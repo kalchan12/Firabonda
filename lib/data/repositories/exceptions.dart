@@ -29,6 +29,13 @@ final class SaleExceedsStockException implements Exception {
   String toString() => 'Cannot sell more than the $stockLeft left in stock.';
 }
 
+final class SaleQuantityException implements Exception {
+  const SaleQuantityException();
+
+  @override
+  String toString() => 'Quantity must be greater than 0.';
+}
+
 final class NotFoundException implements Exception {
   const NotFoundException(this.message);
 
