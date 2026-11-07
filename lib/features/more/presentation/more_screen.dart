@@ -114,13 +114,19 @@ final class _ThemeSection extends StatelessWidget {
                   child: SegmentedButton<ThemeMode>(
                     showSelectedIcon: false,
                     segments: const [
-                      ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        icon: Icon(Icons.dark_mode_outlined, size: 18),
+                        label: Text('Dark'),
+                      ),
                       ButtonSegment(
                         value: ThemeMode.light,
+                        icon: Icon(Icons.light_mode_outlined, size: 18),
                         label: Text('Light'),
                       ),
                       ButtonSegment(
                         value: ThemeMode.system,
+                        icon: Icon(Icons.brightness_auto_outlined, size: 18),
                         label: Text('System'),
                       ),
                     ],

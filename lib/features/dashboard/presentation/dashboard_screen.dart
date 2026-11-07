@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/utils/business_logic.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_card.dart';
@@ -34,7 +35,7 @@ final class DashboardScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           children: [
-            // Top App Bar
+            // Top App Bar with Light/Dark mode toggle
             Row(
               children: [
                 Expanded(
@@ -43,6 +44,38 @@ final class DashboardScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: Theme.of(context).brightness == Brightness.dark
+                      ? 'Switch to Light mode'
+                      : 'Switch to Dark mode',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        color: colors.textPrimary,
+                        size: 20,
+                      ),
+                      tooltip: Theme.of(context).brightness == Brightness.dark
+                          ? 'Switch to Light mode'
+                          : 'Switch to Dark mode',
+                      onPressed: () {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        ref.read(themeControllerProvider.notifier).setMode(
+                              isDark ? ThemeMode.light : ThemeMode.dark,
+                            );
+                      },
+                    ),
                   ),
                 ),
               ],

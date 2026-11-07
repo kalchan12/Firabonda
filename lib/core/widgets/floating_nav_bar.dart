@@ -45,52 +45,64 @@ final class FloatingNavBar extends StatelessWidget {
     final colors = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        0,
-        AppSpacing.xl,
         AppSpacing.l,
+        0,
+        AppSpacing.l,
+        AppSpacing.m,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colors.surfaceVariant.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: colors.border),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.m,
-                    vertical: AppSpacing.s,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _destination(context, 0),
-                      _destination(context, 1),
-                      const SizedBox(width: 84),
-                      _destination(context, 2),
-                      _destination(context, 3),
-                    ],
-                  ),
-                ),
-                Positioned.fill(
-                  child: Center(
-                    child: IntrinsicWidth(
-                      child: _AddPurchaseButton(
-                        onPressed: () => context.push('/add-purchase'),
-                      ),
+      child: SizedBox(
+        height: 74,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          clipBehavior: Clip.none,
+          children: [
+            // Floating bar background dock
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: Container(
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: colors.border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s,
+                    ),
+                    child: Row(
+                      children: [
+                        _destination(context, 0),
+                        _destination(context, 1),
+                        const SizedBox(width: 80),
+                        _destination(context, 2),
+                        _destination(context, 3),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            // Prominent center button, raised up above the bar
+            Positioned(
+              top: 0,
+              child: _AddPurchaseButton(
+                onPressed: () => context.push('/add-purchase'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -160,30 +172,33 @@ final class _AddPurchaseButton extends StatelessWidget {
       child: Material(
         color: colors.primary,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        elevation: 0,
+        elevation: 6,
+        shadowColor: colors.primary.withValues(alpha: 0.5),
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: 14,
-            ),
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: Colors.transparent),
+              border: Border.all(
+                color: colors.onPrimary.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add, color: colors.onPrimary, size: 20),
-                const SizedBox(width: AppSpacing.s),
+                Icon(Icons.add_rounded, color: colors.onPrimary, size: 22),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   'Add purchase',
                   style: TextStyle(
                     color: colors.onPrimary,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
                   ),
                 ),
               ],
