@@ -2,7 +2,7 @@
 
 Update the checkboxes and "Status" at the end of every phase. Work on **one phase at a time** and wait for the owner's approval.
 
-**Current status:** Phase 5 complete — Dashboard with periods, animated stat tiles, fl_chart profit trend, best sellers, unsold stock value, and low stock alerts built and tested (56 tests passing). Waiting for owner approval before Phase 6.
+**Current status:** Phase 6 complete — Secondary features (Suppliers, Expenses, Debts & credit, Photos, Categories & Colors, Settings, PDF/CSV Export, and SQLite Backup & Restore) built and fully verified (65 tests passing). Waiting for owner approval before Phase 7 (Polish and release prep).
 
 ## Phase 0: Environment check
 - [x] flutter, dart, flutter doctor, adb outputs shown
@@ -50,15 +50,15 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] Real profit includes expenses
 
 ## Phase 6: Secondary features
-- [ ] Suppliers
-- [ ] Expenses
-- [ ] Debts and credit tracker
-- [ ] Photos
-- [ ] Category and color management
-- [ ] Settings (theme, size field toggle, low stock default)
-- [ ] PDF and CSV export
-- [ ] Backup and restore
-- [ ] (Optional) app lock
+- [x] Suppliers
+- [x] Expenses
+- [x] Debts and credit tracker
+- [x] Photos
+- [x] Category and color management
+- [x] Settings (theme, size field toggle, low stock default)
+- [x] PDF and CSV export
+- [x] Backup and restore
+- [x] (Optional) app lock (Settings & database prepared)
 
 ## Phase 7: Polish and release prep
 - [ ] Full review on phone, both themes, text scales, orientations

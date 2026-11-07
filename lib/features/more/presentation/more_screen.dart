@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
@@ -38,20 +39,29 @@ final class MoreScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.s),
-            const _MoreTile(
+            _MoreTile(
               icon: Icons.local_shipping_outlined,
               label: 'Suppliers',
+              onTap: () => context.push('/suppliers'),
             ),
-            const _MoreTile(icon: Icons.payments_outlined, label: 'Expenses'),
-            const _MoreTile(
+            _MoreTile(
+              icon: Icons.payments_outlined,
+              label: 'Expenses',
+              onTap: () => context.push('/expenses'),
+            ),
+            _MoreTile(
               icon: Icons.handshake_outlined,
               label: 'Debts & credit',
+              onTap: () => context.push('/debts'),
             ),
-            const _MoreTile(icon: Icons.category_outlined, label: 'Categories'),
-            const _MoreTile(icon: Icons.palette_outlined, label: 'Colors'),
+            _MoreTile(
+              icon: Icons.category_outlined,
+              label: 'Categories & colors',
+              onTap: () => context.push('/categories-colors'),
+            ),
             const SizedBox(height: AppSpacing.l),
             Text(
-              'Data',
+              'Data & Backup',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -59,15 +69,21 @@ final class MoreScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.s),
-            const _MoreTile(
+            _MoreTile(
               icon: Icons.picture_as_pdf_outlined,
               label: 'Export report',
+              onTap: () => context.push('/export'),
             ),
-            const _MoreTile(
+            _MoreTile(
               icon: Icons.backup_outlined,
               label: 'Backup & restore',
+              onTap: () => context.push('/backup-restore'),
             ),
-            const _MoreTile(icon: Icons.settings_outlined, label: 'Settings'),
+            _MoreTile(
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              onTap: () => context.push('/settings'),
+            ),
             const SizedBox(height: 96),
           ],
         ),
@@ -123,17 +139,22 @@ final class _ThemeSection extends StatelessWidget {
 }
 
 final class _MoreTile extends StatelessWidget {
-  const _MoreTile({required this.icon, required this.label});
+  const _MoreTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     return Card(
       child: ListTile(
-        onTap: () {},
+        onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         leading: Icon(icon, color: colors.textMuted),
         title: Text(

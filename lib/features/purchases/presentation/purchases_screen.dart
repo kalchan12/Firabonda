@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -307,25 +309,55 @@ final class _PurchaseItemCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category initials badge
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: colors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      purchase.categoryName.isNotEmpty
-                          ? purchase.categoryName[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: colors.primary,
-                      ),
+                // Photo thumbnail or category initial
+                GestureDetector(
+                  onTap: () {
+                    if (purchase.photoPath != null &&
+                        File(purchase.photoPath!).existsSync()) {
+                      showDialog<void>(
+                        context: context,
+                        builder: (ctx) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          child: ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.card),
+                            child: Image.file(
+                              File(purchase.photoPath!),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    clipBehavior: Clip.antiAlias,
+                    child: (purchase.photoPath != null &&
+                            File(purchase.photoPath!).existsSync())
+                        ? Image.file(
+                            File(purchase.photoPath!),
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.cover,
+                          )
+                        : Center(
+                            child: Text(
+                              purchase.categoryName.isNotEmpty
+                                  ? purchase.categoryName[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.m),

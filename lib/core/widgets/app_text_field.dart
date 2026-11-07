@@ -19,6 +19,7 @@ final class AppTextField extends StatelessWidget {
     this.filled = true,
     this.maxLines = 1,
     this.enabled = true,
+    this.autofocus = false,
   });
 
   final String label;
@@ -33,6 +34,7 @@ final class AppTextField extends StatelessWidget {
   final bool filled;
   final int maxLines;
   final bool enabled;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +43,7 @@ final class AppTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       enabled: enabled,
+      autofocus: autofocus,
       inputFormatters: keyboardType == TextInputType.number
           ? <TextInputFormatter>[
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),

@@ -63,3 +63,7 @@ final saleOverviewsStreamProvider = StreamProvider<List<SaleOverview>>((ref) {
 final expensesStreamProvider = StreamProvider<List<ExpenseRow>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchAll();
 });
+
+final debtsStreamProvider = StreamProvider<List<DebtRow>>((ref) {
+  return ref.watch(debtRepositoryProvider).watchAll();
+});
