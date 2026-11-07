@@ -16,12 +16,14 @@ final class MoneyField extends StatefulWidget {
     required this.label,
     this.helperText,
     this.enabled = true,
+    this.quantity,
   });
 
   final TextEditingController? controller;
   final String label;
   final String? helperText;
   final bool enabled;
+  final int? quantity;
 
   @override
   State<MoneyField> createState() => _MoneyFieldState();
@@ -50,7 +52,11 @@ final class _MoneyFieldState extends State<MoneyField> {
   }
 
   Future<void> _openCalculator() async {
-    final result = await showCalculatorSheet(context, _controller.text);
+    final result = await showCalculatorSheet(
+      context,
+      _controller.text,
+      quantity: widget.quantity,
+    );
     if (result != null && result.used) {
       _controller.text = result.value;
     }

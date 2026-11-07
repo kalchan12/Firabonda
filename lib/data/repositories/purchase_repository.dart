@@ -224,13 +224,15 @@ final class LocalPurchaseRepository implements PurchaseRepository {
   }) async {
     final query = _db.select(_db.purchases)
       ..where(
-        (row) => row.categoryId.equals(categoryId) & row.deletedAt.isNull(),
+        (row) =>
+            row.categoryId.equals(categoryId) &
+            (colorId != null
+                ? row.colorId.equals(colorId)
+                : const Constant(true)) &
+            row.deletedAt.isNull(),
       )
       ..orderBy([(row) => OrderingTerm.desc(row.date)])
       ..limit(1);
-    if (colorId != null) {
-      query.where((row) => row.colorId.equals(colorId));
-    }
     final row = await query.getSingleOrNull();
     return row?.unitCost;
   }

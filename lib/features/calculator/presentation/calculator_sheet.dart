@@ -19,33 +19,36 @@ final class CalculatorResult {
 /// back into the field and closes the sheet.
 Future<CalculatorResult?> showCalculatorSheet(
   BuildContext context,
-  String initialText,
-) {
+  String initialText, {
+  int? quantity,
+}) {
   return showModalBottomSheet<CalculatorResult>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => CalculatorSheet(initialText: initialText),
+    builder: (_) => CalculatorSheet(
+      initialText: initialText,
+      quantity: quantity,
+    ),
   );
 }
 
 final class CalculatorSheet extends StatefulWidget {
-  const CalculatorSheet({super.key, required this.initialText});
+  const CalculatorSheet({
+    super.key,
+    required this.initialText,
+    this.quantity,
+  });
 
   final String initialText;
+  final int? quantity;
 
   @override
   State<CalculatorSheet> createState() => _CalculatorSheetState();
 }
 
 final class _CalculatorSheetState extends State<CalculatorSheet> {
-  static const _rows = <List<String?>>[
-    ['C', '⌫', '%', '÷'],
-    ['7', '8', '9', '−'],
-    ['4', '5', '6', '+'],
-    ['1', '2', '3', '×'],
-    ['0', '.', '=', null],
-  ];
+  late final List<List<String?>> _rows;
 
   late String _expression;
   String? _error;
@@ -53,6 +56,15 @@ final class _CalculatorSheetState extends State<CalculatorSheet> {
   @override
   void initState() {
     super.initState();
+    final qty = widget.quantity;
+    final qtyKey = (qty != null && qty > 1) ? '$qty×' : null;
+    _rows = [
+      ['C', '⌫', '%', '÷'],
+      ['7', '8', '9', '−'],
+      ['4', '5', '6', '+'],
+      ['1', '2', '3', '×'],
+      ['0', '.', '=', qtyKey],
+    ];
     final trimmed = widget.initialText.trim();
     _expression = trimmed.replaceAll('ETB', '').trim();
   }
@@ -60,6 +72,17 @@ final class _CalculatorSheetState extends State<CalculatorSheet> {
   void _onKey(String key) {
     setState(() {
       _error = null;
+      if (key.endsWith('×') && key != '×') {
+        // e.g. "5×" quick multiplier shortcut
+        if (_expression.isEmpty) {
+          _expression = key;
+        } else if (!_expression.contains('×')) {
+          _expression = '$key$_expression';
+        } else {
+          _expression = _expression + key;
+        }
+        return;
+      }
       switch (key) {
         case 'C':
           _expression = '';

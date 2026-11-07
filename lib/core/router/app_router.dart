@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/models/shop_models.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/purchases/presentation/add_purchase_screen.dart';
@@ -57,7 +58,9 @@ GoRouter buildAppRouter() {
       GoRoute(
         path: '/add-purchase',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AddPurchaseScreen(),
+        builder: (context, state) => AddPurchaseScreen(
+          initialPurchase: state.extra as PurchaseOverview?,
+        ),
       ),
     ],
   );

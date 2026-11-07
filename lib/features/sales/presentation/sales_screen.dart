@@ -1,70 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/skeleton_loader.dart';
+import '../../../data/models/shop_models.dart';
+import '../../../data/repositories/providers.dart';
 
-/// Sales list screen (visual sample). Real data in Phase 4.
-const _sampleSales = <_SaleRow>[
-  _SaleRow(
-    category: 'Shirts',
-    quantity: 2,
-    unitPriceCents: 180000,
-    unitCostCents: 120000,
-    dateLabel: 'Today',
-  ),
-  _SaleRow(
-    category: 'T-shirts',
-    quantity: 5,
-    unitPriceCents: 95000,
-    unitCostCents: 80000,
-    dateLabel: 'Today',
-  ),
-  _SaleRow(
-    category: 'Jeans',
-    quantity: 1,
-    unitPriceCents: 140000,
-    unitCostCents: 150000,
-    dateLabel: 'Yesterday',
-  ),
-];
-
-final class _SaleRow {
-  const _SaleRow({
-    required this.category,
-    required this.quantity,
-    required this.unitPriceCents,
-    required this.unitCostCents,
-    required this.dateLabel,
-  });
-
-  final String category;
-  final int quantity;
-  final int unitPriceCents;
-  final int unitCostCents;
-  final String dateLabel;
-
-  int get profitCents => (unitPriceCents - unitCostCents) * quantity;
-}
-
-final class SalesScreen extends StatelessWidget {
+final class SalesScreen extends ConsumerWidget {
   const SalesScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    if (_sampleSales.isEmpty) {
-      return const Scaffold(
-        body: EmptyState(
-          icon: Icons.receipt_long_outlined,
-          message: 'No sales yet. Sell an item from your purchases.',
-          actionLabel: 'Sell item',
-          onAction: null,
-        ),
-      );
+  String _formatDateGroup(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final itemDate = DateTime(date.year, date.month, date.day);
+
+    if (itemDate == today) return 'Today';
+    if (itemDate == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    return DateFormat.yMMMd().format(date);
+  }
+
+  Map<String, List<SaleOverview>> _groupByDate(List<SaleOverview> list) {
+    final map = <String, List<SaleOverview>>{};
+    for (final item in list) {
+      final key = _formatDateGroup(item.date);
+      map.putIfAbsent(key, () => []).add(item);
     }
+    return map;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final salesAsync = ref.watch(saleOverviewsStreamProvider);
+
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
@@ -75,80 +48,255 @@ final class SalesScreen extends StatelessWidget {
               title: const Text('Sales'),
               backgroundColor: colors.background,
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenPadding,
-              ),
-              sliver: SliverList.builder(
-                itemCount: _sampleSales.length,
-                itemBuilder: (context, index) {
-                  final s = _sampleSales[index];
-                  final showDateHeader =
-                      index == 0 ||
-                      _sampleSales[index - 1].dateLabel != s.dateLabel;
-                  final loss = s.profitCents < 0;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.m),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (showDateHeader)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.s,
-                              top: AppSpacing.xs,
-                            ),
-                            child: Text(
-                              s.dateLabel,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                          ),
-                        AppCard(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${s.quantity}x ${s.category}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      '${Money.amount(s.unitPriceCents)} each',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: colors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                '${loss ? '-' : '+'} ${Money.amount(s.profitCents.abs())}',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: loss ? colors.loss : colors.profit,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+            salesAsync.when(
+              data: (sales) {
+                if (sales.isEmpty) {
+                  return const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyState(
+                      icon: Icons.point_of_sale_outlined,
+                      message:
+                          'No sales recorded yet. Tap "Sell" on any item in your Purchases list to track your earnings and profit.',
                     ),
                   );
-                },
+                }
+
+                final totalProfit =
+                    sales.fold<int>(0, (sum, s) => sum + s.profitCents);
+                final totalRevenue = sales.fold<int>(
+                  0,
+                  (sum, s) => sum + (s.unitPriceCents * s.quantity),
+                );
+
+                final grouped = _groupByDate(sales);
+
+                return SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Summary Banner
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.screenPadding,
+                        AppSpacing.s,
+                        AppSpacing.screenPadding,
+                        AppSpacing.m,
+                      ),
+                      child: AppCard(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Total revenue',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  Money.etb(totalRevenue),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              height: 32,
+                              width: 1,
+                              color: colors.border,
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  'Total profit',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  totalProfit >= 0
+                                      ? '+${Money.etb(totalProfit)}'
+                                      : Money.etb(totalProfit),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: totalProfit >= 0
+                                        ? colors.profit
+                                        : colors.loss,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Grouped Sales List
+                    for (final entry in grouped.entries) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding,
+                          vertical: AppSpacing.xs,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.s,
+                              ),
+                              child: Text(
+                                entry.key,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textMuted,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            for (final sale in entry.value)
+                              _SaleItemCard(sale: sale),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 100), // padding for floating nav
+                  ]),
+                );
+              },
+              loading: () => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                  child: Column(
+                    children: [
+                      SkeletonLoader(
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+                      SkeletonLoader(
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              error: (err, stack) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text(
+                    'Error loading sales: $err',
+                    style: TextStyle(color: colors.loss),
+                  ),
+                ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SaleItemCard extends StatelessWidget {
+  const _SaleItemCard({required this.sale});
+
+  final SaleOverview sale;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isProfit = sale.profitCents >= 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s),
+      child: AppCard(
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isProfit
+                    ? colors.profit.withValues(alpha: 0.15)
+                    : colors.loss.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isProfit
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                color: isProfit ? colors.profit : colors.loss,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${sale.categoryName} (${sale.colorName})',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.unitCostCents)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  isProfit
+                      ? '+${Money.etb(sale.profitCents)}'
+                      : Money.etb(sale.profitCents),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: isProfit ? colors.profit : colors.loss,
+                  ),
+                ),
+                Text(
+                  DateFormat.jm().format(sale.date),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

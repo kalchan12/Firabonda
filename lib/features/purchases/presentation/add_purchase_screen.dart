@@ -1,63 +1,85 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/uuid.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/money_field.dart';
+import '../../../data/models/shop_models.dart';
+import '../../../data/repositories/providers.dart';
+import '../../settings/application/settings_controller.dart';
+import '../application/purchases_controller.dart';
+import 'widgets/add_category_dialog.dart';
+import 'widgets/custom_color_dialog.dart';
 
-/// Categories and colors presets come from the DB seeds in Phase 3;
-/// the values below mirror that seed for the design checkpoint.
-const _presetCategories = [
-  'T-shirts',
-  'Shirts',
-  'Hoodies',
-  'Jackets',
-  'Trousers',
-  'Jeans',
-  'Shorts',
-  'Sweaters',
-];
+final class AddPurchaseScreen extends ConsumerStatefulWidget {
+  const AddPurchaseScreen({super.key, this.initialPurchase});
 
-const _presetColors = <(String, int)>[
-  ('Black', 0xFF000000),
-  ('White', 0xFFFFFFFF),
-  ('Gray', 0xFF808080),
-  ('Blue', 0xFF2F5BFF),
-  ('Navy', 0xFF0B1F4B),
-  ('Red', 0xFFE53950),
-  ('Green', 0xFF2E9E63),
-  ('Brown', 0xFF7A4B2A),
-  ('Beige', 0xFFD8C3A5),
-  ('Yellow', 0xFFF2C94C),
-];
-
-/// Add / edit purchase screen (design checkpoint sample). In Phase 4 the
-/// form gets validation, price memory hints, persistence and editing.
-final class AddPurchaseScreen extends StatefulWidget {
-  const AddPurchaseScreen({super.key});
+  final PurchaseOverview? initialPurchase;
 
   @override
-  State<AddPurchaseScreen> createState() => _AddPurchaseScreenState();
+  ConsumerState<AddPurchaseScreen> createState() => _AddPurchaseScreenState();
 }
 
-final class _AddPurchaseScreenState extends State<AddPurchaseScreen> {
+final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
   final _unitCost = TextEditingController();
   final _sellingPrice = TextEditingController();
-  int _quantity = 1;
+  final _size = TextEditingController();
+  final _note = TextEditingController();
 
-  String _category = _presetCategories.first;
-  String _color = _presetColors.first.$1;
+  int _quantity = 1;
+  String? _selectedCategoryId;
+  String? _selectedColorId;
+  String? _selectedSupplierId;
+  DateTime _date = DateTime.now();
+  String? _photoPath;
+  bool _showSizeInput = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialPurchase;
+    if (initial != null) {
+      _selectedCategoryId = initial.categoryId;
+      _selectedColorId = initial.colorId;
+      _selectedSupplierId = initial.supplierId;
+      _quantity = initial.quantity;
+      _unitCost.text = Money.amount(initial.unitCostCents);
+      if (initial.sellingPriceCents != null) {
+        _sellingPrice.text = Money.amount(initial.sellingPriceCents!);
+      }
+      if (initial.size != null && initial.size!.isNotEmpty) {
+        _size.text = initial.size!;
+        _showSizeInput = true;
+      }
+      if (initial.note != null) {
+        _note.text = initial.note!;
+      }
+      _photoPath = initial.photoPath;
+      _date = initial.date;
+    }
+  }
 
   @override
   void dispose() {
     _unitCost.dispose();
     _sellingPrice.dispose();
+    _size.dispose();
+    _note.dispose();
     super.dispose();
   }
 
@@ -74,62 +96,351 @@ final class _AddPurchaseScreenState extends State<AddPurchaseScreen> {
     }
   }
 
+  Future<void> _pickPhoto(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+
+      final docsDir = await getApplicationDocumentsDirectory();
+      final photosDir = Directory(p.join(docsDir.path, 'photos'));
+      if (!photosDir.existsSync()) {
+        await photosDir.create(recursive: true);
+      }
+      final ext = p.extension(picked.path);
+      final destPath = p.join(photosDir.path, '${newUuid()}$ext');
+      final saved = await File(picked.path).copy(destPath);
+
+      if (mounted) {
+        setState(() => _photoPath = saved.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick photo: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _onAddCategory() async {
+    final result = await showAddCategoryDialog(context);
+    if (result == null) return;
+    try {
+      final repo = ref.read(categoryRepositoryProvider);
+      final created = await repo.add(name: result.$1, icon: result.$2);
+      setState(() => _selectedCategoryId = created.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not add category: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _onAddColor() async {
+    final result = await showCustomColorDialog(context);
+    if (result == null) return;
+    try {
+      final repo = ref.read(colorRepositoryProvider);
+      final created = await repo.add(name: result.$1, hex: result.$2);
+      setState(() => _selectedColorId = created.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not add color: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _date = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _date.hour,
+          _date.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    final categoryId = _selectedCategoryId ??
+        ref.read(categoriesStreamProvider).value?.firstOrNull?.id;
+    if (categoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+    final colorId = _selectedColorId ??
+        ref.read(colorsStreamProvider).value?.firstOrNull?.id;
+    if (colorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a color')),
+      );
+      return;
+    }
+    final unitCostCents = _tryParseCents(_unitCost.text);
+    if (unitCostCents == null || unitCostCents <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid unit cost')),
+      );
+      return;
+    }
+
+    final sellingPriceCents = _sellingPrice.text.trim().isEmpty
+        ? null
+        : _tryParseCents(_sellingPrice.text);
+
+    setState(() => _isSaving = true);
+    try {
+      final input = PurchaseInput(
+        categoryId: categoryId,
+        colorId: colorId,
+        supplierId: _selectedSupplierId,
+        size: _size.text.trim().isEmpty ? null : _size.text.trim(),
+        quantity: _quantity,
+        unitCostCents: unitCostCents,
+        sellingPriceCents: sellingPriceCents,
+        photoPath: _photoPath,
+        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+        date: _date,
+      );
+
+      final repo = ref.read(purchaseRepositoryProvider);
+      if (widget.initialPurchase == null) {
+        await repo.add(input);
+      } else {
+        await repo.update(widget.initialPurchase!.id, input);
+      }
+
+      await HapticFeedback.lightImpact();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.initialPurchase == null
+                  ? 'Purchase saved successfully'
+                  : 'Purchase updated successfully',
+            ),
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving purchase: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final initial = widget.initialPurchase;
+    if (initial == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete purchase?'),
+        content: Text(
+          initial.stockLeft < initial.quantity
+              ? 'This purchase has ${initial.quantity - initial.stockLeft} sales recorded. Deleting it will also remove those sales from calculations. Continue?'
+              : 'Are you sure you want to delete this purchase?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final repo = ref.read(purchaseRepositoryProvider);
+      await repo.softDelete(initial.id);
+      await HapticFeedback.mediumImpact();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchase deleted')),
+        );
+        context.pop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final colorsAsync = ref.watch(colorsStreamProvider);
+    final suppliersAsync = ref.watch(suppliersStreamProvider);
+    final showSizeSetting = ref.watch(showSizeFieldProvider);
+
+    final activeCategoryId = _selectedCategoryId ??
+        categoriesAsync.value?.firstOrNull?.id;
+    final activeColorId = _selectedColorId ??
+        colorsAsync.value?.firstOrNull?.id;
+
+    // Price memory lookup
+    final priceMemoryAsync = activeCategoryId == null
+        ? null
+        : ref.watch(
+            priceMemoryProvider((
+              categoryId: activeCategoryId,
+              colorId: activeColorId,
+            )),
+          );
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Add purchase')),
+      appBar: AppBar(
+        title: Text(
+          widget.initialPurchase == null ? 'Add purchase' : 'Edit purchase',
+        ),
+        actions: [
+          if (widget.initialPurchase != null)
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: colors.loss),
+              tooltip: 'Delete purchase',
+              onPressed: _confirmDelete,
+            ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           children: [
-            Text('Category', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.s),
-            Wrap(
-              spacing: AppSpacing.s,
-              runSpacing: AppSpacing.s,
+            // Category section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                for (final category in _presetCategories)
-                  AppChip(
-                    label: category,
-                    selected: category == _category,
-                    onTap: () => setState(() => _category = category),
-                  ),
+                Text(
+                  'Category',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                TextButton.icon(
+                  onPressed: _onAddCategory,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add new'),
+                ),
               ],
             ),
-            const SizedBox(height: AppSpacing.l),
-            Text('Color', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.s),
-            Wrap(
-              spacing: AppSpacing.s,
-              runSpacing: AppSpacing.s,
-              children: [
-                for (final (name, hex) in _presetColors)
-                  AppChip(
-                    label: name,
-                    selected: name == _color,
-                    dotColor: Color(hex),
-                    onTap: () => setState(() => _color = name),
-                  ),
-              ],
+            const SizedBox(height: AppSpacing.xs),
+            categoriesAsync.when(
+              data: (categories) => Wrap(
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
+                children: [
+                  for (final category in categories)
+                    AppChip(
+                      label: category.name,
+                      selected: category.id == activeCategoryId,
+                      onTap: () =>
+                          setState(() => _selectedCategoryId = category.id),
+                    ),
+                ],
+              ),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (err, stack) => Text(
+                'Error loading categories: $err',
+                style: TextStyle(color: colors.loss),
+              ),
             ),
             const SizedBox(height: AppSpacing.l),
+
+            // Color section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Color', style: Theme.of(context).textTheme.titleMedium),
+                TextButton.icon(
+                  onPressed: _onAddColor,
+                  icon: const Icon(Icons.palette_outlined, size: 18),
+                  label: const Text('Custom color'),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            colorsAsync.when(
+              data: (colorList) => Wrap(
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
+                children: [
+                  for (final c in colorList)
+                    AppChip(
+                      label: c.name,
+                      dotColor: Color(
+                        int.tryParse(c.hex.replaceFirst('#', '0xFF')) ??
+                            0xFF000000,
+                      ),
+                      selected: c.id == activeColorId,
+                      onTap: () => setState(() => _selectedColorId = c.id),
+                    ),
+                ],
+              ),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (err, stack) => Text(
+                'Error loading colors: $err',
+                style: TextStyle(color: colors.loss),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.l),
+
+            // Quantity stepper
+            Text('Quantity', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.s),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Quantity',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
                 _StepperButton(
+                  key: const ValueKey('stepper_remove'),
                   icon: Icons.remove,
-                  onTap: () => setState(
-                    () => _quantity = _quantity > 1 ? _quantity - 1 : 1,
-                  ),
+                  onPressed: _quantity > 1
+                      ? () => setState(() => _quantity--)
+                      : null,
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.l,
+                  ),
                   child: Text(
                     '$_quantity',
                     style: const TextStyle(
@@ -139,125 +450,312 @@ final class _AddPurchaseScreenState extends State<AddPurchaseScreen> {
                   ),
                 ),
                 _StepperButton(
+                  key: const ValueKey('stepper_add'),
                   icon: Icons.add,
-                  onTap: () => setState(() => _quantity = _quantity + 1),
+                  onPressed: () => setState(() => _quantity++),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.l),
+
+            // Unit cost and price memory hint
             MoneyField(
               label: 'Unit cost',
               controller: _unitCost,
-              helperText: 'Last time: ETB 800 each',
+              quantity: _quantity,
             ),
-            const SizedBox(height: AppSpacing.m),
-            MoneyField(
-              label: 'Selling price (optional)',
-              controller: _sellingPrice,
-            ),
-            const SizedBox(height: AppSpacing.m),
-            AppCard(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textMuted,
+            if (priceMemoryAsync != null)
+              priceMemoryAsync.when(
+                data: (lastCostCents) {
+                  if (lastCostCents == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 4),
+                    child: InkWell(
+                      onTap: () {
+                        _unitCost.text = Money.amount(lastCostCents);
+                        setState(() {});
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 4,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.history_rounded,
+                              size: 16,
+                              color: colors.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Last time: ${Money.etb(lastCostCents)} each',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.primary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '(tap to use)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (err, stack) => const SizedBox.shrink(),
+              ),
+            const SizedBox(height: AppSpacing.m),
+
+            // Computed total cost preview
+            AppCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total cost',
+                    style: TextStyle(
+                      color: colors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Text(
-                      Money.etb(_totalCents),
-                      key: ValueKey<int>(_totalCents),
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  Text(
+                    Money.etb(_totalCents),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.l),
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: Text(
-                'More details',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
-              ),
-              childrenPadding: EdgeInsets.zero,
-              children: [
-                const AppTextField(label: 'Supplier (optional)'),
-                const SizedBox(height: AppSpacing.m),
-                const AppTextField(label: 'Note (optional)', maxLines: 2),
-                const SizedBox(height: AppSpacing.m),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: colors.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.button),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  icon: const Icon(Icons.photo_outlined),
-                  label: const Text('Add photo (optional)'),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            AppButton(
-              label: 'Save purchase',
-              icon: Icons.check_rounded,
-              onPressed: _save,
+
+            // Optional planned selling price
+            MoneyField(
+              label: 'Planned selling price (optional)',
+              controller: _sellingPrice,
+              helperText: 'Prefills price when marking items as sold',
             ),
             const SizedBox(height: AppSpacing.m),
+
+            // Optional Supplier
+            Text('Supplier', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            suppliersAsync.when(
+              data: (suppliers) {
+                if (suppliers.isEmpty) {
+                  return Text(
+                    'No suppliers added yet',
+                    style: TextStyle(fontSize: 13, color: colors.textMuted),
+                  );
+                }
+                return Wrap(
+                  spacing: AppSpacing.s,
+                  runSpacing: AppSpacing.s,
+                  children: [
+                    AppChip(
+                      label: 'None',
+                      selected: _selectedSupplierId == null,
+                      onTap: () => setState(() => _selectedSupplierId = null),
+                    ),
+                    for (final s in suppliers)
+                      AppChip(
+                        label: s.name,
+                        selected: s.id == _selectedSupplierId,
+                        onTap: () => setState(() => _selectedSupplierId = s.id),
+                      ),
+                  ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (err, stack) => const SizedBox.shrink(),
+            ),
+            const SizedBox(height: AppSpacing.l),
+
+            // Date picker tile
+            InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Date: ${DateFormat.yMMMd().format(_date)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: colors.textMuted,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
+
+            // Size field (optional, hidden by default per PRD / Settings)
+            if (showSizeSetting || _showSizeInput) ...[
+              AppTextField(
+                label: 'Size (optional)',
+                controller: _size,
+                hintText: 'e.g. M, L, XL, 32',
+              ),
+              const SizedBox(height: AppSpacing.m),
+            ] else ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _showSizeInput = true),
+                  icon: const Icon(Icons.straighten, size: 16),
+                  label: const Text('Add size'),
+                ),
+              ),
+            ],
+
+            // Note field
+            AppTextField(
+              label: 'Note (optional)',
+              controller: _note,
+              hintText: 'Any extra details',
+            ),
+            const SizedBox(height: AppSpacing.m),
+
+            // Photo picker
+            Text(
+              'Photo (optional)',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.s),
+            if (_photoPath != null && File(_photoPath!).existsSync()) ...[
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    child: Image.file(
+                      File(_photoPath!),
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _photoPath = null),
+                    icon: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickPhoto(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: const Text('Take photo'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.m),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickPhoto(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: const Text('From gallery'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+
+            // Save button
+            AppButton(
+              label: widget.initialPurchase == null
+                  ? (_isSaving ? 'Saving...' : 'Save purchase')
+                  : (_isSaving ? 'Updating...' : 'Update purchase'),
+              onPressed: _isSaving ? () {} : _save,
+            ),
+            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
     );
   }
-
-  void _save() {
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Saved (design checkpoint demo)')),
-    );
-    context.pop();
-  }
 }
 
 final class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.icon, required this.onTap});
+  const _StepperButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+  });
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final enabled = onPressed != null;
     return Material(
-      color: colors.surfaceVariant,
-      borderRadius: BorderRadius.circular(14),
+      color: enabled ? colors.surfaceVariant : colors.surface,
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(14),
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(icon, size: 20, color: colors.textPrimary),
+          child: Icon(
+            icon,
+            color: enabled ? colors.textPrimary : colors.textMuted,
+          ),
         ),
       ),
     );

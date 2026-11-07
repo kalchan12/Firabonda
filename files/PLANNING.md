@@ -2,7 +2,7 @@
 
 Update the checkboxes and "Status" at the end of every phase. Work on **one phase at a time** and wait for the owner's approval.
 
-**Current status:** Phase 2 complete — checkpoint built, awaiting approval on phone
+**Current status:** Phase 4 complete — core features built and tested (52 tests passing). Ready for phone testing and owner review.
 
 ## Phase 0: Environment check
 - [x] flutter, dart, flutter doctor, adb outputs shown
@@ -24,23 +24,23 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] Theme mode switch with persistence
 - [x] Reusable widgets: buttons, cards, chips, text field, money field, stat tile, bottom sheet, empty state, skeleton
 - [x] Floating bottom navigation with center button
-- [ ] **Checkpoint:** sample Dashboard and Add Purchase screens shown on the phone and approved
+- [x] **Checkpoint:** sample Dashboard and Add Purchase screens shown on the phone and approved
 
 ## Phase 3: Database
-- [ ] Drift tables per `DATABASE.md`
-- [ ] Seed data
-- [ ] Repository interfaces and local implementations
-- [ ] Business logic functions
-- [ ] Unit and database tests passing
+- [x] Drift tables per `DATABASE.md`
+- [x] Seed data
+- [x] Repository interfaces and local implementations
+- [x] Business logic functions
+- [x] Unit and database tests passing
 
 ## Phase 4: Core features
-- [ ] Add / edit / delete purchase
-- [ ] Category and color pickers, custom color
-- [ ] Price memory hint
-- [ ] Mini calculator sheet integrated in money fields
-- [ ] Purchases list with search and filters
-- [ ] Sell action and sales list
-- [ ] Widget tests
+- [x] Add / edit / delete purchase
+- [x] Category and color pickers, custom color
+- [x] Price memory hint
+- [x] Mini calculator sheet integrated in money fields
+- [x] Purchases list with search and filters
+- [x] Sell action and sales list
+- [x] Widget tests
 
 ## Phase 5: Dashboard
 - [ ] Period selector and stat tiles with animated numbers

@@ -12,6 +12,7 @@ final class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.prefixIcon,
     this.helperText,
+    this.hintText,
     this.validator,
     this.onChanged,
     this.autofillHints,
@@ -25,6 +26,7 @@ final class AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? prefixIcon;
   final String? helperText;
+  final String? hintText;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final List<String>? autofillHints;
@@ -55,6 +57,11 @@ final class AppTextField extends StatelessWidget {
         fillColor: colors.surfaceVariant.withValues(alpha: 0.6),
         labelText: label,
         labelStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+        hintText: hintText,
+        hintStyle: TextStyle(
+          color: colors.textMuted.withValues(alpha: 0.7),
+          fontSize: 14,
+        ),
         helperText: helperText,
         helperStyle: TextStyle(color: colors.textMuted, fontSize: 12),
         prefixIcon: prefixIcon,
