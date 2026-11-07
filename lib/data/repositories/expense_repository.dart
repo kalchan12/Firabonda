@@ -82,13 +82,4 @@ final class LocalExpenseRepository implements ExpenseRepository {
 
 DateTime _utc(DateTime input) => input.isUtc ? input : input.toUtc();
 
-DateTime _asUtc(DateTime stored) => DateTime.utc(
-  stored.year,
-  stored.month,
-  stored.day,
-  stored.hour,
-  stored.minute,
-  stored.second,
-  stored.millisecond,
-  stored.microsecond,
-);
+DateTime _asUtc(DateTime stored) => stored.isUtc ? stored : stored.toUtc();

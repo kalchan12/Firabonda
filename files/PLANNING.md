@@ -2,7 +2,7 @@
 
 Update the checkboxes and "Status" at the end of every phase. Work on **one phase at a time** and wait for the owner's approval.
 
-**Current status:** Phase 4 complete — core features built and tested (52 tests passing). Ready for phone testing and owner review.
+**Current status:** Phase 5 complete — Dashboard with periods, animated stat tiles, fl_chart profit trend, best sellers, unsold stock value, and low stock alerts built and tested (56 tests passing). Waiting for owner approval before Phase 6.
 
 ## Phase 0: Environment check
 - [x] flutter, dart, flutter doctor, adb outputs shown
@@ -43,11 +43,11 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] Widget tests
 
 ## Phase 5: Dashboard
-- [ ] Period selector and stat tiles with animated numbers
-- [ ] Profit chart
-- [ ] Best sellers, stock value
-- [ ] Low stock alerts
-- [ ] Real profit includes expenses
+- [x] Period selector and stat tiles with animated numbers
+- [x] Profit chart
+- [x] Best sellers, stock value
+- [x] Low stock alerts
+- [x] Real profit includes expenses
 
 ## Phase 6: Secondary features
 - [ ] Suppliers
