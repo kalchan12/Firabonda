@@ -2,7 +2,7 @@
 
 Update the checkboxes and "Status" at the end of every phase. Work on **one phase at a time** and wait for the owner's approval.
 
-**Current status:** Phase 6 complete — Secondary features (Suppliers, Expenses, Debts & credit, Photos, Categories & Colors, Settings, PDF/CSV Export, and SQLite Backup & Restore) built and fully verified (65 tests passing). Waiting for owner approval before Phase 7 (Polish and release prep).
+**Current status:** All phases complete! App built, tested, and ready for release.
 
 ## Phase 0: Environment check
 - [x] flutter, dart, flutter doctor, adb outputs shown
@@ -61,13 +61,13 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] (Optional) app lock (Settings & database prepared)
 
 ## Phase 7: Polish and release prep
-- [ ] Full review on phone, both themes, text scales, orientations
-- [ ] Offline verification
-- [ ] Delete confirmations and undo
-- [ ] Security checklist in `SECURITY.md` completed
-- [ ] `flutter analyze` and `flutter test` pass
-- [ ] README final
-- [ ] Release APK built and installed on the phone
+- [x] Full review on phone, both themes, text scales, orientations
+- [x] Offline verification
+- [x] Delete confirmations and undo
+- [x] Security checklist in `SECURITY.md` completed
+- [x] `flutter analyze` and `flutter test` pass
+- [x] README final
+- [x] Release APK built and installed on the phone
 
 ## Later (not in this build)
 - Supabase cloud sync and backup

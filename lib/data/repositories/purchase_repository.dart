@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 
@@ -31,6 +32,9 @@ abstract interface class PurchaseRepository {
   /// Records a sale in a transaction. Enforces the stock-left rule by
   /// throwing [SaleExceedsStockException] before writing anything.
   Future<String> recordSale(SaleInput input);
+
+  /// Soft deletes a sale record, restoring the purchase stock.
+  Future<void> softDeleteSale(String saleId);
 
   /// Sales with purchase details and computed profit.
   Stream<List<SaleOverview>> watchSaleOverviews();
@@ -96,6 +100,17 @@ final class LocalPurchaseRepository implements PurchaseRepository {
   Future<void> softDelete(String id) {
     final now = Value(DateTime.now().toUtc());
     return _db.transaction(() async {
+      final purchase = await (_db.select(_db.purchases)
+            ..where((row) => row.id.equals(id)))
+          .getSingleOrNull();
+      if (purchase?.photoPath != null) {
+        final photo = File(purchase!.photoPath!);
+        if (photo.existsSync()) {
+          try {
+            await photo.delete();
+          } catch (_) {}
+        }
+      }
       await (_db.update(_db.sales)..where((row) => row.purchaseId.equals(id)))
           .write(SalesCompanion(deletedAt: now));
       await (_db.update(_db.purchases)..where((row) => row.id.equals(id)))
@@ -176,6 +191,13 @@ final class LocalPurchaseRepository implements PurchaseRepository {
           );
       return saleId;
     });
+  }
+
+  @override
+  Future<void> softDeleteSale(String saleId) {
+    final now = Value(DateTime.now().toUtc());
+    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId)))
+        .write(SalesCompanion(deletedAt: now));
   }
 
   @override

@@ -103,18 +103,41 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                   AppButton(
                     label: 'Create & Share Backup',
                     icon: Icons.share_outlined,
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      setState(() => _isBackingUp = true);
-                      try {
-                        await BackupService.createBackup(db);
-                      } catch (e) {
-                        messenger.showSnackBar(
-                          SnackBar(content: Text('Backup failed: $e')),
-                        );
-                      } finally {
-                        if (mounted) setState(() => _isBackingUp = false);
-                      }
+                    onPressed: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Share Backup File?'),
+                          content: const Text(
+                            'This file contains your complete shop data (purchases, sales, debts, expenses). Share it only with people you trust or save it to your personal storage.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () async {
+                                Navigator.of(ctx).pop();
+                                final messenger = ScaffoldMessenger.of(context);
+                                setState(() => _isBackingUp = true);
+                                try {
+                                  await BackupService.createBackup(db);
+                                } catch (e) {
+                                  messenger.showSnackBar(
+                                    SnackBar(content: Text('Backup failed: $e')),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isBackingUp = false);
+                                  }
+                                }
+                              },
+                              child: const Text('Continue'),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   ),
               ],

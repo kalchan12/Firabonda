@@ -71,12 +71,12 @@ When cloud sync is added later:
 
 ## 11. Security checklist (verify at Phase 7)
 
-- [ ] No network permission in the manifest
-- [ ] No secrets or keystores in git history
-- [ ] All SQL goes through Drift
-- [ ] Inputs validated and length limited
-- [ ] Photos stored privately and cleaned up on delete
-- [ ] Backup warning shown
-- [ ] `allowBackup` is false
-- [ ] Release build is obfuscated
-- [ ] Logs contain no business data
+- [x] No network permission in the manifest
+- [x] No secrets or keystores in git history
+- [x] All SQL goes through Drift
+- [x] Inputs validated and length limited
+- [x] Photos stored privately and cleaned up on delete
+- [x] Backup warning shown
+- [x] `allowBackup` is false
+- [x] Release build is obfuscated
+- [x] Logs contain no business data

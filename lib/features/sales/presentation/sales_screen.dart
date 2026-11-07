@@ -219,13 +219,13 @@ final class SalesScreen extends ConsumerWidget {
   }
 }
 
-final class _SaleItemCard extends StatelessWidget {
+final class _SaleItemCard extends ConsumerWidget {
   const _SaleItemCard({required this.sale});
 
   final SaleOverview sale;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
     final isProfit = sale.profitCents >= 0;
 
@@ -296,6 +296,48 @@ final class _SaleItemCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 18),
+              tooltip: 'Delete sale',
+              onPressed: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Sale?'),
+                    content: Text(
+                      'Delete sale of ${sale.quantity}x ${sale.categoryName}? The ${sale.quantity} items will be restored to inventory stock.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final nav = Navigator.of(ctx);
+                          await ref
+                              .read(purchaseRepositoryProvider)
+                              .softDeleteSale(sale.id);
+                          nav.pop();
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),

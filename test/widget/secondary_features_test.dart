@@ -4,7 +4,6 @@ import 'package:firabonda/data/database/app_database.dart';
 import 'package:firabonda/data/models/shop_models.dart';
 import 'package:firabonda/data/repositories/debt_repository.dart';
 import 'package:firabonda/data/repositories/expense_repository.dart';
-import 'package:firabonda/data/repositories/providers.dart';
 import 'package:firabonda/data/repositories/supplier_repository.dart';
 import 'package:firabonda/features/categories/presentation/categories_colors_screen.dart';
 import 'package:firabonda/features/debts/presentation/debts_screen.dart';
