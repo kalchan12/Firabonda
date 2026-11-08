@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:firabonda/core/utils/business_logic.dart';
+import 'package:firabonda/core/utils/period_range.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('stockLeft', () {
@@ -89,32 +89,38 @@ void main() {
     });
   });
 
-  group('periodWindowUtc', () {
-    // 2026-06-24 15:30 local (UTC+0 for the test host).
-    final fixedUtc = DateTime.parse('2026-06-24T15:30:00.000Z');
+  group('PeriodRange calendar boundaries', () {
+    // 2026-06-24 15:30 local.
+    final fixedDate = DateTime(2026, 6, 24, 15, 30);
 
     test('today covers the local calendar day', () {
-      final (start, end) = ShopLogic.periodWindowUtc(Period.today, fixedUtc);
-      expect(
-        start.isBefore(DateTime.parse('2026-06-24T00:00:00.000Z')),
-        isTrue,
-      );
-      expect(end.isAfter(fixedUtc), isTrue);
+      final range = PeriodRange.today(now: fixedDate);
+      expect(range.contains(DateTime(2026, 6, 24, 0, 0, 0)), isTrue);
+      expect(range.contains(DateTime(2026, 6, 24, 23, 59, 59)), isTrue);
+      expect(range.contains(DateTime(2026, 6, 25, 0, 0, 0)), isFalse);
     });
 
-    test('week reaches back 7 days', () {
-      final (start, _) = ShopLogic.periodWindowUtc(Period.week, fixedUtc);
-      expect(fixedUtc.toLocal().difference(start.toLocal()).inDays, 7);
+    test('week starts at start of calendar week', () {
+      final range = PeriodRange.week(
+        now: fixedDate,
+        firstDayOfWeek: DateTime.monday,
+      );
+      // 2026-06-24 is Wednesday (3). Monday of that week was 2026-06-22.
+      expect(range.contains(DateTime(2026, 6, 22, 0, 0, 0)), isTrue);
+      expect(range.contains(DateTime(2026, 6, 28, 23, 59, 59)), isTrue);
     });
 
     test('month starts at the first of the calendar month', () {
-      final (start, _) = ShopLogic.periodWindowUtc(Period.month, fixedUtc);
-      expect(start.toLocal().day, 1);
+      final range = PeriodRange.month(now: fixedDate);
+      expect(range.contains(DateTime(2026, 6, 1, 0, 0, 0)), isTrue);
+      expect(range.contains(DateTime(2026, 6, 30, 23, 59, 59)), isTrue);
+      expect(range.contains(DateTime(2026, 7, 1, 0, 0, 0)), isFalse);
     });
 
-    test('all-covers everything', () {
-      final (start, _) = ShopLogic.periodWindowUtc(Period.all, fixedUtc);
-      expect(start.year, 1970);
+    test('all covers everything', () {
+      final range = PeriodRange.all();
+      expect(range.startUtc.year, 1970);
+      expect(range.endUtc.year, 3000);
     });
   });
 }

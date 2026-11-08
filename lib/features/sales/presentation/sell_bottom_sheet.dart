@@ -368,8 +368,8 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                             child: Text(
                               hasPrice
                                   ? (profit >= 0
-                                      ? '+${Money.etb(profit)}'
-                                      : Money.etb(profit))
+                                        ? '+${Money.etb(profit)}'
+                                        : Money.etb(profit))
                                   : '—',
                               style: TextStyle(
                                 fontSize: 18,
@@ -377,8 +377,8 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                 color: !hasPrice
                                     ? colors.textMuted
                                     : (profit >= 0
-                                        ? colors.profit
-                                        : colors.loss),
+                                          ? colors.profit
+                                          : colors.loss),
                               ),
                             ),
                           ),

@@ -18,9 +18,11 @@ final class DashboardScreen extends ConsumerWidget {
 
   String _periodLabel(Period period) => switch (period) {
     Period.today => 'Today',
+    Period.yesterday => 'Yesterday',
     Period.week => 'Week',
     Period.month => 'Month',
     Period.all => 'All',
+    Period.custom => 'Custom',
   };
 
   @override
@@ -95,12 +97,78 @@ final class DashboardScreen extends ConsumerWidget {
                     ButtonSegment(value: p, label: Text(_periodLabel(p))),
                 ],
                 selected: {selectedPeriod},
-                onSelectionChanged: (selection) => ref
-                    .read(selectedPeriodProvider.notifier)
-                    .setPeriod(selection.first),
+                onSelectionChanged: (selection) async {
+                  final chosen = selection.first;
+                  if (chosen == Period.custom) {
+                    final picked = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      ref
+                          .read(customDateRangeProvider.notifier)
+                          .setRange(picked.start, picked.end);
+                      ref
+                          .read(selectedPeriodProvider.notifier)
+                          .setPeriod(Period.custom);
+                    }
+                  } else {
+                    ref.read(selectedPeriodProvider.notifier).setPeriod(chosen);
+                  }
+                },
               ),
             ),
-            const SizedBox(height: AppSpacing.l),
+            const SizedBox(height: AppSpacing.s),
+
+            // Stepper bar (prev / label / next)
+            if (selectedPeriod != Period.all &&
+                selectedPeriod != Period.custom) ...[
+              Consumer(
+                builder: (context, ref, _) {
+                  final range = ref.watch(currentPeriodRangeProvider);
+                  final offset = ref.watch(periodOffsetProvider);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        tooltip: 'Previous',
+                        onPressed: () => ref
+                            .read(periodOffsetProvider.notifier)
+                            .stepPrevious(),
+                      ),
+                      Text(
+                        range.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        tooltip: 'Next',
+                        onPressed: () =>
+                            ref.read(periodOffsetProvider.notifier).stepNext(),
+                      ),
+                      if (offset != 0)
+                        TextButton(
+                          onPressed: () =>
+                              ref.read(periodOffsetProvider.notifier).reset(),
+                          child: const Text(
+                            'Reset',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.s),
+            ] else ...[
+              const SizedBox(height: AppSpacing.s),
+            ],
 
             dashboardAsync.when(
               data: (data) {

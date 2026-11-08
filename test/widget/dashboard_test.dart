@@ -181,6 +181,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap 'Month'
+      await tester.ensureVisible(find.text('Month'));
       await tester.tap(find.text('Month'));
       await tester.pumpAndSettle();
 
@@ -188,6 +189,7 @@ void main() {
       expect(find.textContaining('Real Profit (Month)'), findsOneWidget);
 
       // Tap 'All'
+      await tester.ensureVisible(find.text('All'));
       await tester.tap(find.text('All'));
       await tester.pumpAndSettle();
 

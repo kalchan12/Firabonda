@@ -3,7 +3,7 @@
 library;
 
 /// Dashboard periods supported by all aggregates.
-enum Period { today, week, month, all }
+enum Period { today, yesterday, week, month, all, custom }
 
 /// Result of the stock check for a new sale.
 enum SaleCheck { ok, invalidQuantity, exceedsStock }
@@ -30,7 +30,7 @@ final class ShopLogic {
     return purchasedQuantity - soldQuantity;
   }
 
-  /// profit(sale) = (unitPrice - unitCost) * quantity. Can be negative (loss).
+  /// profit(sale) = (unitPrice - costAtSale) * quantity. Can be negative (loss).
   static int saleProfit({
     required int quantity,
     required int unitPriceCents,
@@ -39,12 +39,32 @@ final class ShopLogic {
     return (unitPriceCents - unitCostCents) * quantity;
   }
 
-  /// realProfit(period) = sum(profit of sales) - sum(expenses)
+  /// realProfit(period) = sum(profit of sales) - sum(expenses) - sum(losses)
   static int realProfit({
     required int salesProfitCents,
     required int expensesCents,
+    int lossesCents = 0,
   }) {
-    return salesProfitCents - expensesCents;
+    return salesProfitCents - expensesCents - lossesCents;
+  }
+
+  /// Net profit = Profit - Expenses - Losses
+  static int netProfit({
+    required int profitCents,
+    required int expensesCents,
+    int lossesCents = 0,
+  }) {
+    return profitCents - expensesCents - lossesCents;
+  }
+
+  /// Profit percentage (markup on cost) in percent (e.g. 100 for 100%).
+  /// Can be negative or exceed 100%. Returns 0.0 if cost is zero.
+  static double profitPercent({
+    required int profitCents,
+    required int costOfSoldItemsCents,
+  }) {
+    if (costOfSoldItemsCents <= 0) return 0.0;
+    return (profitCents / costOfSoldItemsCents) * 100.0;
   }
 
   /// stockValue = sum(stockLeft * unitCost)
@@ -61,27 +81,5 @@ final class ShopLogic {
     if (quantity <= 0) return SaleCheck.invalidQuantity;
     if (quantity > stockLeft) return SaleCheck.exceedsStock;
     return SaleCheck.ok;
-  }
-
-  /// [startUtc, endUtc) window for a [Period], computed on local wall-clock
-  /// days because dates are displayed in local time (see
-  /// `files/CODING_STANDARDS.md`).
-  static (DateTime, DateTime) periodWindowUtc(Period period, DateTime nowUtc) {
-    final local = nowUtc.toLocal();
-    var startLocal = DateTime(local.year, local.month, local.day);
-    switch (period) {
-      case Period.today:
-        break;
-      case Period.week:
-        startLocal = startLocal.subtract(const Duration(days: 7));
-      case Period.month:
-        startLocal = DateTime(local.year, local.month);
-      case Period.all:
-        return (
-          DateTime.utc(1970),
-          nowUtc.add(const Duration(microseconds: 1)),
-        );
-    }
-    return (startLocal.toUtc(), nowUtc.add(const Duration(microseconds: 1)));
   }
 }
