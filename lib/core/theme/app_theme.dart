@@ -51,11 +51,27 @@ final class AppTheme {
       cardTheme: CardThemeData(
         color: c.surface,
         elevation: 0,
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(AppRadius.radiusCard),
           side: BorderSide(color: c.border),
         ),
         margin: EdgeInsets.zero,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.radiusSheet),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.radiusChip),
+        ),
+        side: BorderSide(color: c.border),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(

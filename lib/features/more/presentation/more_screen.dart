@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../core/widgets/app_card.dart';
 
 /// "More" hub with the theme switcher. Secondary features land here in
 /// Phase 6.
@@ -115,45 +116,41 @@ final class _ThemeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Theme', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.m),
-            Row(
-              children: [
-                Expanded(
-                  child: SegmentedButton<ThemeMode>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: ThemeMode.dark,
-                        icon: Icon(Icons.dark_mode_outlined, size: 18),
-                        label: Text('Dark'),
-                      ),
-                      ButtonSegment(
-                        value: ThemeMode.light,
-                        icon: Icon(Icons.light_mode_outlined, size: 18),
-                        label: Text('Light'),
-                      ),
-                      ButtonSegment(
-                        value: ThemeMode.system,
-                        icon: Icon(Icons.brightness_auto_outlined, size: 18),
-                        label: Text('System'),
-                      ),
-                    ],
-                    selected: {selected},
-                    onSelectionChanged: (selection) =>
-                        onSelect(selection.first),
-                  ),
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Theme', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.m),
+          Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<ThemeMode>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: ThemeMode.dark,
+                      icon: Icon(Icons.dark_mode_outlined, size: 18),
+                      label: Text('Dark'),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.light,
+                      icon: Icon(Icons.light_mode_outlined, size: 18),
+                      label: Text('Light'),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.system,
+                      icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                      label: Text('System'),
+                    ),
+                  ],
+                  selected: {selected},
+                  onSelectionChanged: (selection) => onSelect(selection.first),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -173,10 +170,10 @@ final class _MoreTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return Card(
+    return AppCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
       child: ListTile(
-        onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         leading: Icon(icon, color: colors.textMuted),
         title: Text(
           label,

@@ -52,6 +52,7 @@ final class StatTile extends StatelessWidget {
     );
 
     final tile = AppCard(
+      hero: hero,
       gradient: hero
           ? LinearGradient(
               begin: Alignment.topLeft,

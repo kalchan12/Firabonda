@@ -352,6 +352,7 @@ final class _NetProfitHeroTile extends StatelessWidget {
     final statusText = isPositive ? 'Profitable' : 'Net Loss';
 
     return AppCard(
+      hero: true,
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
