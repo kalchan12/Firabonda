@@ -121,5 +121,162 @@ void main() {
         expect(totalPurchasesCost, 100000);
       },
     );
+
+    test(
+      'Task 4: Saving a batch with 2-color split creates two purchase rows with correct quantities and costs',
+      () async {
+        final categories = await db.select(db.categories).get();
+        final colors = await db.select(db.colorOptions).get();
+
+        // 10 jackets @ 500 ETB (50,000 cents/piece) split: 6 Black and 4 White
+        const unitCostCents = 50000;
+        const qtyA = 6;
+        const qtyB = 4;
+        const totalQty = qtyA + qtyB;
+        const totalBatchCost = totalQty * unitCostCents;
+
+        final batchId = await repo.addBatch(
+          BatchPurchaseInput(
+            totalCostCents: totalBatchCost,
+            date: DateTime.now(),
+            items: [
+              BatchItemInput(
+                categoryId: categories[0].id,
+                colorId: colors[0].id, // Black
+                quantity: qtyA,
+                unitCostCents: unitCostCents,
+                sellingPriceCents: 85000,
+              ),
+              BatchItemInput(
+                categoryId: categories[0].id,
+                colorId: colors[1].id, // White
+                quantity: qtyB,
+                unitCostCents: unitCostCents,
+                sellingPriceCents: 85000,
+              ),
+            ],
+          ),
+        );
+
+        final purchases = await (db.select(
+          db.purchases,
+        )..where((p) => p.batchId.equals(batchId))).get();
+
+        expect(purchases.length, 2);
+
+        // Row 1: Color A (Black)
+        final rowA = purchases.firstWhere((p) => p.colorId == colors[0].id);
+        expect(rowA.quantity, 6);
+        expect(rowA.unitCost, 50000);
+        expect(rowA.totalCost, 300000);
+        expect(rowA.sellingPrice, 85000);
+
+        // Row 2: Color B (White)
+        final rowB = purchases.firstWhere((p) => p.colorId == colors[1].id);
+        expect(rowB.quantity, 4);
+        expect(rowB.unitCost, 50000);
+        expect(rowB.totalCost, 200000);
+        expect(rowB.sellingPrice, 85000);
+
+        // Sum of rows matches batch total cost
+        expect(rowA.totalCost + rowB.totalCost, totalBatchCost);
+      },
+    );
+
+    test(
+      'Task 4: Saving a mixed-color line creates one row marked mixed and getOrCreateMixedColorId works',
+      () async {
+        final categories = await db.select(db.categories).get();
+        final mixedColorId = await repo.getOrCreateMixedColorId();
+        expect(mixedColorId, isNotEmpty);
+
+        final mixedColor = await (db.select(
+          db.colorOptions,
+        )..where((c) => c.id.equals(mixedColorId))).getSingle();
+        expect(mixedColor.name, 'Mixed');
+
+        // 12 mixed shirts @ 250 ETB = 300,000 cents
+        const unitCostCents = 25000;
+        const totalQty = 12;
+        const totalBatchCost = unitCostCents * totalQty;
+
+        final batchId = await repo.addBatch(
+          BatchPurchaseInput(
+            totalCostCents: totalBatchCost,
+            date: DateTime.now(),
+            note: 'Summer pack',
+            items: [
+              BatchItemInput(
+                categoryId: categories[1].id,
+                colorId: mixedColorId,
+                quantity: totalQty,
+                unitCostCents: unitCostCents,
+                note: 'Summer pack (Mixed)',
+              ),
+            ],
+          ),
+        );
+
+        final purchases = await (db.select(
+          db.purchases,
+        )..where((p) => p.batchId.equals(batchId))).get();
+
+        expect(purchases.length, 1);
+        final item = purchases.first;
+        expect(item.colorId, mixedColorId);
+        expect(item.quantity, 12);
+        expect(item.unitCost, 25000);
+        expect(item.totalCost, totalBatchCost);
+      },
+    );
+
+    test(
+      'Task 4: Different purchase prices per line preserve exact line totals',
+      () async {
+        final categories = await db.select(db.categories).get();
+        final colors = await db.select(db.colorOptions).get();
+
+        // Line 1: 3 jackets @ 600 ETB = 180,000 cents
+        // Line 2: 5 shirts @ 250 ETB = 125,000 cents
+        // Total batch cost = 305,000 cents
+        const line1Unit = 60000;
+        const line1Qty = 3;
+        const line2Unit = 25000;
+        const line2Qty = 5;
+        const totalCost = (line1Unit * line1Qty) + (line2Unit * line2Qty);
+
+        final batchId = await repo.addBatch(
+          BatchPurchaseInput(
+            totalCostCents: totalCost,
+            date: DateTime.now(),
+            items: [
+              BatchItemInput(
+                categoryId: categories[0].id,
+                colorId: colors[0].id,
+                quantity: line1Qty,
+                unitCostCents: line1Unit,
+              ),
+              BatchItemInput(
+                categoryId: categories[1].id,
+                colorId: colors[1].id,
+                quantity: line2Qty,
+                unitCostCents: line2Unit,
+              ),
+            ],
+          ),
+        );
+
+        final purchases = await (db.select(
+          db.purchases,
+        )..where((p) => p.batchId.equals(batchId))).get();
+
+        expect(purchases.length, 2);
+        expect(purchases[0].unitCost, line1Unit);
+        expect(purchases[0].totalCost, 180000);
+        expect(purchases[1].unitCost, line2Unit);
+        expect(purchases[1].totalCost, 125000);
+        expect(purchases[0].totalCost + purchases[1].totalCost, totalCost);
+      },
+    );
   });
 }

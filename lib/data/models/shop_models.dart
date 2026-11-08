@@ -55,15 +55,19 @@ final class BatchItemInput {
     required this.categoryId,
     required this.colorId,
     required this.quantity,
+    this.unitCostCents,
     this.sellingPriceCents,
     this.size,
+    this.note,
   });
 
   final String categoryId;
   final String colorId;
   final int quantity;
+  final int? unitCostCents;
   final int? sellingPriceCents;
   final String? size;
+  final String? note;
 }
 
 final class BatchPurchaseInput {

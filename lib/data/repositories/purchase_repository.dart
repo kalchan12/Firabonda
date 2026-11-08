@@ -51,6 +51,9 @@ abstract interface class PurchaseRepository {
 
   /// Records a batch lot purchase and distributes total cost across items.
   Future<String> addBatch(BatchPurchaseInput input);
+
+  /// Retrieves or lazily creates a "Mixed" color option in the database.
+  Future<String> getOrCreateMixedColorId();
 }
 
 final class LocalPurchaseRepository implements PurchaseRepository {
@@ -379,17 +382,30 @@ final class LocalPurchaseRepository implements PurchaseRepository {
             ),
           );
 
-      // Allocate total batch cost across items using largest-remainder method
-      final quantities = input.items.map((i) => i.quantity).toList();
-      final allocatedCosts = ShopLogic.allocateBatchCost(
-        totalCostCents: input.totalCostCents,
-        quantities: quantities,
+      // Determine costs: if each item has an explicit unit cost, use it;
+      // otherwise allocate totalCostCents using largest-remainder method.
+      final hasExplicitLineCosts = input.items.every(
+        (i) => i.unitCostCents != null && i.unitCostCents! > 0,
       );
+
+      final List<int> allocatedCosts;
+      if (hasExplicitLineCosts) {
+        allocatedCosts = input.items
+            .map((i) => i.unitCostCents! * i.quantity)
+            .toList();
+      } else {
+        final quantities = input.items.map((i) => i.quantity).toList();
+        allocatedCosts = ShopLogic.allocateBatchCost(
+          totalCostCents: input.totalCostCents,
+          quantities: quantities,
+        );
+      }
 
       for (var idx = 0; idx < input.items.length; idx++) {
         final item = input.items[idx];
         final itemTotalCost = allocatedCosts[idx];
-        final itemUnitCost = (itemTotalCost / item.quantity).round();
+        final itemUnitCost =
+            item.unitCostCents ?? (itemTotalCost / item.quantity).round();
         final purchaseId = newUuid();
 
         await _db
@@ -406,7 +422,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
                 unitCost: itemUnitCost,
                 totalCost: itemTotalCost,
                 sellingPrice: Value(item.sellingPriceCents),
-                note: Value(input.note),
+                note: Value(item.note ?? input.note),
                 date: dateUtc,
                 createdAt: now,
                 updatedAt: now,
@@ -416,6 +432,31 @@ final class LocalPurchaseRepository implements PurchaseRepository {
 
       return batchId;
     });
+  }
+
+  @override
+  Future<String> getOrCreateMixedColorId() async {
+    final existing =
+        await (_db.select(_db.colorOptions)
+              ..where((c) => c.name.equals('Mixed') | c.name.equals('mixed')))
+            .getSingleOrNull();
+    if (existing != null) return existing.id;
+
+    final now = DateTime.now().toUtc();
+    final id = newUuid();
+    await _db
+        .into(_db.colorOptions)
+        .insert(
+          ColorOptionsCompanion.insert(
+            id: id,
+            name: 'Mixed',
+            hex: '#9E9E9E',
+            isPreset: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    return id;
   }
 
   Future<PurchaseRow?> _purchaseOrNull(String id) {

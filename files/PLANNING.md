@@ -87,7 +87,7 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Task 1: Sell screen cannot scroll (button hidden)**: Scrollable content, keyboard handling, fixed footer with action button.
 - [x] **Task 2: Corner radius inconsistency**: Radius tokens, shared AppCard with anti-alias clipping across all containers.
 - [x] **Task 3: Center plus button opens only Batch purchase**: Remove speed-dial; plus button navigates straight to Batch purchase.
-- [ ] **Task 4: Batch purchase fields**: Purchase price per piece, Two colors / Mixed colors, optional note, photo.
+- [x] **Task 4: Batch purchase fields**: Purchase price per piece, Two colors / Mixed colors, optional note, photo.
 - [ ] **Task 5: Profit logic**: Assumed profit, over profit, loss, not assumed; replace markup % with % of target.
 - [ ] **Task 6: Simple sell screen**: Clean 3-input sell sheet, live result card (+ETB / Loss / Target), fixed footer.
 - [ ] **Task 7: Update dashboard and lists for new profit language**: Unified profit status colors and labels.
