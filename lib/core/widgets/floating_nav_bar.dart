@@ -1,16 +1,15 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_dimensions.dart';
 import '../theme/app_colors.dart';
+import 'speed_dial_sheet.dart';
 
-/// Floating bottom bar with 4 destinations and a prominent center
-/// "+ Add purchase" button, per `files/DESIGN.md` section 6.
-///
-/// `onAddPurchase` pushes the add-purchase screen; destinations switch
-/// go_router branches.
+/// Floating navigation bar with 4 destinations and a prominent 68-72dp
+/// raised circular center speed-dial button with subtle blue glow.
 final class FloatingNavBar extends StatelessWidget {
   const FloatingNavBar({
     super.key,
@@ -21,42 +20,55 @@ final class FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onDestinationTap;
 
+  /// Configuration: If true, tap opens speed-dial. If false, tap navigates directly
+  /// to single purchase and long-press opens speed-dial.
+  static const bool speedDialOnTap = true;
+
   static const _destinations = <_NavDestination>[
     _NavDestination(
       location: '/dashboard',
-      icon: Icons.home_outlined,
+      outlineIcon: Icons.home_outlined,
+      filledIcon: Icons.home_rounded,
       label: 'Home',
     ),
     _NavDestination(
       location: '/purchases',
-      icon: Icons.shopping_bag_outlined,
+      outlineIcon: Icons.shopping_bag_outlined,
+      filledIcon: Icons.shopping_bag_rounded,
       label: 'Purchases',
     ),
     _NavDestination(
       location: '/sales',
-      icon: Icons.receipt_long_outlined,
+      outlineIcon: Icons.receipt_long_outlined,
+      filledIcon: Icons.receipt_long_rounded,
       label: 'Sales',
     ),
-    _NavDestination(location: '/more', icon: Icons.menu, label: 'More'),
+    _NavDestination(
+      location: '/more',
+      outlineIcon: Icons.grid_view_outlined,
+      filledIcon: Icons.grid_view_rounded,
+      label: 'More',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.l,
-        0,
-        AppSpacing.l,
         AppSpacing.m,
+        0,
+        AppSpacing.m,
+        AppSpacing.s,
       ),
       child: SizedBox(
-        height: 74,
+        height: 84,
         child: Stack(
           alignment: Alignment.bottomCenter,
           clipBehavior: Clip.none,
           children: [
-            // Floating bar background dock
+            // Floating bar dock
             Positioned(
               left: 0,
               right: 0,
@@ -66,9 +78,9 @@ final class FloatingNavBar extends StatelessWidget {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                   child: Container(
-                    height: 58,
+                    height: 60,
                     decoration: BoxDecoration(
-                      color: colors.surfaceVariant.withValues(alpha: 0.85),
+                      color: colors.surfaceVariant.withValues(alpha: 0.88),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(color: colors.border),
                       boxShadow: [
@@ -79,14 +91,12 @@ final class FloatingNavBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.s,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Row(
                       children: [
                         _destination(context, 0),
                         _destination(context, 1),
-                        const SizedBox(width: 80),
+                        const SizedBox(width: 76), // clearance for 70dp center button
                         _destination(context, 2),
                         _destination(context, 3),
                       ],
@@ -95,11 +105,27 @@ final class FloatingNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            // Prominent center button, raised up above the bar
+
+            // Center circular button (68-72dp, raised 22dp with subtle glow and cutout notch)
             Positioned(
               top: 0,
-              child: _AddPurchaseButton(
-                onPressed: () => context.push('/add-purchase'),
+              child: _CenterSpeedDialButton(
+                onTap: () {
+                  if (speedDialOnTap) {
+                    showSpeedDialSheet(context);
+                  } else {
+                    HapticFeedback.lightImpact();
+                    context.push('/add-purchase');
+                  }
+                },
+                onLongPress: () {
+                  if (!speedDialOnTap) {
+                    showSpeedDialSheet(context);
+                  } else {
+                    HapticFeedback.lightImpact();
+                    context.push('/add-purchase');
+                  }
+                },
               ),
             ),
           ],
@@ -112,19 +138,24 @@ final class FloatingNavBar extends StatelessWidget {
     final destination = _destinations[index];
     final selected = index == currentIndex;
     final colors = context.appColors;
+
     return Expanded(
       child: Semantics(
         button: true,
         selected: selected,
+        label: destination.label,
         child: InkWell(
-          onTap: () => onDestinationTap(index),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onDestinationTap(index);
+          },
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                destination.icon,
-                size: 20,
+                selected ? destination.filledIcon : destination.outlineIcon,
+                size: 22,
                 color: selected ? colors.primary : colors.textMuted,
               ),
               const SizedBox(height: 2),
@@ -136,7 +167,7 @@ final class FloatingNavBar extends StatelessWidget {
                     maxLines: 1,
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                       color: selected ? colors.primary : colors.textMuted,
                     ),
                   ),
@@ -153,59 +184,86 @@ final class FloatingNavBar extends StatelessWidget {
 final class _NavDestination {
   const _NavDestination({
     required this.location,
-    required this.icon,
+    required this.outlineIcon,
+    required this.filledIcon,
     required this.label,
   });
 
   final String location;
-  final IconData icon;
+  final IconData outlineIcon;
+  final IconData filledIcon;
   final String label;
 }
 
-final class _AddPurchaseButton extends StatelessWidget {
-  const _AddPurchaseButton({required this.onPressed});
+/// Raised circular center button (70dp) with blue accent glow and cutout ring.
+final class _CenterSpeedDialButton extends StatelessWidget {
+  const _CenterSpeedDialButton({
+    required this.onTap,
+    this.onLongPress,
+  });
 
-  final VoidCallback onPressed;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
     return Semantics(
       button: true,
-      label: 'Add purchase',
-      child: Material(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        elevation: 6,
-        shadowColor: colors.primary.withValues(alpha: 0.5),
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+      label: 'Add',
+      tooltip: 'Add',
+      child: Tooltip(
+        message: 'Add',
+        child: Container(
+          width: 76,
+          height: 76,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: colors.background, // Cutout ring effect
+          ),
+          alignment: Alignment.center,
           child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+            width: 68,
+            height: 68,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.pill),
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colors.primary,
+                  Color.lerp(colors.primary, Colors.blue.shade900, 0.25)!,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.primary.withValues(alpha: 0.38),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
               border: Border.all(
-                color: colors.onPrimary.withValues(alpha: 0.25),
+                color: Colors.white.withValues(alpha: 0.25),
                 width: 1.5,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add_rounded, color: colors.onPrimary, size: 22),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Add purchase',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onTap,
+                onLongPress: onLongPress,
+                child: const Center(
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),

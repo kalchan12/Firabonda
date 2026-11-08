@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-    'FloatingNavBar renders without overflow at 360dp with textScale 1.6',
+    'FloatingNavBar renders without overflow at 360dp with textScale 1.6 in dark and light theme',
     (tester) async {
       tester.view.physicalSize = const Size(360 * 2, 640 * 2);
       tester.view.devicePixelRatio = 2.0;
@@ -17,27 +17,64 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
+      for (final brightness in [Brightness.dark, Brightness.light]) {
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.build(brightness),
+              home: MediaQuery(
+                data: const MediaQueryData(
+                  size: Size(360, 640),
+                  textScaler: TextScaler.linear(1.6),
+                ),
+                child: Scaffold(
+                  bottomNavigationBar: FloatingNavBar(
+                    currentIndex: 0,
+                    onDestinationTap: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets(
+    'FloatingNavBar center button opens speed-dial with Purchase, Batch purchase, Quick sale',
+    (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             theme: AppTheme.build(Brightness.dark),
-            home: MediaQuery(
-              data: const MediaQueryData(
-                size: Size(360, 640),
-                textScaler: TextScaler.linear(1.6),
-              ),
-              child: Scaffold(
-                bottomNavigationBar: FloatingNavBar(
-                  currentIndex: 0,
-                  onDestinationTap: (_) {},
-                ),
+            home: Scaffold(
+              bottomNavigationBar: FloatingNavBar(
+                currentIndex: 0,
+                onDestinationTap: (_) {},
               ),
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
+
+      // Tap center Add button
+      await tester.tap(find.byTooltip('Add'));
+      await tester.pumpAndSettle();
+
+      // Verify speed dial options
+      expect(find.text('Purchase'), findsWidgets);
+      expect(find.text('Batch purchase'), findsOneWidget);
+      expect(find.text('Quick sale'), findsOneWidget);
+
+      // Tap close button
+      await tester.tap(find.bySemanticsLabel('Close add menu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Batch purchase'), findsNothing);
     },
   );
 

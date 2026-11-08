@@ -10,7 +10,9 @@ import '../../features/export_backup/presentation/backup_restore_screen.dart';
 import '../../features/export_backup/presentation/export_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/purchases/presentation/add_purchase_screen.dart';
+import '../../features/purchases/presentation/batch_purchase_screen.dart';
 import '../../features/purchases/presentation/purchases_screen.dart';
+import '../../features/sales/presentation/quick_sale_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/suppliers/presentation/suppliers_screen.dart';
@@ -68,6 +70,16 @@ GoRouter buildAppRouter() {
         builder: (context, state) => AddPurchaseScreen(
           initialPurchase: state.extra as PurchaseOverview?,
         ),
+      ),
+      GoRoute(
+        path: '/batch-purchase',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BatchPurchaseScreen(),
+      ),
+      GoRoute(
+        path: '/quick-sale',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const QuickSaleScreen(),
       ),
       GoRoute(
         path: '/suppliers',
