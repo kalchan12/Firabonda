@@ -55,6 +55,21 @@ final class MoreScreen extends ConsumerWidget {
               onTap: () => context.push('/debts'),
             ),
             _MoreTile(
+              icon: Icons.inventory_2_outlined,
+              label: 'Stock adjustments (Losses)',
+              onTap: () => context.push('/stock-adjustments'),
+            ),
+            _MoreTile(
+              icon: Icons.fact_check_outlined,
+              label: 'Reconciliation & audit',
+              onTap: () => context.push('/reconciliation'),
+            ),
+            _MoreTile(
+              icon: Icons.summarize_outlined,
+              label: 'Day close summary',
+              onTap: () => context.push('/day-close'),
+            ),
+            _MoreTile(
               icon: Icons.category_outlined,
               label: 'Categories & colors',
               onTap: () => context.push('/categories-colors'),

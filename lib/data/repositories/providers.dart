@@ -6,6 +6,7 @@ import 'category_repository.dart';
 import 'color_repository.dart';
 import 'debt_repository.dart';
 import 'expense_repository.dart';
+import 'inventory_repository.dart';
 import 'purchase_repository.dart';
 import 'supplier_repository.dart';
 
@@ -67,4 +68,19 @@ final expensesStreamProvider = StreamProvider<List<ExpenseRow>>((ref) {
 
 final debtsStreamProvider = StreamProvider<List<DebtRow>>((ref) {
   return ref.watch(debtRepositoryProvider).watchAll();
+});
+
+final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return LocalInventoryRepository(db);
+});
+
+final stockAdjustmentsStreamProvider =
+    StreamProvider<List<StockAdjustmentOverview>>((ref) {
+  return ref.watch(inventoryRepositoryProvider).watchStockAdjustments();
+});
+
+final reconciliationsStreamProvider =
+    StreamProvider<List<ReconciliationRow>>((ref) {
+  return ref.watch(inventoryRepositoryProvider).watchReconciliations();
 });

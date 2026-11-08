@@ -154,7 +154,8 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       throw const NotFoundException('Purchase not found');
     }
     final sold = await _soldQuantity(purchaseId);
-    return purchase.quantity - sold;
+    final adjusted = await _stockAdjustedQuantity(purchaseId);
+    return purchase.quantity - sold + adjusted;
   }
 
   @override
@@ -165,7 +166,8 @@ final class LocalPurchaseRepository implements PurchaseRepository {
         throw const NotFoundException('Purchase not found');
       }
       final sold = await _soldQuantity(input.purchaseId);
-      final stockLeft = purchase.quantity - sold;
+      final adjusted = await _stockAdjustedQuantity(input.purchaseId);
+      final stockLeft = purchase.quantity - sold + adjusted;
       switch (ShopLogic.checkSale(
         quantity: input.quantity,
         stockLeft: stockLeft,
@@ -306,6 +308,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final color = row.readTable(_db.colorOptions);
       final supplier = row.readTableOrNull(_db.suppliers);
       final sold = await _soldQuantity(purchase.id);
+      final adjusted = await _stockAdjustedQuantity(purchase.id);
       overviews.add(
         PurchaseOverview(
           id: purchase.id,
@@ -324,7 +327,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
           photoPath: purchase.photoPath,
           note: purchase.note,
           date: _asUtc(purchase.date),
-          stockLeft: purchase.quantity - sold,
+          stockLeft: purchase.quantity - sold + adjusted,
         ),
       );
     }
@@ -402,6 +405,17 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       );
     final row = await query.getSingle();
     return row.read(_db.sales.quantity.sum()) ?? 0;
+  }
+
+  Future<int> _stockAdjustedQuantity(String purchaseId) async {
+    final query = _db.selectOnly(_db.stockAdjustments)
+      ..addColumns([_db.stockAdjustments.quantityChange.sum()])
+      ..where(
+        _db.stockAdjustments.purchaseId.equals(purchaseId) &
+            _db.stockAdjustments.deletedAt.isNull(),
+      );
+    final row = await query.getSingle();
+    return row.read(_db.stockAdjustments.quantityChange.sum()) ?? 0;
   }
 }
 

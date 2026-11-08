@@ -8,10 +8,13 @@ import '../../features/debts/presentation/debts_screen.dart';
 import '../../features/expenses/presentation/expenses_screen.dart';
 import '../../features/export_backup/presentation/backup_restore_screen.dart';
 import '../../features/export_backup/presentation/export_screen.dart';
+import '../../features/inventory_adjustments/presentation/stock_adjustments_screen.dart';
 import '../../features/more/presentation/more_screen.dart';
 import '../../features/purchases/presentation/add_purchase_screen.dart';
 import '../../features/purchases/presentation/batch_purchase_screen.dart';
 import '../../features/purchases/presentation/purchases_screen.dart';
+import '../../features/reconciliation/presentation/day_close_screen.dart';
+import '../../features/reconciliation/presentation/reconciliation_screen.dart';
 import '../../features/sales/presentation/quick_sale_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -95,6 +98,21 @@ GoRouter buildAppRouter() {
         path: '/debts',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const DebtsScreen(),
+      ),
+      GoRoute(
+        path: '/stock-adjustments',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const StockAdjustmentsScreen(),
+      ),
+      GoRoute(
+        path: '/reconciliation',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ReconciliationScreen(),
+      ),
+      GoRoute(
+        path: '/day-close',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const DayCloseScreen(),
       ),
       GoRoute(
         path: '/categories-colors',

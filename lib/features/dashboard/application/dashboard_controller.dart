@@ -195,11 +195,13 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final purchasesAsync = ref.watch(purchaseOverviewsStreamProvider);
   final salesAsync = ref.watch(saleOverviewsStreamProvider);
   final expensesAsync = ref.watch(expensesStreamProvider);
+  final adjustmentsAsync = ref.watch(stockAdjustmentsStreamProvider);
   final lowStockThreshold = ref.watch(lowStockThresholdProvider);
 
   if (purchasesAsync.isLoading ||
       salesAsync.isLoading ||
-      expensesAsync.isLoading) {
+      expensesAsync.isLoading ||
+      adjustmentsAsync.isLoading) {
     return const AsyncValue.loading();
   }
 
@@ -225,6 +227,7 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final allPurchases = purchasesAsync.value ?? [];
   final allSales = salesAsync.value ?? [];
   final allExpenses = expensesAsync.value ?? [];
+  final allAdjustments = adjustmentsAsync.value ?? [];
 
   // Map purchase IDs to unitCost for fallback if costAtSale is not yet set
   final purchaseCostMap = {for (final p in allPurchases) p.id: p.unitCostCents};
@@ -270,8 +273,13 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
     }
   }
 
-  // 4. Losses in period (Step 8 stock adjustments)
-  const lossesCents = 0;
+  // 4. Losses in period (Step 8 stock adjustments: damaged, lost, personal use)
+  var lossesCents = 0;
+  for (final a in allAdjustments) {
+    if (a.reason.isLoss && periodRange.contains(a.date)) {
+      lossesCents += a.valueAtCostCents;
+    }
+  }
 
   // 5. Net profit
   final netProfitCents = ShopLogic.netProfit(

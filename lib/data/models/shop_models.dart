@@ -211,3 +211,90 @@ final class DebtInput {
   final DateTime? dueDate;
   final String? note;
 }
+
+enum StockAdjustmentReason {
+  damaged('damaged', 'Damaged in store / transit', true),
+  lost('lost', 'Missing / stolen', true),
+  personalUse('personal_use', 'Personal or family use', true),
+  returnedToSupplier('returned_to_supplier', 'Returned to supplier', false),
+  customerReturn('customer_return', 'Customer return', false),
+  countCorrection('count_correction', 'Count correction', false);
+
+  const StockAdjustmentReason(this.dbValue, this.label, this.isLoss);
+
+  final String dbValue;
+  final String label;
+  final bool isLoss;
+
+  static StockAdjustmentReason fromDbValue(String value) => values.firstWhere(
+        (r) => r.dbValue == value,
+        orElse: () => countCorrection,
+      );
+}
+
+final class StockAdjustmentInput {
+  const StockAdjustmentInput({
+    required this.purchaseId,
+    required this.categoryId,
+    required this.quantityChange,
+    required this.reason,
+    required this.valueAtCostCents,
+    required this.date,
+    this.note,
+    this.photoPath,
+  });
+
+  final String purchaseId;
+  final String categoryId;
+  final int quantityChange;
+  final StockAdjustmentReason reason;
+  final int valueAtCostCents;
+  final DateTime date;
+  final String? note;
+  final String? photoPath;
+}
+
+final class StockAdjustmentOverview {
+  const StockAdjustmentOverview({
+    required this.id,
+    required this.purchaseId,
+    required this.categoryName,
+    required this.colorName,
+    required this.quantityChange,
+    required this.reason,
+    required this.valueAtCostCents,
+    required this.date,
+    this.note,
+    this.photoPath,
+  });
+
+  final String id;
+  final String purchaseId;
+  final String categoryName;
+  final String colorName;
+  final int quantityChange;
+  final StockAdjustmentReason reason;
+  final int valueAtCostCents;
+  final DateTime date;
+  final String? note;
+  final String? photoPath;
+}
+
+final class ReconciliationInput {
+  const ReconciliationInput({
+    required this.type,
+    this.accountId,
+    required this.expectedCents,
+    required this.countedCents,
+    required this.date,
+    this.note,
+  });
+
+  final String type; // 'cash_account' or 'stock'
+  final String? accountId;
+  final int expectedCents;
+  final int countedCents;
+  final DateTime date;
+  final String? note;
+}
+
