@@ -65,6 +65,8 @@ class Purchases extends Table {
   TextColumn get photoPath => text().nullable()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get date => dateTime()();
+  TextColumn get batchId => text().nullable()();
+  TextColumn get accountId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -81,6 +83,9 @@ class Sales extends Table {
   TextColumn get purchaseId => text()();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()();
+  IntColumn get costAtSale => integer().nullable()();
+  TextColumn get accountId => text().nullable()();
+  IntColumn get paidAmount => integer().nullable()();
   DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -96,6 +101,7 @@ class Expenses extends Table {
   TextColumn get title => text()();
   IntColumn get amount => integer()();
   DateTimeColumn get date => dateTime()();
+  TextColumn get accountId => text().nullable()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -132,4 +138,122 @@ class AppMeta extends Table {
 
   @override
   Set<Column> get primaryKey => {key};
+}
+
+/// Financial accounts: Cash, Bank, Mobile money, etc.
+@DataClassName('AccountRow')
+class Accounts extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+
+  /// 'cash', 'bank', 'mobile_money', 'other'
+  TextColumn get type => text()();
+  IntColumn get openingBalance => integer().withDefault(const Constant(0))();
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Ledger entries linking all money movements to specific accounts.
+@DataClassName('AccountTransactionRow')
+@TableIndex(name: 'acc_tx_account_date', columns: {#accountId, #date})
+class AccountTransactions extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text()();
+  IntColumn get amount => integer()();
+
+  /// 'inflow' or 'outflow'
+  TextColumn get direction => text()();
+
+  /// 'purchase', 'sale', 'expense', 'debt_payment', 'transfer', 'deposit', 'withdrawal', 'reconciliation'
+  TextColumn get type => text()();
+  TextColumn get relatedId => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Batch purchases grouping multiple lot items into one supplier order.
+@DataClassName('BatchRow')
+class Batches extends Table {
+  TextColumn get id => text()();
+  TextColumn get supplierId => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  IntColumn get totalPaid => integer()();
+  TextColumn get accountId => text().nullable()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Stock adjustments for damaged, lost, or returned items.
+@DataClassName('StockAdjustmentRow')
+class StockAdjustments extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text().nullable()();
+  TextColumn get categoryId => text().nullable()();
+  IntColumn get quantityChange => integer()();
+
+  /// 'damaged', 'lost', 'returned_to_supplier', 'customer_return', 'personal_use', 'count_correction'
+  TextColumn get reason => text()();
+  IntColumn get valueAtCost => integer()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get note => text().nullable()();
+  TextColumn get photoPath => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cash & stock count reconciliations.
+@DataClassName('ReconciliationRow')
+class Reconciliations extends Table {
+  TextColumn get id => text()();
+
+  /// 'cash_account' or 'stock'
+  TextColumn get type => text()();
+  TextColumn get accountId => text().nullable()();
+  IntColumn get expected => integer()();
+  IntColumn get counted => integer()();
+  IntColumn get difference => integer()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Audit trail logging any changes or corrections to records.
+@DataClassName('EditHistoryRow')
+class EditHistory extends Table {
+  TextColumn get id => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text()();
+  TextColumn get field => text()();
+  TextColumn get oldValue => text().nullable()();
+  TextColumn get newValue => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

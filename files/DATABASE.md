@@ -37,6 +37,8 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | categoryId | text FK | -> categories |
 | colorId | text FK | -> colors |
 | supplierId | text? FK | -> suppliers |
+| batchId | text? FK | -> batches (nullable) |
+| accountId | text? FK | -> accounts (defaults to acc_cash) |
 | size | text? | optional, hidden by default |
 | quantity | int | > 0 |
 | unitCost | int | cents, >= 0 |
@@ -53,6 +55,9 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | purchaseId | text FK | -> purchases |
 | quantity | int | > 0, cannot exceed stock left |
 | unitPrice | int | cents, price sold at |
+| costAtSale | int? | cents per piece, frozen at time of sale |
+| accountId | text? FK | -> accounts (defaults to acc_cash) |
+| paidAmount | int? | cents paid at sale, remainder becomes debt |
 | date | datetime | |
 
 ### expenses
@@ -61,6 +66,7 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | id | text PK | |
 | title | text | |
 | amount | int | cents |
+| accountId | text? FK | -> accounts (defaults to acc_cash) |
 | date | datetime | |
 | note | text? | |
 
@@ -74,6 +80,73 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | dueDate | datetime? | |
 | isPaid | bool | |
 | note | text? | |
+
+### accounts
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID or preset (`acc_cash`, `acc_bank`, `acc_telebirr`) |
+| name | text | Account display name |
+| type | text | `cash`, `bank`, `mobile_money`, `other` |
+| openingBalance | int | cents (default 0) |
+| isArchived | bool | archived accounts |
+
+### account_transactions
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| accountId | text FK | -> accounts |
+| amount | int | cents (positive) |
+| direction | text | `inflow` or `outflow` |
+| type | text | `purchase`, `sale`, `expense`, `debt_payment`, `transfer`, `deposit`, `withdrawal`, `reconciliation` |
+| relatedId | text? | ID of related sale, purchase, or expense |
+| date | datetime | transaction date |
+| note | text? | |
+
+### batches
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| supplierId | text? FK | -> suppliers |
+| date | datetime | order date |
+| totalPaid | int | cents |
+| accountId | text? FK | -> accounts |
+| note | text? | |
+
+### stock_adjustments
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| purchaseId | text? FK | -> purchases |
+| categoryId | text? FK | -> categories |
+| quantityChange | int | pieces (negative for loss, positive for return) |
+| reason | text | `damaged`, `lost`, `returned_to_supplier`, `customer_return`, `personal_use`, `count_correction` |
+| valueAtCost | int | cents (qty x cost) |
+| date | datetime | adjustment date |
+| note | text? | |
+| photoPath | text? | optional photo of damage |
+
+### reconciliations
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| type | text | `cash_account` or `stock` |
+| accountId | text? FK | -> accounts |
+| expected | int | expected cents or pieces |
+| counted | int | actual counted cents or pieces |
+| difference | int | counted - expected |
+| date | datetime | reconciliation date |
+| note | text? | |
+
+### edit_history
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| entityType | text | `purchase`, `sale`, `expense`, etc. |
+| entityId | text | ID of target entity |
+| field | text | changed field name |
+| oldValue | text? | stringified old value |
+| newValue | text? | stringified new value |
+| date | datetime | change timestamp |
 
 ### app_meta
 Holds the database schema version and seed version.

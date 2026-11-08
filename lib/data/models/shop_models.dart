@@ -34,12 +34,18 @@ final class SaleInput {
     required this.quantity,
     required this.unitPriceCents,
     required this.date,
+    this.costAtSaleCents,
+    this.accountId = 'acc_cash',
+    this.paidAmountCents,
   });
 
   final String purchaseId;
   final int quantity;
   final int unitPriceCents;
   final DateTime date;
+  final int? costAtSaleCents;
+  final String? accountId;
+  final int? paidAmountCents;
 }
 
 /// A purchase row joined with its category/color names and remaining stock.
@@ -95,6 +101,9 @@ final class SaleOverview {
     required this.unitCostCents,
     required this.date,
     required this.profitCents,
+    this.costAtSaleCents,
+    this.accountId = 'acc_cash',
+    this.paidAmountCents,
   });
 
   final String id;
@@ -106,6 +115,9 @@ final class SaleOverview {
   final int unitCostCents;
   final DateTime date;
   final int profitCents;
+  final int? costAtSaleCents;
+  final String? accountId;
+  final int? paidAmountCents;
 }
 
 /// Direction of a debt entry.

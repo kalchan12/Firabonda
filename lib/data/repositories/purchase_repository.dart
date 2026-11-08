@@ -176,6 +176,10 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       }
       final saleId = newUuid();
       final now = DateTime.now().toUtc();
+      final costAtSale = input.costAtSaleCents ?? purchase.unitCost;
+      final paidAmount =
+          input.paidAmountCents ?? (input.unitPriceCents * input.quantity);
+
       await _db
           .into(_db.sales)
           .insert(
@@ -184,6 +188,9 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               purchaseId: input.purchaseId,
               quantity: input.quantity,
               unitPrice: input.unitPriceCents,
+              costAtSale: Value(costAtSale),
+              accountId: Value(input.accountId ?? 'acc_cash'),
+              paidAmount: Value(paidAmount),
               date: _utc(input.date),
               createdAt: now,
               updatedAt: now,
@@ -225,6 +232,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
         final purchase = row.readTable(_db.purchases);
         final category = row.readTable(_db.categories);
         final color = row.readTable(_db.colorOptions);
+        final costPerPiece = sale.costAtSale ?? purchase.unitCost;
         return SaleOverview(
           id: sale.id,
           purchaseId: sale.purchaseId,
@@ -232,9 +240,12 @@ final class LocalPurchaseRepository implements PurchaseRepository {
           colorName: color.name,
           quantity: sale.quantity,
           unitPriceCents: sale.unitPrice,
-          unitCostCents: purchase.unitCost,
+          unitCostCents: costPerPiece,
           date: _asUtc(sale.date),
-          profitCents: (sale.unitPrice - purchase.unitCost) * sale.quantity,
+          profitCents: (sale.unitPrice - costPerPiece) * sale.quantity,
+          costAtSaleCents: sale.costAtSale,
+          accountId: sale.accountId,
+          paidAmountCents: sale.paidAmount,
         );
       }).toList(),
     );

@@ -66,6 +66,35 @@ Future<void> seed(AppDatabase db) {
             updatedAt: now,
           ),
       ], mode: InsertMode.insertOrIgnore);
+      batch.insertAll(db.accounts, [
+        AccountsCompanion.insert(
+          id: 'acc_cash',
+          name: 'Cash',
+          type: 'cash',
+          openingBalance: const Value(0),
+          isArchived: const Value(false),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        AccountsCompanion.insert(
+          id: 'acc_bank',
+          name: 'Bank',
+          type: 'bank',
+          openingBalance: const Value(0),
+          isArchived: const Value(false),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        AccountsCompanion.insert(
+          id: 'acc_telebirr',
+          name: 'Mobile Money',
+          type: 'mobile_money',
+          openingBalance: const Value(0),
+          isArchived: const Value(false),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ], mode: InsertMode.insertOrIgnore);
     });
 
     await db
