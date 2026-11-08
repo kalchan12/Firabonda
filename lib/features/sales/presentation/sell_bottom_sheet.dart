@@ -35,8 +35,13 @@ final class SellBottomSheet extends ConsumerStatefulWidget {
 
 final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
   final _unitPrice = TextEditingController();
+  final _paidAmountController = TextEditingController();
+  final _customerNameController = TextEditingController();
+
   int _quantity = 1;
   bool _isSaving = false;
+  bool _isPartialPayment = false;
+  String _selectedAccountId = 'acc_cash';
 
   @override
   void initState() {
@@ -44,19 +49,34 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
     final sellingPrice = widget.purchase.sellingPriceCents;
     if (sellingPrice != null && sellingPrice > 0) {
       _unitPrice.text = Money.amount(sellingPrice);
+    } else {
+      // 100% target profit default (2x cost)
+      _unitPrice.text = Money.amount(widget.purchase.unitCostCents * 2);
     }
     _unitPrice.addListener(() => setState(() {}));
+    _paidAmountController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _unitPrice.dispose();
+    _paidAmountController.dispose();
+    _customerNameController.dispose();
     super.dispose();
   }
 
   int? get _parsedPriceCents {
     try {
       return Money.parseCents(_unitPrice.text);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int? get _parsedPaidAmountCents {
+    try {
+      if (_paidAmountController.text.trim().isEmpty) return null;
+      return Money.parseCents(_paidAmountController.text);
     } catch (_) {
       return null;
     }
@@ -81,6 +101,20 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
       return;
     }
 
+    final totalRevenue = priceCents * _quantity;
+    int? paidAmount;
+    if (_isPartialPayment) {
+      paidAmount = _parsedPaidAmountCents ?? 0;
+      if (paidAmount > totalRevenue) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paid amount cannot exceed total revenue'),
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(purchaseRepositoryProvider);
@@ -90,6 +124,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
           quantity: _quantity,
           unitPriceCents: priceCents,
           date: DateTime.now(),
+          accountId: _selectedAccountId,
+          paidAmountCents: paidAmount,
+          customerName: _customerNameController.text.trim(),
         ),
       );
 
@@ -106,7 +143,13 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
             : Money.etb(profit);
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sale recorded! ($profitStr profit)')),
+          SnackBar(
+            content: Text(
+              _isPartialPayment && (paidAmount ?? totalRevenue) < totalRevenue
+                  ? 'Sale recorded! Unpaid balance logged in Debts.'
+                  : 'Sale recorded! ($profitStr profit)',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -136,6 +179,10 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
         : 0;
 
     final revenue = hasPrice ? priceCents * _quantity : 0;
+    final paidAmount = _isPartialPayment
+        ? (_parsedPaidAmountCents ?? 0)
+        : revenue;
+    final unpaidBalance = (revenue - paidAmount).clamp(0, revenue);
     final colorVal = purchase.colorHex;
 
     return Padding(
@@ -309,7 +356,133 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                 controller: _unitPrice,
                 quantity: _quantity,
               ),
+              const SizedBox(height: AppSpacing.xs),
+
+              // Pricing quick presets (Step 6)
+              Wrap(
+                spacing: 8,
+                children: [
+                  ActionChip(
+                    avatar: const Icon(Icons.bolt, size: 16),
+                    label: const Text('100% Target (2x)'),
+                    onPressed: () {
+                      _unitPrice.text = Money.amount(
+                        widget.purchase.unitCostCents * 2,
+                      );
+                    },
+                  ),
+                  ActionChip(
+                    label: const Text('+50%'),
+                    onPressed: () {
+                      _unitPrice.text = Money.amount(
+                        (widget.purchase.unitCostCents * 1.5).round(),
+                      );
+                    },
+                  ),
+                  ActionChip(
+                    label: const Text('+75%'),
+                    onPressed: () {
+                      _unitPrice.text = Money.amount(
+                        (widget.purchase.unitCostCents * 1.75).round(),
+                      );
+                    },
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.m),
+
+              // Payment Account Selection
+              Row(
+                children: [
+                  Text(
+                    'Payment to:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.m),
+                  ChoiceChip(
+                    label: const Text('Cash'),
+                    selected: _selectedAccountId == 'acc_cash',
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedAccountId = 'acc_cash');
+                    },
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  ChoiceChip(
+                    label: const Text('Telebirr'),
+                    selected: _selectedAccountId == 'acc_telebirr',
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _selectedAccountId = 'acc_telebirr');
+                      }
+                    },
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  ChoiceChip(
+                    label: const Text('Bank'),
+                    selected: _selectedAccountId == 'acc_bank',
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedAccountId = 'acc_bank');
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.m),
+
+              // Partial Payment toggle
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(
+                  'Partial payment / Customer debt',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'Unpaid balance will be recorded in Debts',
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
+                value: _isPartialPayment,
+                onChanged: (val) {
+                  setState(() {
+                    _isPartialPayment = val;
+                    if (val && _paidAmountController.text.isEmpty) {
+                      _paidAmountController.text = Money.amount(revenue ~/ 2);
+                    }
+                  });
+                },
+              ),
+
+              if (_isPartialPayment) ...[
+                const SizedBox(height: AppSpacing.xs),
+                TextField(
+                  controller: _customerNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Customer name',
+                    hintText: 'e.g. Abebe',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s),
+                MoneyField(
+                  label: 'Amount paid now',
+                  controller: _paidAmountController,
+                ),
+                if (unpaidBalance > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 6),
+                    child: Text(
+                      'Customer will owe: ${Money.etb(unpaidBalance)}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.loss,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.s),
+              ],
 
               // Live Profit Card
               AppCard(

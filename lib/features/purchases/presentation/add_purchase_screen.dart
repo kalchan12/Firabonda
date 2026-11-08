@@ -550,6 +550,33 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
               controller: _sellingPrice,
               helperText: 'Prefills price when marking items as sold',
             ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: 8,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.bolt, size: 16),
+                  label: const Text('100% Target (2x cost)'),
+                  onPressed: () {
+                    final cost = _tryParseCents(_unitCost.text);
+                    if (cost != null && cost > 0) {
+                      final targetPrice = cost * 2;
+                      _sellingPrice.text = Money.amount(targetPrice);
+                    }
+                  },
+                ),
+                ActionChip(
+                  label: const Text('+50% markup'),
+                  onPressed: () {
+                    final cost = _tryParseCents(_unitCost.text);
+                    if (cost != null && cost > 0) {
+                      final targetPrice = (cost * 1.5).round();
+                      _sellingPrice.text = Money.amount(targetPrice);
+                    }
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.m),
 
             // Optional Supplier

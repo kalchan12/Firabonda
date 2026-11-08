@@ -177,8 +177,8 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final saleId = newUuid();
       final now = DateTime.now().toUtc();
       final costAtSale = input.costAtSaleCents ?? purchase.unitCost;
-      final paidAmount =
-          input.paidAmountCents ?? (input.unitPriceCents * input.quantity);
+      final totalRevenue = input.unitPriceCents * input.quantity;
+      final paidAmount = input.paidAmountCents ?? totalRevenue;
 
       await _db
           .into(_db.sales)
@@ -196,6 +196,30 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               updatedAt: now,
             ),
           );
+
+      // Auto-record unpaid balance as receivable in debts (Step 6)
+      final unpaid = totalRevenue - paidAmount;
+      if (unpaid > 0) {
+        final debtId = newUuid();
+        final debtor =
+            (input.customerName != null && input.customerName!.trim().isNotEmpty)
+                ? input.customerName!.trim()
+                : 'Customer (Sale)';
+        await _db.into(_db.debts).insert(
+          DebtsCompanion.insert(
+            id: debtId,
+            personName: debtor,
+            amount: unpaid,
+            direction: 'owed_to_me',
+            isPaid: false,
+            note: Value(
+              'Unpaid balance from sale of ${input.quantity}x items',
+            ),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
       return saleId;
     });
   }

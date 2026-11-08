@@ -37,6 +37,7 @@ final class SaleInput {
     this.costAtSaleCents,
     this.accountId = 'acc_cash',
     this.paidAmountCents,
+    this.customerName,
   });
 
   final String purchaseId;
@@ -46,6 +47,7 @@ final class SaleInput {
   final int? costAtSaleCents;
   final String? accountId;
   final int? paidAmountCents;
+  final String? customerName;
 }
 
 /// A purchase row joined with its category/color names and remaining stock.
