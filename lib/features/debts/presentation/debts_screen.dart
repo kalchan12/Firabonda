@@ -37,7 +37,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add Debt Record',
-            onPressed: () => _showAddDebtDialog(context, defaultDirection: _tab),
+            onPressed: () =>
+                _showAddDebtDialog(context, defaultDirection: _tab),
           ),
         ],
       ),
@@ -106,10 +107,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: (_tab == DebtDirection.owedToMe
-                                            ? colors.warning
-                                            : colors.loss)
-                                        .withValues(alpha: 0.12),
+                                    color:
+                                        (_tab == DebtDirection.owedToMe
+                                                ? colors.warning
+                                                : colors.loss)
+                                            .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
@@ -218,7 +220,10 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             final colors = context.appColors;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-            return Padding(
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
               padding: EdgeInsets.only(
                 left: AppSpacing.screenPadding,
                 right: AppSpacing.screenPadding,
@@ -276,10 +281,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                       autofocus: true,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    MoneyField(
-                      label: 'Amount',
-                      controller: amountController,
-                    ),
+                    MoneyField(label: 'Amount', controller: amountController),
                     const SizedBox(height: AppSpacing.m),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -290,7 +292,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                             ? 'No due date set'
                             : DateFormat.yMMMd().format(dueDate!),
                         style: TextStyle(
-                          color: dueDate == null ? colors.textMuted : colors.primary,
+                          color: dueDate == null
+                              ? colors.textMuted
+                              : colors.primary,
                         ),
                       ),
                       trailing: dueDate != null
@@ -302,9 +306,15 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: dueDate ?? DateTime.now().add(const Duration(days: 7)),
-                          firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDate: DateTime.now().add(const Duration(days: 730)),
+                          initialDate:
+                              dueDate ??
+                              DateTime.now().add(const Duration(days: 7)),
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 365),
+                          ),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 730),
+                          ),
                         );
                         if (picked != null) {
                           setState(() => dueDate = picked);
@@ -324,11 +334,14 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                       child: FilledButton(
                         onPressed: () async {
                           final name = nameController.text.trim();
-                          final amountCents =
-                              Money.parseCents(amountController.text);
+                          final amountCents = Money.parseCents(
+                            amountController.text,
+                          );
                           if (name.isEmpty || amountCents <= 0) return;
 
-                          await ref.read(debtRepositoryProvider).add(
+                          await ref
+                              .read(debtRepositoryProvider)
+                              .add(
                                 DebtInput(
                                   personName: name,
                                   amountCents: amountCents,
@@ -354,10 +367,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
     );
   }
 
-  void _confirmDeleteDebt(
-    BuildContext context,
-    DebtRow debt,
-  ) {
+  void _confirmDeleteDebt(BuildContext context, DebtRow debt) {
     showDialog<void>(
       context: context,
       builder: (ctx) {
@@ -378,7 +388,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                 await ref.read(debtRepositoryProvider).softDelete(debt.id);
                 nav.pop();
                 messenger.showSnackBar(
-                  SnackBar(content: Text('Deleted debt record for ${debt.personName}')),
+                  SnackBar(
+                    content: Text('Deleted debt record for ${debt.personName}'),
+                  ),
                 );
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -427,8 +439,9 @@ final class _DebtCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        decoration:
-                            debt.isPaid ? TextDecoration.lineThrough : null,
+                        decoration: debt.isPaid
+                            ? TextDecoration.lineThrough
+                            : null,
                         color: debt.isPaid
                             ? colors.textMuted
                             : colors.textPrimary,
@@ -465,9 +478,12 @@ final class _DebtCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      decoration:
-                          debt.isPaid ? TextDecoration.lineThrough : null,
-                      color: debt.isPaid ? colors.textMuted : colors.textPrimary,
+                      decoration: debt.isPaid
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: debt.isPaid
+                          ? colors.textMuted
+                          : colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),

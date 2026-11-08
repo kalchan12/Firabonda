@@ -37,9 +37,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Backup & Restore'),
-      ),
+      appBar: AppBar(title: const Text('Backup & Restore')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -125,7 +123,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                                   await BackupService.createBackup(db);
                                 } catch (e) {
                                   messenger.showSnackBar(
-                                    SnackBar(content: Text('Backup failed: $e')),
+                                    SnackBar(
+                                      content: Text('Backup failed: $e'),
+                                    ),
                                   );
                                 } finally {
                                   if (mounted) {
@@ -200,7 +200,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 const SizedBox(height: AppSpacing.m),
                 AppTextField(
                   label: 'Backup file path',
-                  hintText: '/storage/emulated/0/Download/firabonda_backup.sqlite',
+                  hintText:
+                      '/storage/emulated/0/Download/firabonda_backup.sqlite',
                   controller: _restorePathController,
                 ),
                 const SizedBox(height: AppSpacing.l),

@@ -8,7 +8,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../../data/database/app_database.dart';
 
 final class InvalidBackupException implements Exception {
-  const InvalidBackupException([this.message = 'The selected file is not a valid SQLite database backup.']);
+  const InvalidBackupException([
+    this.message = 'The selected file is not a valid SQLite database backup.',
+  ]);
   final String message;
 
   @override

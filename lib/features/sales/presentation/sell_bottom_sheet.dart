@@ -101,8 +101,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
           unitPriceCents: priceCents,
           unitCostCents: widget.purchase.unitCostCents,
         );
-        final profitStr =
-            profit >= 0 ? '+${Money.etb(profit)}' : Money.etb(profit);
+        final profitStr = profit >= 0
+            ? '+${Money.etb(profit)}'
+            : Money.etb(profit);
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sale recorded! ($profitStr profit)')),
@@ -110,9 +111,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error recording sale: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error recording sale: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -142,6 +143,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: const BorderRadius.vertical(
@@ -174,12 +178,15 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Record Sale',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+                  Expanded(
+                    child: Text(
+                      'Record Sale',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
@@ -221,26 +228,38 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '${purchase.categoryName} • ${purchase.colorName}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
+                  Expanded(
+                    child: Text(
+                      '${purchase.categoryName} • ${purchase.colorName}',
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    'Cost: ${Money.etb(purchase.unitCostCents)}',
-                    style: TextStyle(fontSize: 13, color: colors.textMuted),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Cost: ${Money.etb(purchase.unitCostCents)}',
+                        maxLines: 1,
+                        style: TextStyle(fontSize: 13, color: colors.textMuted),
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.l),
 
               // Quantity Stepper
-              Text('Quantity to sell',
-                  style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                'Quantity to sell',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
               const SizedBox(height: AppSpacing.s),
               Row(
                 children: [
@@ -299,19 +318,28 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Total revenue',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colors.textMuted,
+                        Flexible(
+                          child: Text(
+                            'Total revenue',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ),
-                        Text(
-                          hasPrice ? Money.etb(revenue) : '—',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              hasPrice ? Money.etb(revenue) : '—',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -322,26 +350,37 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Estimated profit',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textPrimary,
+                        Flexible(
+                          child: Text(
+                            'Estimated profit',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
                           ),
                         ),
-                        Text(
-                          hasPrice
-                              ? (profit >= 0
-                                  ? '+${Money.etb(profit)}'
-                                  : Money.etb(profit))
-                              : '—',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: !hasPrice
-                                ? colors.textMuted
-                                : (profit >= 0 ? colors.profit : colors.loss),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              hasPrice
+                                  ? (profit >= 0
+                                      ? '+${Money.etb(profit)}'
+                                      : Money.etb(profit))
+                                  : '—',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: !hasPrice
+                                    ? colors.textMuted
+                                    : (profit >= 0
+                                        ? colors.profit
+                                        : colors.loss),
+                              ),
+                            ),
                           ),
                         ),
                       ],

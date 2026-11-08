@@ -126,9 +126,7 @@ final class _CustomColorDialogState extends State<CustomColorDialog> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Color(
-                          int.parse(hex.replaceFirst('#', '0xFF')),
-                        ),
+                        color: Color(int.parse(hex.replaceFirst('#', '0xFF'))),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _selectedHex == hex

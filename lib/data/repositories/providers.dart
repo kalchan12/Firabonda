@@ -51,8 +51,9 @@ final suppliersStreamProvider = StreamProvider<List<SupplierRow>>((ref) {
   return ref.watch(supplierRepositoryProvider).watchAll();
 });
 
-final purchaseOverviewsStreamProvider =
-    StreamProvider<List<PurchaseOverview>>((ref) {
+final purchaseOverviewsStreamProvider = StreamProvider<List<PurchaseOverview>>((
+  ref,
+) {
   return ref.watch(purchaseRepositoryProvider).watchOverviews();
 });
 

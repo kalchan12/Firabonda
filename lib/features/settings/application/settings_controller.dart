@@ -42,5 +42,5 @@ final class LowStockThresholdController extends Notifier<int> {
 
 final lowStockThresholdProvider =
     NotifierProvider<LowStockThresholdController, int>(
-  LowStockThresholdController.new,
-);
+      LowStockThresholdController.new,
+    );

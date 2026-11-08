@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_dimensions.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'app_card.dart';
 
 /// Tone for a [StatTile] value, mapping to token colors.
@@ -96,13 +97,16 @@ final class _CountUpText extends StatelessWidget {
           ),
         );
       },
-      child: Text(
-        value,
-        style: TextStyle(
-          fontSize: large ? 34 : 22,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-          color: color,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          value,
+          style: AppTypography.moneyStyle(
+            fontSize: large ? 32 : 20,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
       ),
     );

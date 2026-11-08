@@ -19,9 +19,7 @@ final class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -65,7 +63,10 @@ final class SettingsScreen extends ConsumerWidget {
                           ),
                           ButtonSegment(
                             value: ThemeMode.system,
-                            icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                            icon: Icon(
+                              Icons.brightness_auto_outlined,
+                              size: 18,
+                            ),
                             label: Text('System'),
                           ),
                         ],
@@ -142,8 +143,8 @@ final class SettingsScreen extends ConsumerWidget {
                           icon: const Icon(Icons.remove, size: 16),
                           onPressed: lowStockThreshold > 1
                               ? () => ref
-                                  .read(lowStockThresholdProvider.notifier)
-                                  .setThreshold(lowStockThreshold - 1)
+                                    .read(lowStockThresholdProvider.notifier)
+                                    .setThreshold(lowStockThreshold - 1)
                               : null,
                         ),
                         Padding(
@@ -182,10 +183,7 @@ final class SettingsScreen extends ConsumerWidget {
           AppCard(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                Icons.currency_exchange,
-                color: colors.primary,
-              ),
+              leading: Icon(Icons.currency_exchange, color: colors.primary),
               title: const Text('Currency'),
               subtitle: const Text('Ethiopian Birr (ETB)'),
               trailing: const Text(

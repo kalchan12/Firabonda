@@ -61,8 +61,10 @@ final class SalesScreen extends ConsumerWidget {
                   );
                 }
 
-                final totalProfit =
-                    sales.fold<int>(0, (sum, s) => sum + s.profitCents);
+                final totalProfit = sales.fold<int>(
+                  0,
+                  (sum, s) => sum + s.profitCents,
+                );
                 final totalRevenue = sales.fold<int>(
                   0,
                   (sum, s) => sum + (s.unitPriceCents * s.quantity),
@@ -267,10 +269,7 @@ final class _SaleItemCard extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.unitCostCents)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.textMuted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
                   ),
                 ],
               ),
@@ -290,10 +289,7 @@ final class _SaleItemCard extends ConsumerWidget {
                 ),
                 Text(
                   DateFormat.jm().format(sale.date),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.textMuted,
-                  ),
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
                 ),
               ],
             ),

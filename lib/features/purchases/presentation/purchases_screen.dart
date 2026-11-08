@@ -43,7 +43,9 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
     return DateFormat.yMMMd().format(date);
   }
 
-  Map<String, List<PurchaseOverview>> _groupByDate(List<PurchaseOverview> list) {
+  Map<String, List<PurchaseOverview>> _groupByDate(
+    List<PurchaseOverview> list,
+  ) {
     final map = <String, List<PurchaseOverview>>{};
     for (final item in list) {
       final key = _formatDateGroup(item.date);
@@ -161,7 +163,8 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
             purchasesAsync.when(
               data: (purchases) {
                 if (purchases.isEmpty) {
-                  final isFiltering = filters.searchQuery.isNotEmpty ||
+                  final isFiltering =
+                      filters.searchQuery.isNotEmpty ||
                       filters.categoryId != null;
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -172,12 +175,15 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                       message: isFiltering
                           ? 'No matching purchases found. Try clearing the search or category filter.'
                           : 'No purchases yet. Tap "+ Add purchase" to record your clothing inventory.',
-                      actionLabel:
-                          isFiltering ? 'Clear filters' : 'Add purchase',
+                      actionLabel: isFiltering
+                          ? 'Clear filters'
+                          : 'Add purchase',
                       onAction: isFiltering
                           ? () {
                               _searchController.clear();
-                              ref.read(purchaseFiltersProvider.notifier).reset();
+                              ref
+                                  .read(purchaseFiltersProvider.notifier)
+                                  .reset();
                             }
                           : () => context.push('/add-purchase'),
                     ),
@@ -187,51 +193,46 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                 final grouped = _groupByDate(purchases);
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final dateKey = grouped.keys.elementAt(index);
-                      final items = grouped[dateKey]!;
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final dateKey = grouped.keys.elementAt(index);
+                    final items = grouped[dateKey]!;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenPadding,
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.s,
-                              ),
-                              child: Text(
-                                dateKey,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textMuted,
-                                  letterSpacing: 0.5,
-                                ),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.s,
+                            ),
+                            child: Text(
+                              dateKey,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textMuted,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                            for (final purchase in items)
-                              _PurchaseItemCard(
-                                purchase: purchase,
-                                onTap: () => context.push(
-                                  '/add-purchase',
-                                  extra: purchase,
-                                ),
-                                onSell: () => showSellBottomSheet(
-                                  context,
-                                  purchase,
-                                ),
+                          ),
+                          for (final purchase in items)
+                            _PurchaseItemCard(
+                              purchase: purchase,
+                              onTap: () => context.push(
+                                '/add-purchase',
+                                extra: purchase,
                               ),
-                          ],
-                        ),
-                      );
-                    },
-                    childCount: grouped.length,
-                  ),
+                              onSell: () =>
+                                  showSellBottomSheet(context, purchase),
+                            ),
+                        ],
+                      ),
+                    );
+                  }, childCount: grouped.length),
                 );
               },
               loading: () => SliverToBoxAdapter(
@@ -319,8 +320,7 @@ final class _PurchaseItemCard extends StatelessWidget {
                         builder: (ctx) => Dialog(
                           backgroundColor: Colors.transparent,
                           child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.card),
+                            borderRadius: BorderRadius.circular(AppRadius.card),
                             child: Image.file(
                               File(purchase.photoPath!),
                               fit: BoxFit.contain,
@@ -338,7 +338,8 @@ final class _PurchaseItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: (purchase.photoPath != null &&
+                    child:
+                        (purchase.photoPath != null &&
                             File(purchase.photoPath!).existsSync())
                         ? Image.file(
                             File(purchase.photoPath!),
@@ -413,10 +414,7 @@ final class _PurchaseItemCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         'Cost: ${Money.etb(purchase.unitCostCents)} each • Qty: ${purchase.quantity}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colors.textMuted,
-                        ),
+                        style: TextStyle(fontSize: 13, color: colors.textMuted),
                       ),
                     ],
                   ),
@@ -432,8 +430,8 @@ final class _PurchaseItemCard extends StatelessWidget {
                     color: isSoldOut
                         ? colors.surfaceVariant
                         : (isLowStock
-                            ? colors.warning.withValues(alpha: 0.15)
-                            : colors.profit.withValues(alpha: 0.15)),
+                              ? colors.warning.withValues(alpha: 0.15)
+                              : colors.profit.withValues(alpha: 0.15)),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(

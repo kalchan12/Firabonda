@@ -33,10 +33,16 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     final sales = salesAsync.value ?? [];
     final expenses = expensesAsync.value ?? [];
 
-    final startOfMonth =
-        DateTime(_selectedMonth.year, _selectedMonth.month, 1).toUtc();
-    final endOfMonth =
-        DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1).toUtc();
+    final startOfMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month,
+      1,
+    ).toUtc();
+    final endOfMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      1,
+    ).toUtc();
 
     final mPurchases = purchases.where((p) {
       final d = p.date.toUtc();
@@ -74,9 +80,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Export Report'),
-      ),
+      appBar: AppBar(title: const Text('Export Report')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -139,13 +143,25 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           AppCard(
             child: Column(
               children: [
-                _PreviewRow(label: 'Purchases (Spent)', value: Money.etb(spentCents)),
+                _PreviewRow(
+                  label: 'Purchases (Spent)',
+                  value: Money.etb(spentCents),
+                ),
                 const Divider(height: 16),
-                _PreviewRow(label: 'Sales (Earned)', value: Money.etb(earnedCents)),
+                _PreviewRow(
+                  label: 'Sales (Earned)',
+                  value: Money.etb(earnedCents),
+                ),
                 const Divider(height: 16),
-                _PreviewRow(label: 'Sales count', value: '${mSales.length} sales'),
+                _PreviewRow(
+                  label: 'Sales count',
+                  value: '${mSales.length} sales',
+                ),
                 const Divider(height: 16),
-                _PreviewRow(label: 'Expenses deducted', value: Money.etb(expenseCents)),
+                _PreviewRow(
+                  label: 'Expenses deducted',
+                  value: Money.etb(expenseCents),
+                ),
                 const Divider(height: 16),
                 _PreviewRow(
                   label: 'Real Net Profit',
@@ -232,14 +248,17 @@ final class _PreviewRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-            color: colors.textMuted,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              color: colors.textMuted,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(

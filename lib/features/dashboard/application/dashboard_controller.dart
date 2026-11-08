@@ -11,7 +11,7 @@ final selectedPeriodProvider = NotifierProvider<_PeriodNotifier, Period>(
 
 final class _PeriodNotifier extends Notifier<Period> {
   @override
-  Period build() => Period.week;
+  Period build() => Period.today;
 
   void setPeriod(Period period) => state = period;
 }
@@ -108,7 +108,9 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   // 2. Sales in period
   final periodSales = allSales.where((s) {
     final sDateUtc = s.date.isUtc ? s.date : s.date.toUtc();
-    return sDateUtc.isAfter(startUtc.subtract(const Duration(microseconds: 1))) &&
+    return sDateUtc.isAfter(
+          startUtc.subtract(const Duration(microseconds: 1)),
+        ) &&
         sDateUtc.isBefore(endUtc);
   }).toList();
 
@@ -143,8 +145,10 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
     ),
   );
   final stockValueCents = ShopLogic.stockValue(positions);
-  final unsoldItemsCount =
-      allPurchases.fold<int>(0, (sum, p) => sum + p.stockLeft);
+  final unsoldItemsCount = allPurchases.fold<int>(
+    0,
+    (sum, p) => sum + p.stockLeft,
+  );
 
   // 6. Low stock items
   final lowStockItems = allPurchases
@@ -226,8 +230,11 @@ List<double> _calculateChartPoints(
   if (period == Period.week) {
     final now = DateTime.now();
     for (var i = 0; i < 7; i++) {
-      final day = DateTime(now.year, now.month, now.day)
-          .subtract(Duration(days: 6 - i));
+      final day = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 6 - i));
       var dayProfit = 0;
       for (final s in sales) {
         final local = s.date.toLocal();

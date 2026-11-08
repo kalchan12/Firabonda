@@ -67,8 +67,8 @@ final class PurchaseFiltersNotifier extends Notifier<PurchaseFilters> {
 
 final purchaseFiltersProvider =
     NotifierProvider<PurchaseFiltersNotifier, PurchaseFilters>(
-  PurchaseFiltersNotifier.new,
-);
+      PurchaseFiltersNotifier.new,
+    );
 
 final filteredPurchasesProvider = Provider<AsyncValue<List<PurchaseOverview>>>((
   ref,
@@ -78,15 +78,13 @@ final filteredPurchasesProvider = Provider<AsyncValue<List<PurchaseOverview>>>((
 
   return purchasesAsync.whenData((list) {
     return list.where((item) {
-      if (filters.categoryId != null &&
-          item.categoryId != filters.categoryId) {
+      if (filters.categoryId != null && item.categoryId != filters.categoryId) {
         return false;
       }
       if (filters.colorId != null && item.colorId != filters.colorId) {
         return false;
       }
-      if (filters.supplierId != null &&
-          item.supplierId != filters.supplierId) {
+      if (filters.supplierId != null && item.supplierId != filters.supplierId) {
         return false;
       }
       if (filters.dateRange != null) {
@@ -114,8 +112,10 @@ final filteredPurchasesProvider = Provider<AsyncValue<List<PurchaseOverview>>>((
 
 typedef PriceMemoryQuery = ({String categoryId, String? colorId});
 
-final priceMemoryProvider =
-    FutureProvider.family<int?, PriceMemoryQuery>((ref, query) async {
+final priceMemoryProvider = FutureProvider.family<int?, PriceMemoryQuery>((
+  ref,
+  query,
+) async {
   final repo = ref.watch(purchaseRepositoryProvider);
   return repo.lastPricePaid(
     categoryId: query.categoryId,

@@ -121,9 +121,9 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick photo: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick photo: $e')));
       }
     }
   }
@@ -137,9 +137,9 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       setState(() => _selectedCategoryId = created.id);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not add category: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not add category: $e')));
       }
     }
   }
@@ -153,9 +153,9 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       setState(() => _selectedColorId = created.id);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not add color: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not add color: $e')));
       }
     }
   }
@@ -181,20 +181,22 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
   }
 
   Future<void> _save() async {
-    final categoryId = _selectedCategoryId ??
+    final categoryId =
+        _selectedCategoryId ??
         ref.read(categoriesStreamProvider).value?.firstOrNull?.id;
     if (categoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
       return;
     }
-    final colorId = _selectedColorId ??
+    final colorId =
+        _selectedColorId ??
         ref.read(colorsStreamProvider).value?.firstOrNull?.id;
     if (colorId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a color')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a color')));
       return;
     }
     final unitCostCents = _tryParseCents(_unitCost.text);
@@ -247,9 +249,9 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving purchase: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving purchase: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -290,9 +292,9 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       await repo.softDelete(initial.id);
       await HapticFeedback.mediumImpact();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Purchase deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Purchase deleted')));
         context.pop();
       }
     }
@@ -306,10 +308,10 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
     final suppliersAsync = ref.watch(suppliersStreamProvider);
     final showSizeSetting = ref.watch(showSizeFieldProvider);
 
-    final activeCategoryId = _selectedCategoryId ??
-        categoriesAsync.value?.firstOrNull?.id;
-    final activeColorId = _selectedColorId ??
-        colorsAsync.value?.firstOrNull?.id;
+    final activeCategoryId =
+        _selectedCategoryId ?? categoriesAsync.value?.firstOrNull?.id;
+    final activeColorId =
+        _selectedColorId ?? colorsAsync.value?.firstOrNull?.id;
 
     // Price memory lookup
     final priceMemoryAsync = activeCategoryId == null
@@ -438,9 +440,7 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
                       : null,
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.l,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
                   child: Text(
                     '$_quantity',
                     style: const TextStyle(

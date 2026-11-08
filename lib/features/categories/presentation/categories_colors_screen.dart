@@ -160,11 +160,9 @@ class _CategoriesColorsScreenState
               onPressed: () async {
                 final name = controller.text.trim();
                 if (name.isEmpty) return;
-                await ref.read(categoryRepositoryProvider).rename(
-                      category.id,
-                      name: name,
-                      icon: category.icon,
-                    );
+                await ref
+                    .read(categoryRepositoryProvider)
+                    .rename(category.id, name: name, icon: category.icon);
                 if (ctx.mounted) Navigator.of(ctx).pop();
               },
               child: const Text('Save'),
@@ -213,10 +211,9 @@ class _CategoriesColorsScreenState
                 if (!hex.startsWith('#')) hex = '#$hex';
                 if (hex.length != 7) return;
 
-                await ref.read(colorRepositoryProvider).add(
-                      name: name,
-                      hex: hex,
-                    );
+                await ref
+                    .read(colorRepositoryProvider)
+                    .add(name: name, hex: hex);
                 if (ctx.mounted) Navigator.of(ctx).pop();
               },
               child: const Text('Add'),
@@ -244,10 +241,7 @@ class _CategoriesColorsScreenState
                 autofocus: true,
               ),
               const SizedBox(height: AppSpacing.m),
-              AppTextField(
-                label: 'Hex code',
-                controller: hexController,
-              ),
+              AppTextField(label: 'Hex code', controller: hexController),
             ],
           ),
           actions: [
@@ -263,11 +257,9 @@ class _CategoriesColorsScreenState
                 if (!hex.startsWith('#')) hex = '#$hex';
                 if (hex.length != 7) return;
 
-                await ref.read(colorRepositoryProvider).rename(
-                      color.id,
-                      name: name,
-                      hex: hex,
-                    );
+                await ref
+                    .read(colorRepositoryProvider)
+                    .rename(color.id, name: name, hex: hex);
                 if (ctx.mounted) Navigator.of(ctx).pop();
               },
               child: const Text('Save'),
@@ -354,7 +346,9 @@ final class _CategoriesList extends ConsumerWidget {
                               .softDelete(category.id);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Deleted ${category.name}')),
+                              SnackBar(
+                                content: Text('Deleted ${category.name}'),
+                              ),
                             );
                           }
                         } on CategoryInUseException {

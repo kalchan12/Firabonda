@@ -11,18 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget createTestApp({
-  required Widget child,
-  required AppDatabase db,
-}) {
+Widget createTestApp({required Widget child, required AppDatabase db}) {
   return ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.build(Brightness.dark),
-      home: child,
-    ),
+    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    child: MaterialApp(theme: AppTheme.build(Brightness.dark), home: child),
   );
 }
 
@@ -42,17 +34,15 @@ void main() {
   tearDown(() => db.close());
 
   group('AddPurchaseScreen widget tests', () {
-    testWidgets('renders categories, colors, quantity stepper, and unit cost',
-        (tester) async {
+    testWidgets('renders categories, colors, quantity stepper, and unit cost', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const AddPurchaseScreen(),
-          db: db,
-        ),
+        createTestApp(child: const AddPurchaseScreen(), db: db),
       );
       await tester.pumpAndSettle();
 
@@ -80,10 +70,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const AddPurchaseScreen(),
-          db: db,
-        ),
+        createTestApp(child: const AddPurchaseScreen(), db: db),
       );
       await tester.pumpAndSettle();
 
@@ -102,8 +89,9 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('shows price memory hint when previous purchase exists',
-        (tester) async {
+    testWidgets('shows price memory hint when previous purchase exists', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -125,10 +113,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const AddPurchaseScreen(),
-          db: db,
-        ),
+        createTestApp(child: const AddPurchaseScreen(), db: db),
       );
       await tester.pumpAndSettle();
 
@@ -158,10 +143,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const PurchasesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const PurchasesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -178,8 +160,9 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('displays purchase card with stock left and sell button',
-        (tester) async {
+    testWidgets('displays purchase card with stock left and sell button', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -200,10 +183,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const PurchasesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const PurchasesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -220,55 +200,55 @@ void main() {
   });
 
   group('SellBottomSheet widget tests', () {
-    testWidgets('renders stock left, calculates live profit, and records sale',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.resetPhysicalSize);
+    testWidgets(
+      'renders stock left, calculates live profit, and records sale',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      final purchase = PurchaseOverview(
-        id: 'p1',
-        categoryId: 'cat1',
-        categoryName: 'T-shirts',
-        colorId: 'col1',
-        colorName: 'Black',
-        colorHex: 0xFF000000,
-        supplierId: null,
-        supplierName: null,
-        size: 'L',
-        quantity: 10,
-        unitCostCents: 40000,
-        totalCostCents: 400000,
-        sellingPriceCents: 65000,
-        photoPath: null,
-        note: null,
-        date: DateTime.now(),
-        stockLeft: 10,
-      );
+        final purchase = PurchaseOverview(
+          id: 'p1',
+          categoryId: 'cat1',
+          categoryName: 'T-shirts',
+          colorId: 'col1',
+          colorName: 'Black',
+          colorHex: 0xFF000000,
+          supplierId: null,
+          supplierName: null,
+          size: 'L',
+          quantity: 10,
+          unitCostCents: 40000,
+          totalCostCents: 400000,
+          sellingPriceCents: 65000,
+          photoPath: null,
+          note: null,
+          date: DateTime.now(),
+          stockLeft: 10,
+        );
 
-      await tester.pumpWidget(
-        createTestApp(
-          child: Scaffold(
-            body: SellBottomSheet(purchase: purchase),
+        await tester.pumpWidget(
+          createTestApp(
+            child: Scaffold(body: SellBottomSheet(purchase: purchase)),
+            db: db,
           ),
-          db: db,
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Record Sale'), findsOneWidget);
-      expect(find.text('10 in stock'), findsOneWidget);
-      expect(find.text('T-shirts • Black'), findsOneWidget);
-      expect(find.text('Cost: ETB 400.00'), findsOneWidget);
-      expect(find.text('Confirm sale'), findsOneWidget);
+        expect(find.text('Record Sale'), findsOneWidget);
+        expect(find.text('10 in stock'), findsOneWidget);
+        expect(find.text('T-shirts • Black'), findsOneWidget);
+        expect(find.text('Cost: ETB 400.00'), findsOneWidget);
+        expect(find.text('Confirm sale'), findsOneWidget);
 
-      // Pre-filled selling price is 650.00
-      expect(find.text('650.00'), findsOneWidget);
-      // Expected profit for qty 1: (650 - 400) * 1 = 250
-      expect(find.text('+ETB 250.00'), findsOneWidget);
+        // Pre-filled selling price is 650.00
+        expect(find.text('650.00'), findsOneWidget);
+        // Expected profit for qty 1: (650 - 400) * 1 = 250
+        expect(find.text('+ETB 250.00'), findsOneWidget);
 
-      await cleanUpWidget(tester);
-    });
+        await cleanUpWidget(tester);
+      },
+    );
   });
 
   group('SalesScreen widget tests', () {
@@ -278,10 +258,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const SalesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const SalesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -298,8 +275,9 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('displays sales item with profit badge when sales exist',
-        (tester) async {
+    testWidgets('displays sales item with profit badge when sales exist', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -328,10 +306,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const SalesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const SalesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -340,8 +315,10 @@ void main() {
       expect(find.text('Total revenue'), findsOneWidget);
       expect(find.text('Total profit'), findsOneWidget);
       expect(find.text('+ETB 400.00'), findsWidgets); // (500 - 300) * 2 = 400
-      expect(find.text('${categories.first.name} (${colors.first.name})'),
-          findsOneWidget);
+      expect(
+        find.text('${categories.first.name} (${colors.first.name})'),
+        findsOneWidget,
+      );
 
       await cleanUpWidget(tester);
     });

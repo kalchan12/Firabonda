@@ -17,11 +17,11 @@ final class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   String _periodLabel(Period period) => switch (period) {
-        Period.today => 'Today',
-        Period.week => 'Week',
-        Period.month => 'Month',
-        Period.all => 'All',
-      };
+    Period.today => 'Today',
+    Period.week => 'Week',
+    Period.month => 'Month',
+    Period.all => 'All',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,8 +42,8 @@ final class DashboardScreen extends ConsumerWidget {
                   child: Text(
                     'Fira Bonda',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Semantics(
@@ -71,9 +71,9 @@ final class DashboardScreen extends ConsumerWidget {
                       onPressed: () {
                         final isDark =
                             Theme.of(context).brightness == Brightness.dark;
-                        ref.read(themeControllerProvider.notifier).setMode(
-                              isDark ? ThemeMode.light : ThemeMode.dark,
-                            );
+                        ref
+                            .read(themeControllerProvider.notifier)
+                            .setMode(isDark ? ThemeMode.light : ThemeMode.dark);
                       },
                     ),
                   ),
@@ -83,22 +83,22 @@ final class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.l),
 
             // Period Selector
-            SegmentedButton<Period>(
-              showSelectedIcon: false,
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.comfortable,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<Period>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.comfortable,
+                ),
+                segments: [
+                  for (final p in Period.values)
+                    ButtonSegment(value: p, label: Text(_periodLabel(p))),
+                ],
+                selected: {selectedPeriod},
+                onSelectionChanged: (selection) => ref
+                    .read(selectedPeriodProvider.notifier)
+                    .setPeriod(selection.first),
               ),
-              segments: [
-                for (final p in Period.values)
-                  ButtonSegment(
-                    value: p,
-                    label: Text(_periodLabel(p)),
-                  ),
-              ],
-              selected: {selectedPeriod},
-              onSelectionChanged: (selection) => ref
-                  .read(selectedPeriodProvider.notifier)
-                  .setPeriod(selection.first),
             ),
             const SizedBox(height: AppSpacing.l),
 
@@ -139,9 +139,7 @@ final class DashboardScreen extends ConsumerWidget {
                       value: isProfitPositive
                           ? '+ ${Money.etb(data.realProfitCents)}'
                           : Money.etb(data.realProfitCents),
-                      tone: isProfitPositive
-                          ? StatTone.profit
-                          : StatTone.loss,
+                      tone: isProfitPositive ? StatTone.profit : StatTone.loss,
                     ),
                     if (data.expensesCents > 0)
                       Padding(
@@ -177,8 +175,7 @@ final class DashboardScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 'Best sellers',
-                                style:
-                                    Theme.of(context).textTheme.titleMedium,
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
                                 periodName,
@@ -252,8 +249,7 @@ final class DashboardScreen extends ConsumerWidget {
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       'Unsold stock value',
@@ -303,22 +299,16 @@ final class DashboardScreen extends ConsumerWidget {
                                 const SizedBox(width: AppSpacing.s),
                                 Text(
                                   'Low stock alerts',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: colors.warning,
-                                      ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(color: colors.warning),
                                 ),
                               ],
                             ),
                             const SizedBox(height: AppSpacing.s),
                             for (final item in data.lowStockItems)
                               InkWell(
-                                onTap: () => context.push(
-                                  '/add-purchase',
-                                  extra: item,
-                                ),
+                                onTap: () =>
+                                    context.push('/add-purchase', extra: item),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: AppSpacing.xs,
@@ -340,10 +330,12 @@ final class DashboardScreen extends ConsumerWidget {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: colors.warning
-                                              .withValues(alpha: 0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(999),
+                                          color: colors.warning.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
                                         ),
                                         child: Text(
                                           '${item.stockLeft} left',
@@ -375,8 +367,9 @@ final class DashboardScreen extends ConsumerWidget {
                             height: 80,
                             decoration: BoxDecoration(
                               color: colors.surface,
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.card),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.card,
+                              ),
                             ),
                           ),
                         ),
@@ -388,8 +381,9 @@ final class DashboardScreen extends ConsumerWidget {
                             height: 80,
                             decoration: BoxDecoration(
                               color: colors.surface,
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.card),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.card,
+                              ),
                             ),
                           ),
                         ),
@@ -402,8 +396,7 @@ final class DashboardScreen extends ConsumerWidget {
                       height: 110,
                       decoration: BoxDecoration(
                         color: colors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.card),
+                        borderRadius: BorderRadius.circular(AppRadius.card),
                       ),
                     ),
                   ),
@@ -413,8 +406,7 @@ final class DashboardScreen extends ConsumerWidget {
                       height: 200,
                       decoration: BoxDecoration(
                         color: colors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.card),
+                        borderRadius: BorderRadius.circular(AppRadius.card),
                       ),
                     ),
                   ),
@@ -438,10 +430,7 @@ final class DashboardScreen extends ConsumerWidget {
 }
 
 final class _ProfitChartCard extends StatelessWidget {
-  const _ProfitChartCard({
-    required this.periodName,
-    required this.valuesCents,
-  });
+  const _ProfitChartCard({required this.periodName, required this.valuesCents});
 
   final String periodName;
   final List<double> valuesCents;

@@ -85,14 +85,20 @@ final class _AppButtonState extends State<AppButton> {
                     Icon(widget.icon, size: 20, color: foreground),
                     const SizedBox(width: AppSpacing.s),
                   ],
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      color: enabled
-                          ? foreground
-                          : foreground.withValues(alpha: 0.4),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: enabled
+                              ? foreground
+                              : foreground.withValues(alpha: 0.4),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],

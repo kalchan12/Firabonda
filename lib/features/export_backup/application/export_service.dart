@@ -77,7 +77,15 @@ final class ExportService {
 
     // 2. Sales section
     rows.add(['SALES RECORDS']);
-    rows.add(['Date', 'Category', 'Color', 'Quantity', 'Unit Cost', 'Unit Price', 'Profit']);
+    rows.add([
+      'Date',
+      'Category',
+      'Color',
+      'Quantity',
+      'Unit Cost',
+      'Unit Price',
+      'Profit',
+    ]);
     for (final s in filteredSales) {
       rows.add([
         DateFormat('yyyy-MM-dd HH:mm').format(s.date.toLocal()),
@@ -93,7 +101,15 @@ final class ExportService {
 
     // 3. Purchases section
     rows.add(['PURCHASE RECORDS']);
-    rows.add(['Date', 'Category', 'Color', 'Quantity', 'Unit Cost', 'Total Cost', 'Supplier']);
+    rows.add([
+      'Date',
+      'Category',
+      'Color',
+      'Quantity',
+      'Unit Cost',
+      'Total Cost',
+      'Supplier',
+    ]);
     for (final p in filteredPurchases) {
       rows.add([
         DateFormat('yyyy-MM-dd HH:mm').format(p.date.toLocal()),
@@ -203,7 +219,10 @@ final class ExportService {
                   ),
                   pw.Text(
                     'Monthly Report • $monthTitle',
-                    style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+                    style: const pw.TextStyle(
+                      fontSize: 12,
+                      color: PdfColors.grey700,
+                    ),
                   ),
                 ],
               ),
@@ -211,7 +230,10 @@ final class ExportService {
             pw.SizedBox(height: 16),
             pw.Text(
               'Performance Summary',
-              style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             pw.TableHelper.fromTextArray(
@@ -225,48 +247,77 @@ final class ExportService {
                 ['Total Units Sold', '$unitsSold items'],
               ],
               headerStyle: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              cellPadding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              cellPadding: const pw.EdgeInsets.symmetric(
+                vertical: 4,
+                horizontal: 8,
+              ),
             ),
             pw.SizedBox(height: 20),
             pw.Text(
               'Sales Breakdown (${filteredSales.length} records)',
-              style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             if (filteredSales.isEmpty)
-              pw.Text('No sales recorded this month.', style: const pw.TextStyle(color: PdfColors.grey600))
+              pw.Text(
+                'No sales recorded this month.',
+                style: const pw.TextStyle(color: PdfColors.grey600),
+              )
             else
               pw.TableHelper.fromTextArray(
                 headers: ['Date', 'Item', 'Qty', 'Unit Price', 'Profit'],
-                data: filteredSales.map((s) => [
-                  DateFormat('MM/dd').format(s.date.toLocal()),
-                  '${s.categoryName} (${s.colorName})',
-                  '${s.quantity}',
-                  Money.etb(s.unitPriceCents),
-                  Money.etb(s.profitCents),
-                ]).toList(),
+                data: filteredSales
+                    .map(
+                      (s) => [
+                        DateFormat('MM/dd').format(s.date.toLocal()),
+                        '${s.categoryName} (${s.colorName})',
+                        '${s.quantity}',
+                        Money.etb(s.unitPriceCents),
+                        Money.etb(s.profitCents),
+                      ],
+                    )
+                    .toList(),
                 headerStyle: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                cellPadding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+                cellPadding: const pw.EdgeInsets.symmetric(
+                  vertical: 3,
+                  horizontal: 6,
+                ),
               ),
             pw.SizedBox(height: 20),
             pw.Text(
               'Expenses (${filteredExpenses.length} records)',
-              style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             if (filteredExpenses.isEmpty)
-              pw.Text('No expenses recorded this month.', style: const pw.TextStyle(color: PdfColors.grey600))
+              pw.Text(
+                'No expenses recorded this month.',
+                style: const pw.TextStyle(color: PdfColors.grey600),
+              )
             else
               pw.TableHelper.fromTextArray(
                 headers: ['Date', 'Title', 'Amount', 'Note'],
-                data: filteredExpenses.map((e) => [
-                  DateFormat('MM/dd').format(e.date.toLocal()),
-                  e.title,
-                  Money.etb(e.amount),
-                  e.note ?? '-',
-                ]).toList(),
+                data: filteredExpenses
+                    .map(
+                      (e) => [
+                        DateFormat('MM/dd').format(e.date.toLocal()),
+                        e.title,
+                        Money.etb(e.amount),
+                        e.note ?? '-',
+                      ],
+                    )
+                    .toList(),
                 headerStyle: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                cellPadding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+                cellPadding: const pw.EdgeInsets.symmetric(
+                  vertical: 3,
+                  horizontal: 6,
+                ),
               ),
           ];
         },

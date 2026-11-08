@@ -100,9 +100,9 @@ final class LocalPurchaseRepository implements PurchaseRepository {
   Future<void> softDelete(String id) {
     final now = Value(DateTime.now().toUtc());
     return _db.transaction(() async {
-      final purchase = await (_db.select(_db.purchases)
-            ..where((row) => row.id.equals(id)))
-          .getSingleOrNull();
+      final purchase = await (_db.select(
+        _db.purchases,
+      )..where((row) => row.id.equals(id))).getSingleOrNull();
       if (purchase?.photoPath != null) {
         final photo = File(purchase!.photoPath!);
         if (photo.existsSync()) {
@@ -196,8 +196,9 @@ final class LocalPurchaseRepository implements PurchaseRepository {
   @override
   Future<void> softDeleteSale(String saleId) {
     final now = Value(DateTime.now().toUtc());
-    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId)))
-        .write(SalesCompanion(deletedAt: now));
+    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
+      SalesCompanion(deletedAt: now),
+    );
   }
 
   @override

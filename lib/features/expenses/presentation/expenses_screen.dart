@@ -67,10 +67,7 @@ final class ExpensesScreen extends ConsumerWidget {
                         color: colors.loss.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.trending_down,
-                        color: colors.loss,
-                      ),
+                      child: Icon(Icons.trending_down, color: colors.loss),
                     ),
                     const SizedBox(width: AppSpacing.m),
                     Column(
@@ -155,7 +152,10 @@ final class ExpensesScreen extends ConsumerWidget {
             final colors = context.appColors;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-            return Padding(
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
               padding: EdgeInsets.only(
                 left: AppSpacing.screenPadding,
                 right: AppSpacing.screenPadding,
@@ -188,10 +188,7 @@ final class ExpensesScreen extends ConsumerWidget {
                       autofocus: true,
                     ),
                     const SizedBox(height: AppSpacing.m),
-                    MoneyField(
-                      label: 'Amount',
-                      controller: amountController,
-                    ),
+                    MoneyField(label: 'Amount', controller: amountController),
                     const SizedBox(height: AppSpacing.m),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -206,7 +203,9 @@ final class ExpensesScreen extends ConsumerWidget {
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
                         );
                         if (picked != null) {
                           setState(() => selectedDate = picked);
@@ -226,11 +225,14 @@ final class ExpensesScreen extends ConsumerWidget {
                       child: FilledButton(
                         onPressed: () async {
                           final title = titleController.text.trim();
-                          final amountCents =
-                              Money.parseCents(amountController.text);
+                          final amountCents = Money.parseCents(
+                            amountController.text,
+                          );
                           if (title.isEmpty || amountCents <= 0) return;
 
-                          await ref.read(expenseRepositoryProvider).add(
+                          await ref
+                              .read(expenseRepositoryProvider)
+                              .add(
                                 ExpenseInput(
                                   title: title,
                                   amountCents: amountCents,
@@ -295,10 +297,7 @@ final class ExpensesScreen extends ConsumerWidget {
 }
 
 final class _ExpenseCard extends StatelessWidget {
-  const _ExpenseCard({
-    required this.expense,
-    required this.onDelete,
-  });
+  const _ExpenseCard({required this.expense, required this.onDelete});
 
   final ExpenseRow expense;
   final VoidCallback onDelete;

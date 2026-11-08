@@ -9,18 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget createTestApp({
-  required Widget child,
-  required AppDatabase db,
-}) {
+Widget createTestApp({required Widget child, required AppDatabase db}) {
   return ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.build(Brightness.dark),
-      home: child,
-    ),
+    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    child: MaterialApp(theme: AppTheme.build(Brightness.dark), home: child),
   );
 }
 
@@ -40,27 +32,25 @@ void main() {
   tearDown(() => db.close());
 
   group('Dashboard widget tests', () {
-    testWidgets('renders period buttons, stat tiles and stock value',
-        (tester) async {
+    testWidgets('renders period buttons, stat tiles and stock value', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const DashboardScreen(),
-          db: db,
-        ),
+        createTestApp(child: const DashboardScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pumpAndSettle();
 
       expect(find.text('Fira Bonda'), findsOneWidget);
-      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('Today'), findsWidgets);
       expect(find.text('Week'), findsWidgets);
-      expect(find.text('Month'), findsOneWidget);
-      expect(find.text('All'), findsOneWidget);
+      expect(find.text('Month'), findsWidgets);
+      expect(find.text('All'), findsWidgets);
 
       expect(find.textContaining('Spent'), findsOneWidget);
       expect(find.textContaining('Earned'), findsOneWidget);
@@ -72,80 +62,80 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('calculates real profit including expenses and reflects in stats',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.resetPhysicalSize);
+    testWidgets(
+      'calculates real profit including expenses and reflects in stats',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      final categories = await db.select(db.categories).get();
-      final colors = await db.select(db.colorOptions).get();
-      final purchaseRepo = LocalPurchaseRepository(db);
-      final expenseRepo = LocalExpenseRepository(db);
+        final categories = await db.select(db.categories).get();
+        final colors = await db.select(db.colorOptions).get();
+        final purchaseRepo = LocalPurchaseRepository(db);
+        final expenseRepo = LocalExpenseRepository(db);
 
-      // 1. Purchase 10 items @ 400 ETB = 4,000 ETB spent
-      final purchaseId = await purchaseRepo.add(
-        PurchaseInput(
-          categoryId: categories.first.id,
-          colorId: colors.first.id,
-          quantity: 10,
-          unitCostCents: 40000,
-          date: DateTime.now(),
-        ),
-      );
+        // 1. Purchase 10 items @ 400 ETB = 4,000 ETB spent
+        final purchaseId = await purchaseRepo.add(
+          PurchaseInput(
+            categoryId: categories.first.id,
+            colorId: colors.first.id,
+            quantity: 10,
+            unitCostCents: 40000,
+            date: DateTime.now(),
+          ),
+        );
 
-      // 2. Sell 3 items @ 600 ETB = 1,800 ETB earned
-      // Sales profit: (600 - 400) * 3 = 600 ETB
-      await purchaseRepo.recordSale(
-        SaleInput(
-          purchaseId: purchaseId,
-          quantity: 3,
-          unitPriceCents: 60000,
-          date: DateTime.now(),
-        ),
-      );
+        // 2. Sell 3 items @ 600 ETB = 1,800 ETB earned
+        // Sales profit: (600 - 400) * 3 = 600 ETB
+        await purchaseRepo.recordSale(
+          SaleInput(
+            purchaseId: purchaseId,
+            quantity: 3,
+            unitPriceCents: 60000,
+            date: DateTime.now(),
+          ),
+        );
 
-      // 3. Add expense of 150 ETB (e.g. transport)
-      // Real profit: 600 - 150 = 450 ETB
-      await expenseRepo.add(
-        ExpenseInput(
-          title: 'Transport',
-          amountCents: 15000,
-          date: DateTime.now(),
-        ),
-      );
+        // 3. Add expense of 150 ETB (e.g. transport)
+        // Real profit: 600 - 150 = 450 ETB
+        await expenseRepo.add(
+          ExpenseInput(
+            title: 'Transport',
+            amountCents: 15000,
+            date: DateTime.now(),
+          ),
+        );
 
-      await tester.pumpWidget(
-        createTestApp(
-          child: const DashboardScreen(),
-          db: db,
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(child: const DashboardScreen(), db: db),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pumpAndSettle();
 
-      // Check spent (4,000.00)
-      expect(find.text('ETB 4,000.00'), findsOneWidget);
-      // Check earned (1,800.00)
-      expect(find.text('ETB 1,800.00'), findsOneWidget);
-      // Check real profit (+ ETB 450.00)
-      expect(find.text('+ ETB 450.00'), findsOneWidget);
-      // Check expenses mention
-      expect(
-        find.textContaining('Includes ETB 150.00 expenses deducted'),
-        findsOneWidget,
-      );
+        // Check spent (4,000.00)
+        expect(find.text('ETB 4,000.00'), findsOneWidget);
+        // Check earned (1,800.00)
+        expect(find.text('ETB 1,800.00'), findsOneWidget);
+        // Check real profit (+ ETB 450.00)
+        expect(find.text('+ ETB 450.00'), findsOneWidget);
+        // Check expenses mention
+        expect(
+          find.textContaining('Includes ETB 150.00 expenses deducted'),
+          findsOneWidget,
+        );
 
-      // Unsold stock: 7 items left @ 400 ETB = 2,800 ETB
-      expect(find.text('7 pieces in stock'), findsOneWidget);
-      expect(find.text('ETB 2,800.00'), findsOneWidget);
+        // Unsold stock: 7 items left @ 400 ETB = 2,800 ETB
+        expect(find.text('7 pieces in stock'), findsOneWidget);
+        expect(find.text('ETB 2,800.00'), findsOneWidget);
 
-      await cleanUpWidget(tester);
-    });
+        await cleanUpWidget(tester);
+      },
+    );
 
-    testWidgets('shows low stock alerts when remaining stock is <= threshold',
-        (tester) async {
+    testWidgets('shows low stock alerts when remaining stock is <= threshold', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -166,10 +156,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const DashboardScreen(),
-          db: db,
-        ),
+        createTestApp(child: const DashboardScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -187,10 +174,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const DashboardScreen(),
-          db: db,
-        ),
+        createTestApp(child: const DashboardScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));

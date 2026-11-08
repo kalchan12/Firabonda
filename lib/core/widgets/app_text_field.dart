@@ -53,7 +53,13 @@ final class AppTextField extends StatelessWidget {
       onChanged: onChanged,
       maxLines: maxLines,
       autofillHints: autofillHints,
-      style: TextStyle(color: colors.textPrimary, fontSize: 15),
+      style: TextStyle(
+        color: colors.textPrimary,
+        fontSize: 15,
+        fontFeatures: keyboardType == TextInputType.number
+            ? const [FontFeature.tabularFigures()]
+            : null,
+      ),
       cursorColor: colors.primary,
       decoration: InputDecoration(
         filled: filled,

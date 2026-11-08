@@ -26,19 +26,13 @@ Future<CalculatorResult?> showCalculatorSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => CalculatorSheet(
-      initialText: initialText,
-      quantity: quantity,
-    ),
+    builder: (_) =>
+        CalculatorSheet(initialText: initialText, quantity: quantity),
   );
 }
 
 final class CalculatorSheet extends StatefulWidget {
-  const CalculatorSheet({
-    super.key,
-    required this.initialText,
-    this.quantity,
-  });
+  const CalculatorSheet({super.key, required this.initialText, this.quantity});
 
   final String initialText;
   final int? quantity;

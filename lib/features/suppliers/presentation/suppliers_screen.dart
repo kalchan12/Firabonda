@@ -24,15 +24,18 @@ final class SupplierSummary {
   final int purchaseCount;
 }
 
-final supplierSummariesProvider =
-    StreamProvider<List<SupplierSummary>>((ref) {
+final supplierSummariesProvider = StreamProvider<List<SupplierSummary>>((ref) {
   final suppliersStream = ref.watch(supplierRepositoryProvider).watchAll();
-  final purchasesStream = ref.watch(purchaseRepositoryProvider).watchOverviews();
+  final purchasesStream = ref
+      .watch(purchaseRepositoryProvider)
+      .watchOverviews();
 
   return suppliersStream.asyncMap((suppliers) async {
     final purchases = await purchasesStream.first;
     return suppliers.map((supplier) {
-      final supplierPurchases = purchases.where((p) => p.supplierId == supplier.id);
+      final supplierPurchases = purchases.where(
+        (p) => p.supplierId == supplier.id,
+      );
       final totalSpent = supplierPurchases.fold<int>(
         0,
         (sum, p) => sum + p.totalCostCents,
@@ -72,7 +75,8 @@ final class SuppliersScreen extends ConsumerWidget {
             return Center(
               child: EmptyState(
                 icon: Icons.local_shipping_outlined,
-                message: 'No suppliers yet. Add suppliers to track purchase history and totals.',
+                message:
+                    'No suppliers yet. Add suppliers to track purchase history and totals.',
                 actionLabel: 'Add supplier',
                 onAction: () => _showAddEditSupplierDialog(context, ref),
               ),
@@ -137,11 +141,8 @@ final class SuppliersScreen extends ConsumerWidget {
                     ref,
                     supplier: summary.supplier,
                   ),
-                  onDelete: () => _confirmDeleteSupplier(
-                    context,
-                    ref,
-                    summary.supplier,
-                  ),
+                  onDelete: () =>
+                      _confirmDeleteSupplier(context, ref, summary.supplier),
                 ),
                 const SizedBox(height: AppSpacing.s),
               ],

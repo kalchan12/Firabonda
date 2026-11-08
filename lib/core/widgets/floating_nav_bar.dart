@@ -119,26 +119,30 @@ final class FloatingNavBar extends StatelessWidget {
         child: InkWell(
           onTap: () => onDestinationTap(index),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  destination.icon,
-                  size: 22,
-                  color: selected ? colors.primary : colors.textMuted,
-                ),
-                Text(
-                  destination.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? colors.primary : colors.textMuted,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                destination.icon,
+                size: 20,
+                color: selected ? colors.primary : colors.textMuted,
+              ),
+              const SizedBox(height: 2),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    destination.label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: selected ? colors.primary : colors.textMuted,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

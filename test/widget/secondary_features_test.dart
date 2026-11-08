@@ -16,18 +16,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget createTestApp({
-  required Widget child,
-  required AppDatabase db,
-}) {
+Widget createTestApp({required Widget child, required AppDatabase db}) {
   return ProviderScope(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(db),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.build(Brightness.dark),
-      home: child,
-    ),
+    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    child: MaterialApp(theme: AppTheme.build(Brightness.dark), home: child),
   );
 }
 
@@ -47,22 +39,25 @@ void main() {
   tearDown(() => db.close());
 
   group('Secondary features widget tests', () {
-    testWidgets('SuppliersScreen displays empty state and supplier card',
-        (tester) async {
+    testWidgets('SuppliersScreen displays empty state and supplier card', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const SuppliersScreen(),
-          db: db,
-        ),
+        createTestApp(child: const SuppliersScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text('No suppliers yet. Add suppliers to track purchase history and totals.'), findsOneWidget);
+      expect(
+        find.text(
+          'No suppliers yet. Add suppliers to track purchase history and totals.',
+        ),
+        findsOneWidget,
+      );
 
       final repo = LocalSupplierRepository(db);
       await repo.add(
@@ -74,10 +69,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const SuppliersScreen(),
-          db: db,
-        ),
+        createTestApp(child: const SuppliersScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -90,17 +82,15 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('ExpensesScreen displays empty state and added expense card',
-        (tester) async {
+    testWidgets('ExpensesScreen displays empty state and added expense card', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const ExpensesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const ExpensesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -118,10 +108,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const ExpensesScreen(),
-          db: db,
-        ),
+        createTestApp(child: const ExpensesScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -134,8 +121,9 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('DebtsScreen renders tabs and allows marking debt as paid',
-        (tester) async {
+    testWidgets('DebtsScreen renders tabs and allows marking debt as paid', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -151,10 +139,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const DebtsScreen(),
-          db: db,
-        ),
+        createTestApp(child: const DebtsScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -177,36 +162,35 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('CategoriesColorsScreen displays seeded categories and colors',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.resetPhysicalSize);
+    testWidgets(
+      'CategoriesColorsScreen displays seeded categories and colors',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(
-        createTestApp(
-          child: const CategoriesColorsScreen(),
-          db: db,
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(child: const CategoriesColorsScreen(), db: db),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pumpAndSettle();
 
-      expect(find.text('T-shirts'), findsOneWidget);
-      expect(find.text('Shirts'), findsOneWidget);
+        expect(find.text('T-shirts'), findsOneWidget);
+        expect(find.text('Shirts'), findsOneWidget);
 
-      // Switch to colors tab
-      await tester.tap(find.text('Colors'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
+        // Switch to colors tab
+        await tester.tap(find.text('Colors'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Black'), findsOneWidget);
-      expect(find.text('White'), findsOneWidget);
+        expect(find.text('Black'), findsOneWidget);
+        expect(find.text('White'), findsOneWidget);
 
-      await cleanUpWidget(tester);
-    });
+        await cleanUpWidget(tester);
+      },
+    );
 
     testWidgets('SettingsScreen allows changing preferences', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -214,10 +198,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const SettingsScreen(),
-          db: db,
-        ),
+        createTestApp(child: const SettingsScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -237,17 +218,15 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('ExportScreen renders month preview and action buttons',
-        (tester) async {
+    testWidgets('ExportScreen renders month preview and action buttons', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const ExportScreen(),
-          db: db,
-        ),
+        createTestApp(child: const ExportScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -261,17 +240,15 @@ void main() {
       await cleanUpWidget(tester);
     });
 
-    testWidgets('BackupRestoreScreen renders backup and restore actions',
-        (tester) async {
+    testWidgets('BackupRestoreScreen renders backup and restore actions', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       await tester.pumpWidget(
-        createTestApp(
-          child: const BackupRestoreScreen(),
-          db: db,
-        ),
+        createTestApp(child: const BackupRestoreScreen(), db: db),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));

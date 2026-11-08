@@ -28,16 +28,16 @@ void main() {
 
     test('rejects file without SQLite header', () async {
       final tempFile = File('${Directory.systemTemp.path}/fake_backup.sqlite');
-      await tempFile.writeAsString('This is just plain text, not a sqlite database!');
+      await tempFile.writeAsString(
+        'This is just plain text, not a sqlite database!',
+      );
       addTearDown(() {
         if (tempFile.existsSync()) tempFile.deleteSync();
       });
 
       expect(
-        () => BackupService.restoreDatabase(
-          backupFile: tempFile,
-          currentDb: db,
-        ),
+        () =>
+            BackupService.restoreDatabase(backupFile: tempFile, currentDb: db),
         throwsA(isA<InvalidBackupException>()),
       );
     });
