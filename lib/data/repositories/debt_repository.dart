@@ -17,6 +17,9 @@ abstract interface class DebtRepository {
   Future<void> markPaid(String id, {required bool paid});
 
   Future<void> softDelete(String id);
+
+  /// Restores a soft-deleted debt record.
+  Future<void> restore(String id);
 }
 
 final class LocalDebtRepository implements DebtRepository {
@@ -70,6 +73,13 @@ final class LocalDebtRepository implements DebtRepository {
   Future<void> softDelete(String id) {
     return (_db.update(_db.debts)..where((row) => row.id.equals(id))).write(
       DebtsCompanion(deletedAt: Value(DateTime.now().toUtc())),
+    );
+  }
+
+  @override
+  Future<void> restore(String id) {
+    return (_db.update(_db.debts)..where((row) => row.id.equals(id))).write(
+      const DebtsCompanion(deletedAt: Value(null)),
     );
   }
 

@@ -279,12 +279,20 @@ final class ExpensesScreen extends ConsumerWidget {
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 final nav = Navigator.of(ctx);
-                await ref
-                    .read(expenseRepositoryProvider)
-                    .softDelete(expense.id);
+                final repo = ref.read(expenseRepositoryProvider);
+                await repo.softDelete(expense.id);
                 nav.pop();
                 messenger.showSnackBar(
-                  SnackBar(content: Text('Deleted ${expense.title}')),
+                  SnackBar(
+                    content: Text('Deleted ${expense.title}'),
+                    action: SnackBarAction(
+                      label: 'UNDO',
+                      onPressed: () async {
+                        await repo.restore(expense.id);
+                      },
+                    ),
+                    duration: const Duration(seconds: 4),
+                  ),
                 );
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),

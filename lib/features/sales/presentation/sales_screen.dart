@@ -313,15 +313,21 @@ final class _SaleItemCard extends ConsumerWidget {
                         onPressed: () async {
                           final messenger = ScaffoldMessenger.of(context);
                           final nav = Navigator.of(ctx);
-                          await ref
-                              .read(purchaseRepositoryProvider)
-                              .softDeleteSale(sale.id);
+                          final repo = ref.read(purchaseRepositoryProvider);
+                          await repo.softDeleteSale(sale.id);
                           nav.pop();
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
                               ),
+                              action: SnackBarAction(
+                                label: 'UNDO',
+                                onPressed: () async {
+                                  await repo.restoreSale(sale.id);
+                                },
+                              ),
+                              duration: const Duration(seconds: 4),
                             ),
                           );
                         },

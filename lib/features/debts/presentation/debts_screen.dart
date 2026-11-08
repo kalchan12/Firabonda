@@ -385,11 +385,19 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 final nav = Navigator.of(ctx);
-                await ref.read(debtRepositoryProvider).softDelete(debt.id);
+                final repo = ref.read(debtRepositoryProvider);
+                await repo.softDelete(debt.id);
                 nav.pop();
                 messenger.showSnackBar(
                   SnackBar(
                     content: Text('Deleted debt record for ${debt.personName}'),
+                    action: SnackBarAction(
+                      label: 'UNDO',
+                      onPressed: () async {
+                        await repo.restore(debt.id);
+                      },
+                    ),
+                    duration: const Duration(seconds: 4),
                   ),
                 );
               },

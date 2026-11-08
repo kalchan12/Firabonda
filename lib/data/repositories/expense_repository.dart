@@ -17,6 +17,9 @@ abstract interface class ExpenseRepository {
 
   Future<void> softDelete(String id);
 
+  /// Restores a soft-deleted expense.
+  Future<void> restore(String id);
+
   /// Sum of all expense amounts inside the window; money in cents.
   Future<int> totalBetween(DateTime startUtc, DateTime endUtc);
 }
@@ -60,6 +63,13 @@ final class LocalExpenseRepository implements ExpenseRepository {
   Future<void> softDelete(String id) {
     return (_db.update(_db.expenses)..where((row) => row.id.equals(id))).write(
       ExpensesCompanion(deletedAt: Value(DateTime.now().toUtc())),
+    );
+  }
+
+  @override
+  Future<void> restore(String id) {
+    return (_db.update(_db.expenses)..where((row) => row.id.equals(id))).write(
+      const ExpensesCompanion(deletedAt: Value(null)),
     );
   }
 

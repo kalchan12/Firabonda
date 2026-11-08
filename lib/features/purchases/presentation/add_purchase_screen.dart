@@ -35,6 +35,9 @@ final class AddPurchaseScreen extends ConsumerStatefulWidget {
 }
 
 final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
+  static String? _lastCategoryId;
+  static String? _lastSupplierId;
+
   final _unitCost = TextEditingController();
   final _sellingPrice = TextEditingController();
   final _size = TextEditingController();
@@ -71,6 +74,10 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       }
       _photoPath = initial.photoPath;
       _date = initial.date;
+    } else {
+      // Smart default: remember category and supplier from last added purchase
+      _selectedCategoryId = _lastCategoryId;
+      _selectedSupplierId = _lastSupplierId;
     }
   }
 
@@ -233,6 +240,8 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
         await repo.update(widget.initialPurchase!.id, input);
       }
 
+      _lastCategoryId = categoryId;
+      _lastSupplierId = _selectedSupplierId;
       await HapticFeedback.lightImpact();
 
       if (mounted) {
@@ -292,10 +301,19 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       await repo.softDelete(initial.id);
       await HapticFeedback.mediumImpact();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Purchase deleted')));
         context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Purchase deleted'),
+            action: SnackBarAction(
+              label: 'UNDO',
+              onPressed: () async {
+                await repo.restore(initial.id);
+              },
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }
@@ -453,6 +471,21 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
                   key: const ValueKey('stepper_add'),
                   icon: Icons.add,
                   onPressed: () => setState(() => _quantity++),
+                ),
+                const Spacer(),
+                ActionChip(
+                  label: const Text('+1'),
+                  onPressed: () => setState(() => _quantity += 1),
+                ),
+                const SizedBox(width: 4),
+                ActionChip(
+                  label: const Text('+5'),
+                  onPressed: () => setState(() => _quantity += 5),
+                ),
+                const SizedBox(width: 4),
+                ActionChip(
+                  label: const Text('+10'),
+                  onPressed: () => setState(() => _quantity += 10),
                 ),
               ],
             ),

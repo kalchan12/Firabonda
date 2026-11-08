@@ -20,6 +20,9 @@ abstract interface class PurchaseRepository {
   /// in the same transaction.
   Future<void> softDelete(String id);
 
+  /// Restores a soft-deleted purchase row.
+  Future<void> restore(String id);
+
   /// Purchases with category/color names, supplier name and stock left.
   Stream<List<PurchaseOverview>> watchOverviews();
 
@@ -35,6 +38,9 @@ abstract interface class PurchaseRepository {
 
   /// Soft deletes a sale record, restoring the purchase stock.
   Future<void> softDeleteSale(String saleId);
+
+  /// Restores a soft-deleted sale record.
+  Future<void> restoreSale(String saleId);
 
   /// Sales with purchase details and computed profit.
   Stream<List<SaleOverview>> watchSaleOverviews();
@@ -119,6 +125,12 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       await (_db.update(_db.purchases)..where((row) => row.id.equals(id)))
           .write(PurchasesCompanion(deletedAt: now));
     });
+  }
+
+  @override
+  Future<void> restore(String id) {
+    return (_db.update(_db.purchases)..where((row) => row.id.equals(id)))
+        .write(const PurchasesCompanion(deletedAt: Value(null)));
   }
 
   @override
@@ -234,6 +246,13 @@ final class LocalPurchaseRepository implements PurchaseRepository {
     final now = Value(DateTime.now().toUtc());
     return (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
       SalesCompanion(deletedAt: now),
+    );
+  }
+
+  @override
+  Future<void> restoreSale(String saleId) {
+    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
+      const SalesCompanion(deletedAt: Value(null)),
     );
   }
 
