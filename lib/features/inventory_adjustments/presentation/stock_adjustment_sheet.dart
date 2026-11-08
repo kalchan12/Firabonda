@@ -18,6 +18,7 @@ Future<bool?> showStockAdjustmentBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    backgroundColor: Colors.transparent,
     builder: (_) => StockAdjustmentSheet(initialPurchase: purchase),
   );
 }
@@ -127,219 +128,262 @@ final class _StockAdjustmentSheetState
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadius.bottomSheet),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
           ),
-          border: Border(top: BorderSide(color: colors.border)),
-        ),
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.screenPadding,
-          AppSpacing.m,
-          AppSpacing.screenPadding,
-          AppSpacing.xl,
-        ),
-        child: SingleChildScrollView(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.bottomSheet),
+            ),
+            border: Border(top: BorderSide(color: colors.border)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: AppSpacing.m),
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+              // Fixed Top Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.m,
+                  AppSpacing.screenPadding,
+                  AppSpacing.s,
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Stock Adjustment',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.s),
-
-              // Item Selector or Item Display
-              if (purchase == null)
-                purchasesAsync.when(
-                  data: (items) {
-                    final inStock = items
-                        .where((i) => i.stockLeft > 0)
-                        .toList();
-                    return DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Select item from stock',
-                      ),
-                      items: [
-                        for (final item in inStock)
-                          DropdownMenuItem(
-                            value: item.id,
-                            child: Text(
-                              '${item.categoryName} (${item.colorName}) - ${item.stockLeft} in stock',
-                            ),
-                          ),
-                      ],
-                      onChanged: (id) {
-                        setState(() {
-                          _selectedPurchase = inStock.firstWhere(
-                            (i) => i.id == id,
-                          );
-                        });
-                      },
-                    );
-                  },
-                  loading: () => const LinearProgressIndicator(),
-                  error: (err, _) => Text('Error: $err'),
-                )
-              else
-                AppCard(
-                  padding: const EdgeInsets.all(AppSpacing.m),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 14,
-                        height: 14,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.m),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(purchase.colorHex),
-                          border: Border.all(color: colors.border),
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.m),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${purchase.categoryName} • ${purchase.colorName}',
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Stock Adjustment',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Divider(color: colors.border, height: 1),
+              // Scrollable Middle Form
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenPadding,
+                    AppSpacing.m,
+                    AppSpacing.screenPadding,
+                    AppSpacing.m,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Item Selector or Item Display
+                      if (purchase == null)
+                        purchasesAsync.when(
+                          data: (items) {
+                            final inStock = items
+                                .where((i) => i.stockLeft > 0)
+                                .toList();
+                            return DropdownButtonFormField<String>(
+                              decoration: const InputDecoration(
+                                labelText: 'Select item from stock',
+                              ),
+                              items: [
+                                for (final item in inStock)
+                                  DropdownMenuItem(
+                                    value: item.id,
+                                    child: Text(
+                                      '${item.categoryName} (${item.colorName}) - ${item.stockLeft} in stock',
+                                    ),
+                                  ),
+                              ],
+                              onChanged: (id) {
+                                setState(() {
+                                  _selectedPurchase = inStock.firstWhere(
+                                    (i) => i.id == id,
+                                  );
+                                });
+                              },
+                            );
+                          },
+                          loading: () => const LinearProgressIndicator(),
+                          error: (err, _) => Text('Error: $err'),
+                        )
+                      else
+                        AppCard(
+                          padding: const EdgeInsets.all(AppSpacing.m),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(purchase.colorHex),
+                                  border: Border.all(color: colors.border),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.m),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${purchase.categoryName} • ${purchase.colorName}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${purchase.stockLeft} in stock • Cost: ${Money.etb(purchase.unitCostCents)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (widget.initialPurchase == null)
+                                TextButton(
+                                  onPressed: () =>
+                                      setState(() => _selectedPurchase = null),
+                                  child: const Text('Change'),
+                                ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.l),
+
+                      // Reason Selector
+                      Text(
+                        'Reason',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.s),
+                      Wrap(
+                        spacing: AppSpacing.s,
+                        runSpacing: AppSpacing.s,
+                        children: [
+                          for (final r in StockAdjustmentReason.values)
+                            ChoiceChip(
+                              label: Text(r.label),
+                              selected: _reason == r,
+                              selectedColor: r.isLoss
+                                  ? colors.loss.withValues(alpha: 0.2)
+                                  : colors.primary.withValues(alpha: 0.2),
+                              onSelected: (selected) {
+                                if (selected) setState(() => _reason = r);
+                              },
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.l),
+
+                      // Quantity Stepper
+                      Text(
+                        'Quantity',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.s),
+                      Row(
+                        children: [
+                          IconButton.outlined(
+                            icon: const Icon(Icons.remove),
+                            onPressed: _quantity > 1
+                                ? () => setState(() => _quantity--)
+                                : null,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.l,
+                            ),
+                            child: Text(
+                              '$_quantity',
                               style: const TextStyle(
+                                fontSize: 22,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            Text(
-                              '${purchase.stockLeft} in stock • Cost: ${Money.etb(purchase.unitCostCents)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textMuted,
+                          ),
+                          IconButton.outlined(
+                            icon: const Icon(Icons.add),
+                            onPressed: () => setState(() => _quantity++),
+                          ),
+                          const Spacer(),
+                          if (_reason.isLoss)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.loss.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
+                              ),
+                              child: Text(
+                                'Loss: ${Money.etb(valueAtCost)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.loss,
+                                ),
                               ),
                             ),
-                          ],
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.l),
+
+                      // Optional Note
+                      TextField(
+                        controller: _noteController,
+                        decoration: const InputDecoration(
+                          labelText: 'Note (optional)',
+                          hintText: 'e.g. Torn sleeve during unpacking',
                         ),
                       ),
-                      if (widget.initialPurchase == null)
-                        TextButton(
-                          onPressed: () =>
-                              setState(() => _selectedPurchase = null),
-                          child: const Text('Change'),
-                        ),
                     ],
                   ),
                 ),
-              const SizedBox(height: AppSpacing.l),
-
-              // Reason Selector
-              Text('Reason', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: AppSpacing.s),
-              Wrap(
-                spacing: AppSpacing.s,
-                runSpacing: AppSpacing.s,
-                children: [
-                  for (final r in StockAdjustmentReason.values)
-                    ChoiceChip(
-                      label: Text(r.label),
-                      selected: _reason == r,
-                      selectedColor: r.isLoss
-                          ? colors.loss.withValues(alpha: 0.2)
-                          : colors.primary.withValues(alpha: 0.2),
-                      onSelected: (selected) {
-                        if (selected) setState(() => _reason = r);
-                      },
-                    ),
-                ],
               ),
-              const SizedBox(height: AppSpacing.l),
-
-              // Quantity Stepper
-              Text('Quantity', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: AppSpacing.s),
-              Row(
-                children: [
-                  IconButton.outlined(
-                    icon: const Icon(Icons.remove),
-                    onPressed: _quantity > 1
-                        ? () => setState(() => _quantity--)
-                        : null,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.l,
-                    ),
-                    child: Text(
-                      '$_quantity',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  IconButton.outlined(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => setState(() => _quantity++),
-                  ),
-                  const Spacer(),
-                  if (_reason.isLoss)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.loss.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: Text(
-                        'Loss: ${Money.etb(valueAtCost)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: colors.loss,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.l),
-
-              // Optional Note
-              TextField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (optional)',
-                  hintText: 'e.g. Torn sleeve during unpacking',
+              // Fixed Action Footer
+              Container(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.s,
+                  AppSpacing.screenPadding,
+                  AppSpacing.m,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Save Button
-              AppButton(
-                label: _isSaving ? 'Saving...' : 'Confirm Adjustment',
-                onPressed: _isSaving ? () {} : _saveAdjustment,
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  border: Border(top: BorderSide(color: colors.border)),
+                ),
+                child: AppButton(
+                  label: _isSaving ? 'Saving...' : 'Confirm Adjustment',
+                  onPressed: _isSaving ? () {} : _saveAdjustment,
+                ),
               ),
             ],
           ),

@@ -214,150 +214,201 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setState) {
             final colors = context.appColors;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9,
-              ),
-              padding: EdgeInsets.only(
-                left: AppSpacing.screenPadding,
-                right: AppSpacing.screenPadding,
-                top: AppSpacing.l,
-                bottom: bottomInset + AppSpacing.l,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add Debt Record',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                        ),
-                      ],
+            return Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppRadius.bottomSheet),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SegmentedButton<DebtDirection>(
-                            showSelectedIcon: false,
-                            segments: const [
-                              ButtonSegment(
-                                value: DebtDirection.owedToMe,
-                                label: Text('Customer owes me'),
+                    border: Border(top: BorderSide(color: colors.border)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          AppSpacing.m,
+                          AppSpacing.screenPadding,
+                          AppSpacing.s,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Add Debt Record',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(color: colors.border, height: 1),
+                      // Scrollable form
+                      Flexible(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenPadding,
+                            AppSpacing.m,
+                            AppSpacing.screenPadding,
+                            AppSpacing.m,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: SegmentedButton<DebtDirection>(
+                                      showSelectedIcon: false,
+                                      segments: const [
+                                        ButtonSegment(
+                                          value: DebtDirection.owedToMe,
+                                          label: Text('Customer owes me'),
+                                        ),
+                                        ButtonSegment(
+                                          value: DebtDirection.iOwe,
+                                          label: Text('I owe supplier'),
+                                        ),
+                                      ],
+                                      selected: {direction},
+                                      onSelectionChanged: (set) =>
+                                          setState(() => direction = set.first),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              ButtonSegment(
-                                value: DebtDirection.iOwe,
-                                label: Text('I owe supplier'),
+                              const SizedBox(height: AppSpacing.m),
+                              AppTextField(
+                                label: 'Person / Supplier name',
+                                hintText: direction == DebtDirection.owedToMe
+                                    ? 'Customer name'
+                                    : 'Supplier name',
+                                controller: nameController,
+                                autofocus: true,
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              MoneyField(
+                                label: 'Amount',
+                                controller: amountController,
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.event_outlined),
+                                title: const Text('Due date (optional)'),
+                                subtitle: Text(
+                                  dueDate == null
+                                      ? 'No due date set'
+                                      : DateFormat.yMMMd().format(dueDate!),
+                                  style: TextStyle(
+                                    color: dueDate == null
+                                        ? colors.textMuted
+                                        : colors.primary,
+                                  ),
+                                ),
+                                trailing: dueDate != null
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: () =>
+                                            setState(() => dueDate = null),
+                                      )
+                                    : null,
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate:
+                                        dueDate ??
+                                        DateTime.now().add(
+                                          const Duration(days: 7),
+                                        ),
+                                    firstDate: DateTime.now().subtract(
+                                      const Duration(days: 365),
+                                    ),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 730),
+                                    ),
+                                  );
+                                  if (picked != null) {
+                                    setState(() => dueDate = picked);
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              AppTextField(
+                                label: 'Note (optional)',
+                                hintText: 'Items taken or repayment agreement',
+                                controller: noteController,
+                                maxLines: 2,
                               ),
                             ],
-                            selected: {direction},
-                            onSelectionChanged: (set) =>
-                                setState(() => direction = set.first),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    AppTextField(
-                      label: 'Person / Supplier name',
-                      hintText: direction == DebtDirection.owedToMe
-                          ? 'Customer name'
-                          : 'Supplier name',
-                      controller: nameController,
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    MoneyField(label: 'Amount', controller: amountController),
-                    const SizedBox(height: AppSpacing.m),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_outlined),
-                      title: const Text('Due date (optional)'),
-                      subtitle: Text(
-                        dueDate == null
-                            ? 'No due date set'
-                            : DateFormat.yMMMd().format(dueDate!),
-                        style: TextStyle(
-                          color: dueDate == null
-                              ? colors.textMuted
-                              : colors.primary,
                         ),
                       ),
-                      trailing: dueDate != null
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () => setState(() => dueDate = null),
-                            )
-                          : null,
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate:
-                              dueDate ??
-                              DateTime.now().add(const Duration(days: 7)),
-                          firstDate: DateTime.now().subtract(
-                            const Duration(days: 365),
-                          ),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 730),
-                          ),
-                        );
-                        if (picked != null) {
-                          setState(() => dueDate = picked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    AppTextField(
-                      label: 'Note (optional)',
-                      hintText: 'Items taken or repayment agreement',
-                      controller: noteController,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: AppSpacing.l),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          final name = nameController.text.trim();
-                          final amountCents = Money.parseCents(
-                            amountController.text,
-                          );
-                          if (name.isEmpty || amountCents <= 0) return;
-
-                          await ref
-                              .read(debtRepositoryProvider)
-                              .add(
-                                DebtInput(
-                                  personName: name,
-                                  amountCents: amountCents,
-                                  direction: direction,
-                                  dueDate: dueDate,
-                                  note: noteController.text.trim().isEmpty
-                                      ? null
-                                      : noteController.text.trim(),
-                                ),
+                      // Fixed footer
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          AppSpacing.s,
+                          AppSpacing.screenPadding,
+                          AppSpacing.m,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          border: Border(top: BorderSide(color: colors.border)),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () async {
+                              final name = nameController.text.trim();
+                              final amountCents = Money.parseCents(
+                                amountController.text,
                               );
-                          if (ctx.mounted) Navigator.of(ctx).pop();
-                        },
-                        child: const Text('Save record'),
+                              if (name.isEmpty || amountCents <= 0) return;
+
+                              await ref
+                                  .read(debtRepositoryProvider)
+                                  .add(
+                                    DebtInput(
+                                      personName: name,
+                                      amountCents: amountCents,
+                                      direction: direction,
+                                      dueDate: dueDate,
+                                      note: noteController.text.trim().isEmpty
+                                          ? null
+                                          : noteController.text.trim(),
+                                    ),
+                                  );
+                              if (ctx.mounted) Navigator.of(ctx).pop();
+                            },
+                            child: const Text('Save record'),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );

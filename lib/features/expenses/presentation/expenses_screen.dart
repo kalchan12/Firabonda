@@ -146,108 +146,159 @@ final class ExpensesScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setState) {
             final colors = context.appColors;
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9,
-              ),
-              padding: EdgeInsets.only(
-                left: AppSpacing.screenPadding,
-                right: AppSpacing.screenPadding,
-                top: AppSpacing.l,
-                bottom: bottomInset + AppSpacing.l,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add Expense',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                        ),
-                      ],
+            return Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppRadius.bottomSheet),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                    AppTextField(
-                      label: 'Expense title',
-                      hintText: 'e.g. Shop rent, Transport, Packaging',
-                      controller: titleController,
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    MoneyField(label: 'Amount', controller: amountController),
-                    const SizedBox(height: AppSpacing.m),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_today_outlined),
-                      title: const Text('Date'),
-                      subtitle: Text(
-                        DateFormat.yMMMd().format(selectedDate),
-                        style: TextStyle(color: colors.primary),
+                    border: Border(top: BorderSide(color: colors.border)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          AppSpacing.m,
+                          AppSpacing.screenPadding,
+                          AppSpacing.s,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Add Expense',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
+                        ),
                       ),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 365),
+                      Divider(color: colors.border, height: 1),
+                      // Scrollable form
+                      Flexible(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenPadding,
+                            AppSpacing.m,
+                            AppSpacing.screenPadding,
+                            AppSpacing.m,
                           ),
-                        );
-                        if (picked != null) {
-                          setState(() => selectedDate = picked);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    AppTextField(
-                      label: 'Note (optional)',
-                      hintText: 'Receipt number or description',
-                      controller: noteController,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: AppSpacing.l),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          final title = titleController.text.trim();
-                          final amountCents = Money.parseCents(
-                            amountController.text,
-                          );
-                          if (title.isEmpty || amountCents <= 0) return;
-
-                          await ref
-                              .read(expenseRepositoryProvider)
-                              .add(
-                                ExpenseInput(
-                                  title: title,
-                                  amountCents: amountCents,
-                                  date: selectedDate,
-                                  note: noteController.text.trim().isEmpty
-                                      ? null
-                                      : noteController.text.trim(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppTextField(
+                                label: 'Expense title',
+                                hintText:
+                                    'e.g. Shop rent, Transport, Packaging',
+                                controller: titleController,
+                                autofocus: true,
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              MoneyField(
+                                label: 'Amount',
+                                controller: amountController,
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(
+                                  Icons.calendar_today_outlined,
                                 ),
-                              );
-                          if (ctx.mounted) Navigator.of(ctx).pop();
-                        },
-                        child: const Text('Record expense'),
+                                title: const Text('Date'),
+                                subtitle: Text(
+                                  DateFormat.yMMMd().format(selectedDate),
+                                  style: TextStyle(color: colors.primary),
+                                ),
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: selectedDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 365),
+                                    ),
+                                  );
+                                  if (picked != null) {
+                                    setState(() => selectedDate = picked);
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: AppSpacing.m),
+                              AppTextField(
+                                label: 'Note (optional)',
+                                hintText: 'Receipt number or description',
+                                controller: noteController,
+                                maxLines: 2,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      // Fixed footer
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.screenPadding,
+                          AppSpacing.s,
+                          AppSpacing.screenPadding,
+                          AppSpacing.m,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          border: Border(top: BorderSide(color: colors.border)),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () async {
+                              final title = titleController.text.trim();
+                              final amountCents = Money.parseCents(
+                                amountController.text,
+                              );
+                              if (title.isEmpty || amountCents <= 0) return;
+
+                              await ref
+                                  .read(expenseRepositoryProvider)
+                                  .add(
+                                    ExpenseInput(
+                                      title: title,
+                                      amountCents: amountCents,
+                                      date: selectedDate,
+                                      note: noteController.text.trim().isEmpty
+                                          ? null
+                                          : noteController.text.trim(),
+                                    ),
+                                  );
+                              if (ctx.mounted) Navigator.of(ctx).pop();
+                            },
+                            child: const Text('Record expense'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
