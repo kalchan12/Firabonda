@@ -5,6 +5,7 @@ import 'package:firabonda/features/sales/presentation/sell_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets(
@@ -44,18 +45,36 @@ void main() {
   );
 
   testWidgets(
-    'FloatingNavBar center button opens speed-dial with Purchase, Batch purchase, Quick sale',
+    'FloatingNavBar center button pushes /batch-purchase directly with no speed dial sheet',
     (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.build(Brightness.dark),
-            home: Scaffold(
+      String? pushedLocation;
+      final router = GoRouter(
+        initialLocation: '/dashboard',
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => Scaffold(
               bottomNavigationBar: FloatingNavBar(
                 currentIndex: 0,
                 onDestinationTap: (_) {},
               ),
             ),
+          ),
+          GoRoute(
+            path: '/batch-purchase',
+            builder: (context, state) {
+              pushedLocation = '/batch-purchase';
+              return const Scaffold(body: Text('Batch Purchase Screen'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp.router(
+            routerConfig: router,
+            theme: AppTheme.build(Brightness.dark),
           ),
         ),
       );
@@ -65,16 +84,13 @@ void main() {
       await tester.tap(find.byTooltip('Add'));
       await tester.pumpAndSettle();
 
-      // Verify speed dial options
-      expect(find.text('Purchase'), findsWidgets);
-      expect(find.text('Batch purchase'), findsOneWidget);
-      expect(find.text('Quick sale'), findsOneWidget);
+      // Verify that /batch-purchase was immediately pushed
+      expect(pushedLocation, '/batch-purchase');
+      expect(find.text('Batch Purchase Screen'), findsOneWidget);
 
-      // Tap close button
-      await tester.tap(find.bySemanticsLabel('Close add menu'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Batch purchase'), findsNothing);
+      // Verify speed dial sheet is completely absent
+      expect(find.text('Quick sale'), findsNothing);
+      expect(find.bySemanticsLabel('Close add menu'), findsNothing);
     },
   );
 

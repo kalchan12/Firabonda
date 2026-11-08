@@ -62,3 +62,17 @@
   - Smart defaults remembering last selected category and supplier for consecutive additions.
   - Undo snackbars on soft deletions (purchases, sales, expenses, debts) giving the shop owner 4 seconds to restore accidental deletions.
 
+## 2026-11-08: Fix Round V2.1 - Task 3
+- **Center Navigation Plus Button Direct to Batch Purchase:**
+  - Removed speed-dial modal sheet and speed-dial animation.
+  - Tapping the center 70dp raised circular plus button immediately routes to `/batch-purchase`.
+  - Batch purchase is the primary workflow for entering stock in a clothing boutique.
+  - Removed duplicate Add purchase entry points from main navigation while retaining single purchase editing.
+
+## 2026-11-08: Fix Round V2.1 - Task 3
+- **Center Navigation Plus Button Direct to Batch Purchase:**
+  - Removed speed-dial modal sheet and speed-dial animation.
+  - Tapping the center 70dp raised circular plus button immediately routes to `/batch-purchase`.
+  - Batch purchase is the primary workflow for entering stock in a clothing boutique.
+  - Removed duplicate Add purchase entry points from main navigation while retaining single purchase editing.
+

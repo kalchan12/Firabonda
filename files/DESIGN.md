@@ -50,10 +50,7 @@ Floating bottom dock with 4 destinations and a prominent 68-72dp raised circular
 
 1. Home (dashboard)
 2. Purchases
-3. **+ Speed Dial** (center, raised 20dp, accent blue glow, cutout notch) -> opens animated speed dial with:
-   - **Purchase** (single item)
-   - **Batch purchase** (bundle lot entry with Hamilton cost allocation)
-   - **Quick sale** (2-3 tap fast sell flow)
+3. **+ Batch Purchase** (center, raised 20dp, accent blue glow, cutout notch) -> opens Batch purchase directly with zero delay (Fix Plan V2.1 Task 3).
 4. Sales
 5. More
 

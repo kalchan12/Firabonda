@@ -73,8 +73,8 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.add),
-                  tooltip: 'Add purchase',
-                  onPressed: () => context.push('/add-purchase'),
+                  tooltip: 'Batch purchase',
+                  onPressed: () => context.push('/batch-purchase'),
                 ),
               ],
             ),
@@ -174,10 +174,10 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                           : Icons.inventory_2_outlined,
                       message: isFiltering
                           ? 'No matching purchases found. Try clearing the search or category filter.'
-                          : 'No purchases yet. Tap "+ Add purchase" to record your clothing inventory.',
+                          : 'No purchases yet. Tap "+ Batch purchase" to record your clothing inventory.',
                       actionLabel: isFiltering
                           ? 'Clear filters'
-                          : 'Add purchase',
+                          : 'Batch purchase',
                       onAction: isFiltering
                           ? () {
                               _searchController.clear();
@@ -185,7 +185,7 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                                   .read(purchaseFiltersProvider.notifier)
                                   .reset();
                             }
-                          : () => context.push('/add-purchase'),
+                          : () => context.push('/batch-purchase'),
                     ),
                   );
                 }

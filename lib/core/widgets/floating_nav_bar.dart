@@ -6,10 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../constants/app_dimensions.dart';
 import '../theme/app_colors.dart';
-import 'speed_dial_sheet.dart';
 
 /// Floating navigation bar with 4 destinations and a prominent 68-72dp
-/// raised circular center speed-dial button with subtle blue glow.
+/// raised circular center button with subtle blue glow that navigates directly to Batch purchase.
 final class FloatingNavBar extends StatelessWidget {
   const FloatingNavBar({
     super.key,
@@ -19,10 +18,6 @@ final class FloatingNavBar extends StatelessWidget {
 
   final int currentIndex;
   final ValueChanged<int> onDestinationTap;
-
-  /// Configuration: If true, tap opens speed-dial. If false, tap navigates directly
-  /// to single purchase and long-press opens speed-dial.
-  static const bool speedDialOnTap = true;
 
   static const _destinations = <_NavDestination>[
     _NavDestination(
@@ -111,22 +106,10 @@ final class FloatingNavBar extends StatelessWidget {
             // Center circular button (68-72dp, raised 22dp with subtle glow and cutout notch)
             Positioned(
               top: 0,
-              child: _CenterSpeedDialButton(
+              child: _CenterAddButton(
                 onTap: () {
-                  if (speedDialOnTap) {
-                    showSpeedDialSheet(context);
-                  } else {
-                    HapticFeedback.lightImpact();
-                    context.push('/add-purchase');
-                  }
-                },
-                onLongPress: () {
-                  if (!speedDialOnTap) {
-                    showSpeedDialSheet(context);
-                  } else {
-                    HapticFeedback.lightImpact();
-                    context.push('/add-purchase');
-                  }
+                  HapticFeedback.lightImpact();
+                  context.push('/batch-purchase');
                 },
               ),
             ),
@@ -198,11 +181,10 @@ final class _NavDestination {
 }
 
 /// Raised circular center button (70dp) with blue accent glow and cutout ring.
-final class _CenterSpeedDialButton extends StatelessWidget {
-  const _CenterSpeedDialButton({required this.onTap, this.onLongPress});
+final class _CenterAddButton extends StatelessWidget {
+  const _CenterAddButton({required this.onTap});
 
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +236,6 @@ final class _CenterSpeedDialButton extends StatelessWidget {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: onTap,
-                onLongPress: onLongPress,
                 child: const Center(
                   child: Icon(Icons.add_rounded, color: Colors.white, size: 32),
                 ),
