@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/calculator.dart';
+import '../application/calculator_history.dart';
 
 /// Result of the mini calculator sheet. `used` is true when the owner
 /// tapped "Use result" and `value` holds the evaluated decimal literal.
@@ -13,7 +16,7 @@ final class CalculatorResult {
   final String value;
 }
 
-/// Bottom-sheet calculator per `files/DESIGN.md` section 7.1.
+/// Bottom-sheet calculator per `files/DESIGN.md` section 7.1 and Step 9.
 ///
 /// Starts with the field's current value; "Use result" writes the value
 /// back into the field and closes the sheet.
@@ -31,21 +34,22 @@ Future<CalculatorResult?> showCalculatorSheet(
   );
 }
 
-final class CalculatorSheet extends StatefulWidget {
+final class CalculatorSheet extends ConsumerStatefulWidget {
   const CalculatorSheet({super.key, required this.initialText, this.quantity});
 
   final String initialText;
   final int? quantity;
 
   @override
-  State<CalculatorSheet> createState() => _CalculatorSheetState();
+  ConsumerState<CalculatorSheet> createState() => _CalculatorSheetState();
 }
 
-final class _CalculatorSheetState extends State<CalculatorSheet> {
+final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
   late final List<List<String?>> _rows;
 
   late String _expression;
   String? _error;
+  bool _showHistory = false;
 
   @override
   void initState() {
@@ -85,26 +89,47 @@ final class _CalculatorSheetState extends State<CalculatorSheet> {
             _expression = _expression.substring(0, _expression.length - 1);
           }
         case '=':
-          _evaluate();
+          _evaluateAndLog();
         default:
           _expression = _expression + key;
       }
     });
   }
 
-  void _evaluate() {
+  void _evaluateAndLog() {
     if (_expression.trim().isEmpty) return;
     try {
+      final exprToLog = _expression;
       final value = CalculatorEvaluator.evaluate(_expression);
       _expression = value;
+      // Record in history (max 20 entries)
+      ref
+          .read(calculatorHistoryProvider.notifier)
+          .addEntry(exprToLog, value);
     } on CalculatorException catch (error) {
       _error = error.message;
+    }
+  }
+
+  Future<void> _copyResult() async {
+    if (_expression.trim().isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: _expression.trim()));
+    await HapticFeedback.lightImpact();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Result copied to clipboard!'),
+          duration: Duration(milliseconds: 1500),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final history = ref.watch(calculatorHistoryProvider);
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -118,70 +143,180 @@ final class _CalculatorSheetState extends State<CalculatorSheet> {
           border: Border(top: BorderSide(color: colors.border)),
         ),
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xl,
+          AppSpacing.l,
           AppSpacing.m,
-          AppSpacing.xl,
+          AppSpacing.l,
           AppSpacing.xl,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: AppSpacing.l),
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(999),
-              ),
+            // Top drag handle & history switch
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    _showHistory
+                        ? Icons.calculate_outlined
+                        : Icons.history_rounded,
+                    color: colors.primary,
+                  ),
+                  tooltip: _showHistory ? 'Show Keypad' : 'Show History',
+                  onPressed: () =>
+                      setState(() => _showHistory = !_showHistory),
+                ),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy_rounded, size: 20),
+                  tooltip: 'Copy current result',
+                  onPressed: _expression.isNotEmpty ? _copyResult : null,
+                ),
+              ],
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            const SizedBox(height: AppSpacing.s),
+
+            if (_showHistory) ...[
+              // History view (last 20 calculations)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _expression.isEmpty ? '0' : _expression,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 30,
+                    'Calculation History (${history.length}/20)',
+                    style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+                      fontSize: 14,
                     ),
                   ),
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  if (history.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        ref.read(calculatorHistoryProvider.notifier).clear();
+                      },
+                      child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s),
+              SizedBox(
+                height: 260,
+                child: history.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No calculations logged yet',
+                          style: TextStyle(color: colors.textMuted),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: history.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final item = history[index];
+                          return ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              '${item.expression} =',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                            trailing: Text(
+                              item.result,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Sora',
+                              ),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _expression = item.result;
+                                _showHistory = false;
+                              });
+                            },
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: AppSpacing.m),
+              OutlinedButton(
+                onPressed: () => setState(() => _showHistory = false),
+                child: const Text('Back to keypad'),
+              ),
+            ] else ...[
+              // Expression & Result display
+              Align(
+                alignment: Alignment.centerRight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
                       child: Text(
-                        _error!,
+                        _expression.isEmpty ? '0' : _expression,
+                        maxLines: 1,
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: colors.loss,
+                          fontFamily: 'Sora',
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
-                ],
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: colors.loss,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.l),
-            for (final row in _rows)
+              const SizedBox(height: AppSpacing.l),
+
+              // Keypad rows
+              for (final row in _rows)
+                Row(
+                  children: [
+                    for (final key in row)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xs),
+                          child: key == null
+                              ? const SizedBox.shrink()
+                              : _Key(label: key, onTap: () => _onKey(key)),
+                        ),
+                      ),
+                  ],
+                ),
+              const SizedBox(height: AppSpacing.l),
+
+              // Action buttons: Use result & Copy
               Row(
                 children: [
-                  for (final key in row)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        child: key == null
-                            ? const SizedBox.shrink()
-                            : _Key(label: key, onTap: () => _onKey(key)),
-                      ),
-                    ),
+                  Expanded(
+                    child: _UseResultButton(onPressed: _popWithValue),
+                  ),
                 ],
               ),
-            const SizedBox(height: AppSpacing.l),
-            _UseResultButton(onPressed: _popWithValue),
+            ],
           ],
         ),
       ),
@@ -195,6 +330,9 @@ final class _CalculatorSheetState extends State<CalculatorSheet> {
     }
     try {
       final value = CalculatorEvaluator.evaluate(_expression);
+      ref
+          .read(calculatorHistoryProvider.notifier)
+          .addEntry(_expression, value);
       Navigator.of(context).pop(CalculatorResult(used: true, value: value));
     } on CalculatorException catch (error) {
       setState(() => _error = error.message);
@@ -263,7 +401,7 @@ final class _Key extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.button),
           child: SizedBox(
-            height: 56,
+            height: 54,
             child: Center(
               child: label == '⌫'
                   ? Icon(Icons.backspace_outlined, color: foreground, size: 22)
