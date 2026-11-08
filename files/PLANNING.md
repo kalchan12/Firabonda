@@ -69,6 +69,20 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] README final
 - [x] Release APK built and installed on the phone
 
+## Phase 8: Improvement Plan V2
+- [x] **Step 0: Audit & Reproduce:** Full audit of overflows, text scaling (1.0, 1.3, 1.6), fonts, and period logic.
+- [x] **Step 1: Quick Fixes:** Bundled Sora & Inter with tabular figures, resolved all RenderFlex overflows across viewports, set Today as dashboard default.
+- [x] **Step 2: Business Logic:** Pure local-calendar periods (`PeriodRange`, `AppClock`), midnight rollover timer, frozen sale profit (`costAtSale`), and stable totals.
+- [x] **Step 3: Data Model & Safe Migration:** Pre-migration automatic backup, Drift schema v2 with `accounts`, `batches`, `stock_adjustments`, `reconciliations`, `edit_history`.
+- [x] **Step 4: Navigation Bar:** 70dp raised circular center button (+ icon only, blue glow, cutout notch) with speed-dial sheet for Purchase, Batch purchase, and Quick sale.
+- [x] **Step 5: Dashboard Redesign:** Net profit hero tile, 2x2 grid, target profit gauge, recent sales, and collapsible More analytics & stock accordion.
+- [x] **Step 6: Pricing & Quick Sell:** 100% target profit default pricing helper (2x cost), 2-3 tap quick sale interface, partial payment with auto debt creation.
+- [x] **Step 7: Batch Purchase:** Lot entry with Hamilton largest-remainder exact cent cost allocation across bundle items.
+- [x] **Step 8: Inventory Adjustments, Reconciliation & Day Close:** Damaged/lost adjustments deducting from stock and logging to losses, cash & stock reconciliation, and day close summary report with clipboard export.
+- [x] **Step 9: Quick Calculator:** App-shell level draggable/floating quick calculator with 20-entry history, copy to clipboard, and use-result actions.
+- [x] **Step 10: Speed & Usability Pass:** Quick quantity stepper chips (+1, +5, +10), smart category/supplier defaults, and undo snackbars on all soft deletions.
+- [x] **Step 11: Final Polish & Documentation:** Full documentation synchronization, zero analyzer warnings, 100% test pass rate.
+
 ## Later (not in this build)
 - Supabase cloud sync and backup
 - Translations (Amharic, Afaan Oromo)

@@ -10,7 +10,10 @@ abstract interface class InventoryRepository {
   Future<String> addReconciliation(ReconciliationInput input);
   Stream<List<ReconciliationRow>> watchReconciliations();
   Future<int> getExpectedCashBalance();
-  Stream<int> watchLossesInPeriod({required DateTime start, required DateTime end});
+  Stream<int> watchLossesInPeriod({
+    required DateTime start,
+    required DateTime end,
+  });
 }
 
 final class LocalInventoryRepository implements InventoryRepository {
@@ -24,43 +27,46 @@ final class LocalInventoryRepository implements InventoryRepository {
     final now = DateTime.now().toUtc();
     final dateUtc = input.date.isUtc ? input.date : input.date.toUtc();
 
-    await _db.into(_db.stockAdjustments).insert(
-      StockAdjustmentsCompanion.insert(
-        id: id,
-        purchaseId: Value(input.purchaseId),
-        categoryId: Value(input.categoryId),
-        quantityChange: input.quantityChange,
-        reason: input.reason.dbValue,
-        valueAtCost: input.valueAtCostCents,
-        date: dateUtc,
-        note: Value(input.note),
-        photoPath: Value(input.photoPath),
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+    await _db
+        .into(_db.stockAdjustments)
+        .insert(
+          StockAdjustmentsCompanion.insert(
+            id: id,
+            purchaseId: Value(input.purchaseId),
+            categoryId: Value(input.categoryId),
+            quantityChange: input.quantityChange,
+            reason: input.reason.dbValue,
+            valueAtCost: input.valueAtCostCents,
+            date: dateUtc,
+            note: Value(input.note),
+            photoPath: Value(input.photoPath),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
 
     return id;
   }
 
   @override
   Stream<List<StockAdjustmentOverview>> watchStockAdjustments() {
-    final query = _db.select(_db.stockAdjustments).join([
-      leftOuterJoin(
-        _db.purchases,
-        _db.purchases.id.equalsExp(_db.stockAdjustments.purchaseId),
-      ),
-      leftOuterJoin(
-        _db.categories,
-        _db.categories.id.equalsExp(_db.stockAdjustments.categoryId),
-      ),
-      leftOuterJoin(
-        _db.colorOptions,
-        _db.colorOptions.id.equalsExp(_db.purchases.colorId),
-      ),
-    ])
-      ..where(_db.stockAdjustments.deletedAt.isNull())
-      ..orderBy([OrderingTerm.desc(_db.stockAdjustments.date)]);
+    final query =
+        _db.select(_db.stockAdjustments).join([
+            leftOuterJoin(
+              _db.purchases,
+              _db.purchases.id.equalsExp(_db.stockAdjustments.purchaseId),
+            ),
+            leftOuterJoin(
+              _db.categories,
+              _db.categories.id.equalsExp(_db.stockAdjustments.categoryId),
+            ),
+            leftOuterJoin(
+              _db.colorOptions,
+              _db.colorOptions.id.equalsExp(_db.purchases.colorId),
+            ),
+          ])
+          ..where(_db.stockAdjustments.deletedAt.isNull())
+          ..orderBy([OrderingTerm.desc(_db.stockAdjustments.date)]);
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -91,20 +97,22 @@ final class LocalInventoryRepository implements InventoryRepository {
     final dateUtc = input.date.isUtc ? input.date : input.date.toUtc();
     final diff = input.countedCents - input.expectedCents;
 
-    await _db.into(_db.reconciliations).insert(
-      ReconciliationsCompanion.insert(
-        id: id,
-        type: input.type,
-        accountId: Value(input.accountId),
-        expected: input.expectedCents,
-        counted: input.countedCents,
-        difference: diff,
-        date: dateUtc,
-        note: Value(input.note),
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+    await _db
+        .into(_db.reconciliations)
+        .insert(
+          ReconciliationsCompanion.insert(
+            id: id,
+            type: input.type,
+            accountId: Value(input.accountId),
+            expected: input.expectedCents,
+            counted: input.countedCents,
+            difference: diff,
+            date: dateUtc,
+            note: Value(input.note),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
 
     return id;
   }

@@ -114,7 +114,9 @@ final class _ReconciliationScreenState
         await _loadExpectedCash();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Reconciliation logged successfully!')),
+            const SnackBar(
+              content: Text('Reconciliation logged successfully!'),
+            ),
           );
         }
       }
@@ -140,7 +142,9 @@ final class _ReconciliationScreenState
       orElse: () => 0,
     );
 
-    final expectedVal = _selectedTab == 0 ? _expectedCash : (totalStockPieces * 100);
+    final expectedVal = _selectedTab == 0
+        ? _expectedCash
+        : (totalStockPieces * 100);
     final countedVal = _selectedTab == 0
         ? _parsedCountedCash
         : (_parsedCountedStock != null ? _parsedCountedStock! * 100 : null);
@@ -148,9 +152,7 @@ final class _ReconciliationScreenState
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Reconciliation & Audit'),
-      ),
+      appBar: AppBar(title: const Text('Reconciliation & Audit')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -237,20 +239,22 @@ final class _ReconciliationScreenState
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.m),
                     decoration: BoxDecoration(
-                      color: (difference == 0
-                              ? colors.profit
-                              : difference > 0
+                      color:
+                          (difference == 0
+                                  ? colors.profit
+                                  : difference > 0
                                   ? colors.primary
                                   : colors.loss)
-                          .withValues(alpha: 0.12),
+                              .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(
-                        color: (difference == 0
-                                ? colors.profit
-                                : difference > 0
+                        color:
+                            (difference == 0
+                                    ? colors.profit
+                                    : difference > 0
                                     ? colors.primary
                                     : colors.loss)
-                            .withValues(alpha: 0.3),
+                                .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -260,25 +264,25 @@ final class _ReconciliationScreenState
                           difference == 0
                               ? 'Count matches perfectly!'
                               : difference > 0
-                                  ? 'Surplus (over):'
-                                  : 'Deficit (shortage):',
+                              ? 'Surplus (over):'
+                              : 'Deficit (shortage):',
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: difference == 0
                                 ? colors.profit
                                 : difference > 0
-                                    ? colors.primary
-                                    : colors.loss,
+                                ? colors.primary
+                                : colors.loss,
                           ),
                         ),
                         Text(
                           _selectedTab == 0
                               ? (difference >= 0
-                                  ? '+ ${Money.etb(difference)}'
-                                  : Money.etb(difference))
+                                    ? '+ ${Money.etb(difference)}'
+                                    : Money.etb(difference))
                               : (difference >= 0
-                                  ? '+${difference ~/ 100} pieces'
-                                  : '${difference ~/ 100} pieces'),
+                                    ? '+${difference ~/ 100} pieces'
+                                    : '${difference ~/ 100} pieces'),
                           style: TextStyle(
                             fontFamily: 'Sora',
                             fontSize: 16,
@@ -286,8 +290,8 @@ final class _ReconciliationScreenState
                             color: difference == 0
                                 ? colors.profit
                                 : difference > 0
-                                    ? colors.primary
-                                    : colors.loss,
+                                ? colors.primary
+                                : colors.loss,
                           ),
                         ),
                       ],
@@ -307,7 +311,9 @@ final class _ReconciliationScreenState
 
                 AppButton(
                   label: _isSaving ? 'Logging...' : 'Save reconciliation',
-                  onPressed: _isSaving ? () {} : () => _saveReconciliation(expectedVal),
+                  onPressed: _isSaving
+                      ? () {}
+                      : () => _saveReconciliation(expectedVal),
                 ),
               ],
             ),
@@ -317,9 +323,9 @@ final class _ReconciliationScreenState
           // Audit History
           Text(
             'Reconciliation History',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.s),
 
@@ -341,7 +347,8 @@ final class _ReconciliationScreenState
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: records.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.s),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.s),
                 itemBuilder: (context, index) {
                   final rec = records[index];
                   final isCash = rec.type == 'cash_account';
@@ -364,9 +371,7 @@ final class _ReconciliationScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isCash
-                                    ? 'Cash count'
-                                    : 'Stock count',
+                                isCash ? 'Cash count' : 'Stock count',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -397,17 +402,17 @@ final class _ReconciliationScreenState
                               isBalanced
                                   ? 'Balanced'
                                   : rec.difference > 0
-                                      ? '+${isCash ? Money.etb(rec.difference) : '${rec.difference ~/ 100} pcs'}'
-                                      : (isCash
-                                          ? Money.etb(rec.difference)
-                                          : '${rec.difference ~/ 100} pcs'),
+                                  ? '+${isCash ? Money.etb(rec.difference) : '${rec.difference ~/ 100} pcs'}'
+                                  : (isCash
+                                        ? Money.etb(rec.difference)
+                                        : '${rec.difference ~/ 100} pcs'),
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: isBalanced
                                     ? colors.profit
                                     : rec.difference > 0
-                                        ? colors.primary
-                                        : colors.loss,
+                                    ? colors.primary
+                                    : colors.loss,
                               ),
                             ),
                             Text(

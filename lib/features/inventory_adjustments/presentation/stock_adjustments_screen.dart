@@ -19,9 +19,7 @@ final class StockAdjustmentsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Stock Adjustments & Losses'),
-      ),
+      appBar: AppBar(title: const Text('Stock Adjustments & Losses')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showStockAdjustmentBottomSheet(context),
         icon: const Icon(Icons.add),
@@ -114,10 +112,9 @@ final class StockAdjustmentsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.s),
                         decoration: BoxDecoration(
-                          color: (adj.reason.isLoss
-                                  ? colors.loss
-                                  : colors.primary)
-                              .withValues(alpha: 0.15),
+                          color:
+                              (adj.reason.isLoss ? colors.loss : colors.primary)
+                                  .withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(

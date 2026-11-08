@@ -211,14 +211,13 @@ final class _BatchPurchaseScreenState
 
     final totalCost = _parsedTotalCostCents;
     final totalPieces = _totalPieces;
-    final avgCostPerPiece =
-        (totalCost != null && totalPieces > 0) ? (totalCost ~/ totalPieces) : 0;
+    final avgCostPerPiece = (totalCost != null && totalPieces > 0)
+        ? (totalCost ~/ totalPieces)
+        : 0;
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Batch Purchase (Bundle Lot)'),
-      ),
+      appBar: AppBar(title: const Text('Batch Purchase (Bundle Lot)')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
@@ -295,7 +294,9 @@ final class _BatchPurchaseScreenState
                           selected: _selectedAccountId == 'acc_telebirr',
                           onSelected: (val) {
                             if (val) {
-                              setState(() => _selectedAccountId = 'acc_telebirr');
+                              setState(
+                                () => _selectedAccountId = 'acc_telebirr',
+                              );
                             }
                           },
                         ),
@@ -394,8 +395,9 @@ final class _BatchPurchaseScreenState
                                   selected: _selectedSupplierId == s.id,
                                   onSelected: (selected) {
                                     setState(() {
-                                      _selectedSupplierId =
-                                          selected ? s.id : null;
+                                      _selectedSupplierId = selected
+                                          ? s.id
+                                          : null;
                                     });
                                   },
                                 ),
@@ -419,8 +421,8 @@ final class _BatchPurchaseScreenState
                 Text(
                   'Bundle items (${_items.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: _addItem,

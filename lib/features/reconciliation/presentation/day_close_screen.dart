@@ -49,9 +49,7 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Day Close Summary'),
-      ),
+      appBar: AppBar(title: const Text('Day Close Summary')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
@@ -98,15 +96,18 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
 
           salesAsync.when(
             data: (allSales) {
-              final daySales =
-                  allSales.where((s) => _isSameDay(s.date, _selectedDate)).toList();
+              final daySales = allSales
+                  .where((s) => _isSameDay(s.date, _selectedDate))
+                  .toList();
               final allExpenses = expensesAsync.value ?? [];
               final dayExpenses = allExpenses
                   .where((e) => _isSameDay(e.date, _selectedDate))
                   .toList();
               final allAdjustments = adjustmentsAsync.value ?? [];
               final dayAdjustments = allAdjustments
-                  .where((a) => _isSameDay(a.date, _selectedDate) && a.reason.isLoss)
+                  .where(
+                    (a) => _isSameDay(a.date, _selectedDate) && a.reason.isLoss,
+                  )
                   .toList();
 
               // Calculations
@@ -119,7 +120,8 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                 totalRevenue += s.unitPriceCents * s.quantity;
                 totalProfit += s.profitCents;
                 totalPiecesSold += s.quantity;
-                cashCollected += s.paidAmountCents ?? (s.unitPriceCents * s.quantity);
+                cashCollected +=
+                    s.paidAmountCents ?? (s.unitPriceCents * s.quantity);
               }
 
               final totalExpenses = dayExpenses.fold<int>(
@@ -142,8 +144,9 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                       end: Alignment.bottomRight,
                       colors: [
                         colors.surfaceVariant.withValues(alpha: 0.95),
-                        (isProfitable ? colors.profit : colors.loss)
-                            .withValues(alpha: 0.12),
+                        (isProfitable ? colors.profit : colors.loss).withValues(
+                          alpha: 0.12,
+                        ),
                       ],
                     ),
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -167,12 +170,12 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: (isProfitable
-                                        ? colors.profit
-                                        : colors.loss)
-                                    .withValues(alpha: 0.2),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
+                                color:
+                                    (isProfitable ? colors.profit : colors.loss)
+                                        .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
                               ),
                               child: Text(
                                 isProfitable ? 'Profitable' : 'Net Loss',
@@ -199,7 +202,9 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                               fontSize: 32,
                               fontWeight: FontWeight.w800,
                               color: isProfitable ? colors.profit : colors.loss,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ),
@@ -247,7 +252,9 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                           value: totalLosses > 0
                               ? '- ${Money.etb(totalLosses)}'
                               : 'ETB 0.00',
-                          color: totalLosses > 0 ? colors.loss : colors.textMuted,
+                          color: totalLosses > 0
+                              ? colors.loss
+                              : colors.textMuted,
                         ),
                         const Divider(height: 16),
                         _DayCloseRow(
@@ -264,7 +271,8 @@ final class _DayCloseScreenState extends ConsumerState<DayCloseScreen> {
                   AppButton(
                     label: 'Complete Day Close & Copy Summary',
                     onPressed: () async {
-                      final summaryText = '''
+                      final summaryText =
+                          '''
 *** Fira Bonda - Day Close Summary ***
 Date: ${DateFormat.yMMMd().format(_selectedDate)}
 Items sold: $totalPiecesSold pcs (${daySales.length} sales)

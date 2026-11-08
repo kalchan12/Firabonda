@@ -227,9 +227,9 @@ enum StockAdjustmentReason {
   final bool isLoss;
 
   static StockAdjustmentReason fromDbValue(String value) => values.firstWhere(
-        (r) => r.dbValue == value,
-        orElse: () => countCorrection,
-      );
+    (r) => r.dbValue == value,
+    orElse: () => countCorrection,
+  );
 }
 
 final class StockAdjustmentInput {
@@ -297,4 +297,3 @@ final class ReconciliationInput {
   final DateTime date;
   final String? note;
 }
-

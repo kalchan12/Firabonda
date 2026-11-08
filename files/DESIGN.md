@@ -31,37 +31,43 @@ Define all colors as theme tokens in one file. Never hardcode colors inside widg
 
 ## 4. Typography
 
-- Rounded, modern font such as **Plus Jakarta Sans** or **Sora**, bundled as an asset (offline first).
+- Modern bundled fonts (offline first): **Sora** for headings, screen titles, and big money numbers; **Inter** for body text and labels.
 - Scale: Display 34/bold (big money numbers), Title 22/bold, Heading 18/semibold, Body 15/regular, Label 12/medium (muted).
-- Money values always use tabular figures when available, so numbers align.
+- Money values always use tabular figures via `FontFeature.tabularFigures()`, so numbers and prices align vertically.
 
 ## 5. Shape, spacing, elevation
 
 - Corner radius: cards 24, buttons 16, chips 999 (pill), bottom sheets 28 top corners.
 - Spacing scale: 4, 8, 12, 16, 20, 24, 32.
 - Screen padding: 20.
+- Touch targets: minimum 52dp on all primary action buttons, inputs, and touchable cards.
 - Prefer subtle borders and soft shadows over heavy shadows. Light gradients allowed on hero cards.
-- Glass/blur effect only for the floating nav bar, never behind long text.
+- Glass/blur effect only for the floating nav bar and speed-dial overlay backdrop, never behind long text.
 
 ## 6. Navigation
 
-Floating bottom bar with 4 destinations and a prominent center button:
+Floating bottom dock with 4 destinations and a prominent 68-72dp raised circular center button:
 
 1. Home (dashboard)
 2. Purchases
-3. **+ Add purchase** (center, large, accent color)
+3. **+ Speed Dial** (center, raised 20dp, accent blue glow, cutout notch) -> opens animated speed dial with:
+   - **Purchase** (single item)
+   - **Batch purchase** (bundle lot entry with Hamilton cost allocation)
+   - **Quick sale** (2-3 tap fast sell flow)
 4. Sales
 5. More
 
 ## 7. Core screens
 
-1. **Dashboard**: period selector (Today / Week / Month / All), three stat tiles (Spent, Earned, Profit), profit chart, best sellers, stock value, low stock alerts.
+1. **Dashboard**: period selector (Today / Yesterday / Week / Month / All / Custom), Net Profit hero tile with status badge, 2x2 grid (Sold, Cost of sold, Bought, Expenses), Target Profit gauge (100% default), recent sales in period, and expandable "More details" accordion (stock value, low stock alerts, best sellers, profit curve chart).
 2. **Purchases list**: grouped by date, search bar, filter chips, each card shows category icon, color dot, quantity, unit cost, stock left.
-3. **Add / edit purchase**: category chips, color chips, quantity stepper, money fields with calculator icon, last price hint, optional fields collapsed.
-4. **Sell sheet**: bottom sheet with quantity, price (prefilled), live profit preview.
-5. **Sales list**: grouped by date with profit per sale.
-6. **More**: suppliers, expenses, debts, categories, colors, export, backup, settings.
-7. **Calculator sheet**: large display, rounded keypad, "Use result" primary button.
+3. **Add / edit purchase**: category chips, color chips, quantity stepper with +1/+5/+10 quick chips, unit cost with last price hint, 100% target profit prefill helper, smart category/supplier defaults.
+4. **Batch purchase**: bundle lot entry with total cost, supplier, account, and dynamic items list with Hamilton largest-remainder exact cost allocation.
+5. **Quick sale & Sell sheet**: 2-3 tap selling flow, 100% target profit prefill, partial payment support with automatic debt receivable generation.
+6. **Stock adjustments**: record damaged, lost, returned, personal use, or count corrections with live cost and stock deduction.
+7. **Reconciliation & Day close**: expected vs counted cash and stock comparison with discrepancy tracking; day close summary with one-tap clipboard report export.
+8. **More**: suppliers, expenses, debts, categories & colors, stock adjustments, reconciliation, day close, export, backup, settings.
+9. **Quick calculator**: app-shell floating trigger button, 20-entry calculation history, clipboard copy, and "Use result" action.
 
 ## 7.1 Mini calculator behavior
 

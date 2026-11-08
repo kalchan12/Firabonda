@@ -103,9 +103,7 @@ final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
       final value = CalculatorEvaluator.evaluate(_expression);
       _expression = value;
       // Record in history (max 20 entries)
-      ref
-          .read(calculatorHistoryProvider.notifier)
-          .addEntry(exprToLog, value);
+      ref.read(calculatorHistoryProvider.notifier).addEntry(exprToLog, value);
     } on CalculatorException catch (error) {
       _error = error.message;
     }
@@ -163,8 +161,7 @@ final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
                     color: colors.primary,
                   ),
                   tooltip: _showHistory ? 'Show Keypad' : 'Show History',
-                  onPressed: () =>
-                      setState(() => _showHistory = !_showHistory),
+                  onPressed: () => setState(() => _showHistory = !_showHistory),
                 ),
                 Container(
                   width: 40,
@@ -200,7 +197,10 @@ final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
                       onPressed: () {
                         ref.read(calculatorHistoryProvider.notifier).clear();
                       },
-                      child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                 ],
               ),
@@ -311,9 +311,7 @@ final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
               // Action buttons: Use result & Copy
               Row(
                 children: [
-                  Expanded(
-                    child: _UseResultButton(onPressed: _popWithValue),
-                  ),
+                  Expanded(child: _UseResultButton(onPressed: _popWithValue)),
                 ],
               ),
             ],
@@ -330,9 +328,7 @@ final class _CalculatorSheetState extends ConsumerState<CalculatorSheet> {
     }
     try {
       final value = CalculatorEvaluator.evaluate(_expression);
-      ref
-          .read(calculatorHistoryProvider.notifier)
-          .addEntry(_expression, value);
+      ref.read(calculatorHistoryProvider.notifier).addEntry(_expression, value);
       Navigator.of(context).pop(CalculatorResult(used: true, value: value));
     } on CalculatorException catch (error) {
       setState(() => _error = error.message);

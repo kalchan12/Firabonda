@@ -77,10 +77,11 @@ final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
 
 final stockAdjustmentsStreamProvider =
     StreamProvider<List<StockAdjustmentOverview>>((ref) {
-  return ref.watch(inventoryRepositoryProvider).watchStockAdjustments();
-});
+      return ref.watch(inventoryRepositoryProvider).watchStockAdjustments();
+    });
 
-final reconciliationsStreamProvider =
-    StreamProvider<List<ReconciliationRow>>((ref) {
+final reconciliationsStreamProvider = StreamProvider<List<ReconciliationRow>>((
+  ref,
+) {
   return ref.watch(inventoryRepositoryProvider).watchReconciliations();
 });

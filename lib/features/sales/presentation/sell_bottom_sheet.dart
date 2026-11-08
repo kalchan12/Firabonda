@@ -409,7 +409,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                       label: const Text('Cash'),
                       selected: _selectedAccountId == 'acc_cash',
                       onSelected: (val) {
-                        if (val) setState(() => _selectedAccountId = 'acc_cash');
+                        if (val) {
+                          setState(() => _selectedAccountId = 'acc_cash');
+                        }
                       },
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -427,7 +429,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                       label: const Text('Bank'),
                       selected: _selectedAccountId == 'acc_bank',
                       onSelected: (val) {
-                        if (val) setState(() => _selectedAccountId = 'acc_bank');
+                        if (val) {
+                          setState(() => _selectedAccountId = 'acc_bank');
+                        }
                       },
                     ),
                   ],

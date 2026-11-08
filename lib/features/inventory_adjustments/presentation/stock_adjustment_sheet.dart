@@ -105,9 +105,9 @@ final class _StockAdjustmentSheetState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving adjustment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving adjustment: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -119,8 +119,9 @@ final class _StockAdjustmentSheetState
     final colors = context.appColors;
     final purchasesAsync = ref.watch(purchaseOverviewsStreamProvider);
     final purchase = _selectedPurchase;
-    final valueAtCost =
-        purchase != null ? (_quantity * purchase.unitCostCents) : 0;
+    final valueAtCost = purchase != null
+        ? (_quantity * purchase.unitCostCents)
+        : 0;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -178,8 +179,9 @@ final class _StockAdjustmentSheetState
               if (purchase == null)
                 purchasesAsync.when(
                   data: (items) {
-                    final inStock =
-                        items.where((i) => i.stockLeft > 0).toList();
+                    final inStock = items
+                        .where((i) => i.stockLeft > 0)
+                        .toList();
                     return DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
                         labelText: 'Select item from stock',
@@ -195,8 +197,9 @@ final class _StockAdjustmentSheetState
                       ],
                       onChanged: (id) {
                         setState(() {
-                          _selectedPurchase =
-                              inStock.firstWhere((i) => i.id == id);
+                          _selectedPurchase = inStock.firstWhere(
+                            (i) => i.id == id,
+                          );
                         });
                       },
                     );
@@ -225,8 +228,9 @@ final class _StockAdjustmentSheetState
                           children: [
                             Text(
                               '${purchase.categoryName} • ${purchase.colorName}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             Text(
                               '${purchase.stockLeft} in stock • Cost: ${Money.etb(purchase.unitCostCents)}',

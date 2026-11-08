@@ -484,8 +484,8 @@ final class _TargetProfitCard extends StatelessWidget {
                       child: Text(
                         'Target Profit Margin',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          fontWeight: FontWeight.w700,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

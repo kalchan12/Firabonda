@@ -129,8 +129,9 @@ final class LocalPurchaseRepository implements PurchaseRepository {
 
   @override
   Future<void> restore(String id) {
-    return (_db.update(_db.purchases)..where((row) => row.id.equals(id)))
-        .write(const PurchasesCompanion(deletedAt: Value(null)));
+    return (_db.update(_db.purchases)..where((row) => row.id.equals(id))).write(
+      const PurchasesCompanion(deletedAt: Value(null)),
+    );
   }
 
   @override
@@ -219,23 +220,26 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       if (unpaid > 0) {
         final debtId = newUuid();
         final debtor =
-            (input.customerName != null && input.customerName!.trim().isNotEmpty)
-                ? input.customerName!.trim()
-                : 'Customer (Sale)';
-        await _db.into(_db.debts).insert(
-          DebtsCompanion.insert(
-            id: debtId,
-            personName: debtor,
-            amount: unpaid,
-            direction: 'owed_to_me',
-            isPaid: false,
-            note: Value(
-              'Unpaid balance from sale of ${input.quantity}x items',
-            ),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
+            (input.customerName != null &&
+                input.customerName!.trim().isNotEmpty)
+            ? input.customerName!.trim()
+            : 'Customer (Sale)';
+        await _db
+            .into(_db.debts)
+            .insert(
+              DebtsCompanion.insert(
+                id: debtId,
+                personName: debtor,
+                amount: unpaid,
+                direction: 'owed_to_me',
+                isPaid: false,
+                note: Value(
+                  'Unpaid balance from sale of ${input.quantity}x items',
+                ),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
       }
       return saleId;
     });
@@ -360,18 +364,20 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final now = DateTime.now().toUtc();
       final dateUtc = _utc(input.date);
 
-      await _db.into(_db.batches).insert(
-        BatchesCompanion.insert(
-          id: batchId,
-          supplierId: Value(input.supplierId),
-          date: dateUtc,
-          totalPaid: input.totalCostCents,
-          accountId: Value(input.accountId ?? 'acc_cash'),
-          note: Value(input.note),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+      await _db
+          .into(_db.batches)
+          .insert(
+            BatchesCompanion.insert(
+              id: batchId,
+              supplierId: Value(input.supplierId),
+              date: dateUtc,
+              totalPaid: input.totalCostCents,
+              accountId: Value(input.accountId ?? 'acc_cash'),
+              note: Value(input.note),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
 
       // Allocate total batch cost across items using largest-remainder method
       final quantities = input.items.map((i) => i.quantity).toList();
@@ -386,24 +392,26 @@ final class LocalPurchaseRepository implements PurchaseRepository {
         final itemUnitCost = (itemTotalCost / item.quantity).round();
         final purchaseId = newUuid();
 
-        await _db.into(_db.purchases).insert(
-          PurchasesCompanion.insert(
-            id: purchaseId,
-            batchId: Value(batchId),
-            categoryId: item.categoryId,
-            colorId: item.colorId,
-            supplierId: Value(input.supplierId),
-            size: Value(item.size),
-            quantity: item.quantity,
-            unitCost: itemUnitCost,
-            totalCost: itemTotalCost,
-            sellingPrice: Value(item.sellingPriceCents),
-            note: Value(input.note),
-            date: dateUtc,
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
+        await _db
+            .into(_db.purchases)
+            .insert(
+              PurchasesCompanion.insert(
+                id: purchaseId,
+                batchId: Value(batchId),
+                categoryId: item.categoryId,
+                colorId: item.colorId,
+                supplierId: Value(input.supplierId),
+                size: Value(item.size),
+                quantity: item.quantity,
+                unitCost: itemUnitCost,
+                totalCost: itemTotalCost,
+                sellingPrice: Value(item.sellingPriceCents),
+                note: Value(input.note),
+                date: dateUtc,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
       }
 
       return batchId;

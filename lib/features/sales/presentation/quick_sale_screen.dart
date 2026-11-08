@@ -28,20 +28,15 @@ final class _QuickSaleScreenState extends ConsumerState<QuickSaleScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Quick Sale'),
-      ),
+      appBar: AppBar(title: const Text('Quick Sale')),
       body: purchasesAsync.when(
         data: (purchases) {
-          final inStock = purchases
-              .where((p) => p.stockLeft > 0)
-              .where((p) {
-                if (_searchQuery.trim().isEmpty) return true;
-                final query = _searchQuery.toLowerCase();
-                return p.categoryName.toLowerCase().contains(query) ||
-                    p.colorName.toLowerCase().contains(query);
-              })
-              .toList();
+          final inStock = purchases.where((p) => p.stockLeft > 0).where((p) {
+            if (_searchQuery.trim().isEmpty) return true;
+            final query = _searchQuery.toLowerCase();
+            return p.categoryName.toLowerCase().contains(query) ||
+                p.colorName.toLowerCase().contains(query);
+          }).toList();
 
           return Column(
             children: [
@@ -136,10 +131,7 @@ final class _QuickSaleScreenState extends ConsumerState<QuickSaleScreen> {
 }
 
 final class _QuickSaleItemCard extends StatelessWidget {
-  const _QuickSaleItemCard({
-    required this.item,
-    required this.onSellTap,
-  });
+  const _QuickSaleItemCard({required this.item, required this.onSellTap});
 
   final PurchaseOverview item;
   final VoidCallback onSellTap;
@@ -147,8 +139,7 @@ final class _QuickSaleItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final suggestedPrice =
-        item.sellingPriceCents ?? (item.unitCostCents * 2);
+    final suggestedPrice = item.sellingPriceCents ?? (item.unitCostCents * 2);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.m),
@@ -178,10 +169,7 @@ final class _QuickSaleItemCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${item.colorName} • ${item.stockLeft} in stock',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.textMuted,
-                  ),
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
                 ),
                 const SizedBox(height: 2),
                 Text(
