@@ -168,7 +168,9 @@ void main() {
     final db = AppDatabase.open(customPath: dbFile.path);
 
     // Verify user_version upgraded to 2
-    final versionResult = await db.customSelect('PRAGMA user_version;').getSingle();
+    final versionResult = await db
+        .customSelect('PRAGMA user_version;')
+        .getSingle();
     expect(versionResult.data['user_version'], 2);
 
     // 4. Verify safety backup file exists
@@ -203,16 +205,24 @@ void main() {
     expect(accountIds, containsAll(['acc_cash', 'acc_bank', 'acc_telebirr']));
 
     // 7. Verify new v2 tables exist and accept inserts
-    final batchResult = await db.customSelect('SELECT count(*) as c FROM batches;').getSingle();
+    final batchResult = await db
+        .customSelect('SELECT count(*) as c FROM batches;')
+        .getSingle();
     expect(batchResult.data['c'], 0);
 
-    final adjResult = await db.customSelect('SELECT count(*) as c FROM stock_adjustments;').getSingle();
+    final adjResult = await db
+        .customSelect('SELECT count(*) as c FROM stock_adjustments;')
+        .getSingle();
     expect(adjResult.data['c'], 0);
 
-    final recResult = await db.customSelect('SELECT count(*) as c FROM reconciliations;').getSingle();
+    final recResult = await db
+        .customSelect('SELECT count(*) as c FROM reconciliations;')
+        .getSingle();
     expect(recResult.data['c'], 0);
 
-    final histResult = await db.customSelect('SELECT count(*) as c FROM edit_history;').getSingle();
+    final histResult = await db
+        .customSelect('SELECT count(*) as c FROM edit_history;')
+        .getSingle();
     expect(histResult.data['c'], 0);
 
     await db.close();
@@ -221,7 +231,10 @@ void main() {
 
 class _FakeQueryExecutorUser implements QueryExecutorUser {
   @override
-  Future<void> beforeOpen(QueryExecutor executor, OpeningDetails details) async {}
+  Future<void> beforeOpen(
+    QueryExecutor executor,
+    OpeningDetails details,
+  ) async {}
 
   @override
   int get schemaVersion => 1;

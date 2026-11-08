@@ -13,9 +13,7 @@ final class BatchPurchaseScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Batch Purchase'),
-      ),
+      appBar: AppBar(title: const Text('Batch Purchase')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.l),

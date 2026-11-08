@@ -116,7 +116,7 @@ void main() {
         // Check spent (4,000.00)
         expect(find.text('ETB 4,000.00'), findsOneWidget);
         // Check earned (1,800.00)
-        expect(find.text('ETB 1,800.00'), findsOneWidget);
+        expect(find.text('ETB 1,800.00'), findsWidgets);
         // Check real profit (+ ETB 450.00)
         expect(find.text('+ ETB 450.00'), findsOneWidget);
         // Check expenses mention

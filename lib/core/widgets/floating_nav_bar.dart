@@ -96,7 +96,9 @@ final class FloatingNavBar extends StatelessWidget {
                       children: [
                         _destination(context, 0),
                         _destination(context, 1),
-                        const SizedBox(width: 76), // clearance for 70dp center button
+                        const SizedBox(
+                          width: 76,
+                        ), // clearance for 70dp center button
                         _destination(context, 2),
                         _destination(context, 3),
                       ],
@@ -197,10 +199,7 @@ final class _NavDestination {
 
 /// Raised circular center button (70dp) with blue accent glow and cutout ring.
 final class _CenterSpeedDialButton extends StatelessWidget {
-  const _CenterSpeedDialButton({
-    required this.onTap,
-    this.onLongPress,
-  });
+  const _CenterSpeedDialButton({required this.onTap, this.onLongPress});
 
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -257,11 +256,7 @@ final class _CenterSpeedDialButton extends StatelessWidget {
                 onTap: onTap,
                 onLongPress: onLongPress,
                 child: const Center(
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  child: Icon(Icons.add_rounded, color: Colors.white, size: 32),
                 ),
               ),
             ),

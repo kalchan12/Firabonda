@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,6 +12,8 @@ import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/stat_tile.dart';
+import '../../../data/models/shop_models.dart';
+import '../../settings/application/settings_controller.dart';
 import '../application/dashboard_controller.dart';
 
 final class DashboardScreen extends ConsumerWidget {
@@ -30,6 +33,7 @@ final class DashboardScreen extends ConsumerWidget {
     final colors = context.appColors;
     final selectedPeriod = ref.watch(selectedPeriodProvider);
     final dashboardAsync = ref.watch(dashboardDataProvider);
+    final targetProfit = ref.watch(targetProfitPercentProvider);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -178,12 +182,43 @@ final class DashboardScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Spent & Earned Tiles
+                    // 1. Net Profit Hero Tile with status badge
+                    _NetProfitHeroTile(
+                      periodName: periodName,
+                      netProfitCents: data.realProfitCents,
+                      salesProfitCents: data.salesProfitCents,
+                      expensesCents: data.expensesCents,
+                      lossesCents: data.lossesCents,
+                      isPositive: isProfitPositive,
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
+                    // 2. 2x2 Grid: Sold, Cost of sold, Bought, Expenses
                     Row(
                       children: [
                         Expanded(
                           child: StatTile(
-                            label: 'Spent ($periodName)',
+                            label: 'Sold / Earned ($periodName)',
+                            value: Money.etb(data.earnedCents),
+                            tone: StatTone.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.m),
+                        Expanded(
+                          child: StatTile(
+                            label: 'Cost of sold ($periodName)',
+                            value: Money.etb(data.costOfSoldCents),
+                            tone: StatTone.loss,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StatTile(
+                            label: 'Bought / Spent ($periodName)',
                             value: Money.etb(data.spentCents),
                             tone: StatTone.loss,
                           ),
@@ -191,242 +226,47 @@ final class DashboardScreen extends ConsumerWidget {
                         const SizedBox(width: AppSpacing.m),
                         Expanded(
                           child: StatTile(
-                            label: 'Earned ($periodName)',
-                            value: Money.etb(data.earnedCents),
-                            tone: StatTone.primary,
+                            label: 'Expenses ($periodName)',
+                            value: Money.etb(data.expensesCents),
+                            tone: StatTone.loss,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // Real Profit Hero Tile
-                    StatTile(
-                      hero: true,
-                      label: 'Real Profit ($periodName)',
-                      value: isProfitPositive
-                          ? '+ ${Money.etb(data.realProfitCents)}'
-                          : Money.etb(data.realProfitCents),
-                      tone: isProfitPositive ? StatTone.profit : StatTone.loss,
+                    // 3. Target profit gauge/bar
+                    _TargetProfitCard(
+                      achievedPercent: data.profitPercent,
+                      targetPercent: targetProfit,
                     ),
-                    if (data.expensesCents > 0)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: 4,
-                          left: 6,
-                          bottom: 4,
-                        ),
-                        child: Text(
-                          'Includes ${Money.etb(data.expensesCents)} expenses deducted',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // Profit Chart
-                    _ProfitChartCard(
+                    // 4. Sales in period (recent sales)
+                    _SalesPeriodListCard(
                       periodName: periodName,
-                      valuesCents: data.chartPoints,
+                      sales: data.periodSales,
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // Best Sellers Card
-                    AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Best sellers',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                periodName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.m),
-                          if (data.bestSellers.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.m,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'No sales recorded in this period yet',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: colors.textMuted,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            for (final seller in data.bestSellers)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.m,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        seller.categoryName,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '${seller.quantitySold} sold',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.textMuted,
-                                      ),
-                                    ),
-                                    const SizedBox(width: AppSpacing.l),
-                                    Text(
-                                      seller.profitCents >= 0
-                                          ? '+ ${Money.amount(seller.profitCents)}'
-                                          : Money.amount(seller.profitCents),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: seller.profitCents >= 0
-                                            ? colors.profit
-                                            : colors.loss,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          const Divider(),
-                          const SizedBox(height: AppSpacing.s),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Unsold stock value',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.textMuted,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${data.unsoldItemsCount} pieces in stock',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: colors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                Money.etb(data.stockValueCents),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // Low Stock Alert Card (visible only if there are items low in stock)
-                    if (data.lowStockItems.isNotEmpty)
-                      AppCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.warning_amber_rounded,
-                                  size: 20,
-                                  color: colors.warning,
-                                ),
-                                const SizedBox(width: AppSpacing.s),
-                                Text(
-                                  'Low stock alerts',
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(color: colors.warning),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.s),
-                            for (final item in data.lowStockItems)
-                              InkWell(
-                                onTap: () =>
-                                    context.push('/add-purchase', extra: item),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: AppSpacing.xs,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.categoryName} (${item.colorName})',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: colors.warning.withValues(
-                                            alpha: 0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            999,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '${item.stockLeft} left',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: colors.warning,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                    // 5. Expandable "More details" accordion
+                    _MoreDetailsAccordion(data: data, periodName: periodName),
                     const SizedBox(height: 100), // bottom nav clearance
                   ],
                 );
               },
               loading: () => Column(
                 children: [
+                  SkeletonLoader(
+                    child: Container(
+                      height: 130,
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.m),
                   Row(
                     children: [
                       Expanded(
@@ -461,17 +301,7 @@ final class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.m),
                   SkeletonLoader(
                     child: Container(
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-                  SkeletonLoader(
-                    child: Container(
-                      height: 200,
+                      height: 160,
                       decoration: BoxDecoration(
                         color: colors.surface,
                         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -497,6 +327,602 @@ final class DashboardScreen extends ConsumerWidget {
   }
 }
 
+/// 1. Net Profit Hero Tile with status badge (green/red)
+final class _NetProfitHeroTile extends StatelessWidget {
+  const _NetProfitHeroTile({
+    required this.periodName,
+    required this.netProfitCents,
+    required this.salesProfitCents,
+    required this.expensesCents,
+    required this.lossesCents,
+    required this.isPositive,
+  });
+
+  final String periodName;
+  final int netProfitCents;
+  final int salesProfitCents;
+  final int expensesCents;
+  final int lossesCents;
+  final bool isPositive;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final badgeColor = isPositive ? colors.profit : colors.loss;
+    final statusText = isPositive ? 'Profitable' : 'Net Loss';
+
+    return AppCard(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          colors.surfaceVariant.withValues(alpha: 0.95),
+          (isPositive ? colors.profit : colors.loss).withValues(alpha: 0.12),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Real Profit ($periodName)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.s,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: Border.all(color: badgeColor.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPositive
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      size: 14,
+                      color: badgeColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              isPositive
+                  ? '+ ${Money.etb(netProfitCents)}'
+                  : Money.etb(netProfitCents),
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: isPositive ? colors.profit : colors.loss,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            expensesCents > 0
+                ? 'Includes ${Money.etb(expensesCents)} expenses deducted'
+                : lossesCents > 0
+                ? 'Includes ${Money.etb(lossesCents)} losses deducted'
+                : 'Formula: Sold profit minus expenses and losses',
+            style: TextStyle(fontSize: 12, color: colors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 3. Target profit gauge/bar
+final class _TargetProfitCard extends StatelessWidget {
+  const _TargetProfitCard({
+    required this.achievedPercent,
+    required this.targetPercent,
+  });
+
+  final double achievedPercent;
+  final int targetPercent;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final diff = achievedPercent - targetPercent;
+    final isAhead = diff >= 0;
+    final progress = targetPercent > 0
+        ? (achievedPercent / targetPercent).clamp(0.0, 1.5)
+        : 1.0;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.track_changes_rounded,
+                      size: 18,
+                      color: colors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        'Target Profit Margin',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Text(
+                  'Target: $targetPercent%',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: Text(
+                  '${achievedPercent.toStringAsFixed(1)}% markup',
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Text(
+                isAhead
+                    ? '+${diff.toStringAsFixed(1)}% vs target'
+                    : '${diff.toStringAsFixed(1)}% vs target',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isAhead ? colors.profit : colors.loss,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: (progress / 1.5).clamp(0.0, 1.0),
+              minHeight: 8,
+              backgroundColor: colors.surfaceVariant,
+              valueColor: AlwaysStoppedAnimation(
+                isAhead ? colors.profit : colors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 4. Sales in period (recent sales list)
+final class _SalesPeriodListCard extends StatelessWidget {
+  const _SalesPeriodListCard({required this.periodName, required this.sales});
+
+  final String periodName;
+  final List<SaleOverview> sales;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Sales ($periodName)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  '${sales.length} total',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          if (sales.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+              child: Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'No sales recorded in this period yet',
+                      style: TextStyle(fontSize: 13, color: colors.textMuted),
+                    ),
+                    const SizedBox(height: AppSpacing.s),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push('/quick-sale'),
+                      icon: const Icon(Icons.bolt_rounded, size: 16),
+                      label: const Text('Record Quick Sale'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: sales.take(5).length,
+              separatorBuilder: (_, _) => const Divider(height: 12),
+              itemBuilder: (context, index) {
+                final sale = sales[index];
+                final revenue = sale.unitPriceCents * sale.quantity;
+
+                return Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.xs),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                      ),
+                      child: Text(
+                        DateFormat.jm().format(sale.date),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sale.categoryName,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${sale.colorName} • x${sale.quantity}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          Money.etb(revenue),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        Text(
+                          '+ ${Money.amount(sale.profitCents)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: colors.profit,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 5. Expandable "More details" accordion:
+/// Unsold stock value, low stock alerts, best sellers, profit curve chart
+final class _MoreDetailsAccordion extends StatelessWidget {
+  const _MoreDetailsAccordion({required this.data, required this.periodName});
+
+  final DashboardData data;
+  final String periodName;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.l,
+            vertical: AppSpacing.xs,
+          ),
+          title: Text(
+            'More analytics & stock',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            'Stock value, low stock alerts, best sellers & chart',
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.l,
+            0,
+            AppSpacing.l,
+            AppSpacing.l,
+          ),
+          children: [
+            const Divider(height: 1),
+            const SizedBox(height: AppSpacing.m),
+
+            // Stock value
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unsold stock value',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      Text(
+                        '${data.unsoldItemsCount} pieces in stock',
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  Money.etb(data.stockValueCents),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.l),
+
+            // Low Stock Alert (visible if low stock items exist)
+            if (data.lowStockItems.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: colors.warning,
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Text(
+                    'Low stock alerts',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: colors.warning,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              for (final item in data.lowStockItems)
+                InkWell(
+                  onTap: () => context.push('/add-purchase', extra: item),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${item.categoryName} (${item.colorName})',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.warning.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '${item.stockLeft} left',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.l),
+            ],
+
+            // Best sellers
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Best sellers',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  periodName,
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+            if (data.bestSellers.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+                child: Text(
+                  'No best sellers in this period yet',
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
+              )
+            else
+              for (final seller in data.bestSellers)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          seller.categoryName,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${seller.quantitySold} sold',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.m),
+                      Text(
+                        seller.profitCents >= 0
+                            ? '+ ${Money.amount(seller.profitCents)}'
+                            : Money.amount(seller.profitCents),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: seller.profitCents >= 0
+                              ? colors.profit
+                              : colors.loss,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            const SizedBox(height: AppSpacing.l),
+
+            // Profit Trend Line Chart
+            _ProfitChartCard(
+              periodName: periodName,
+              valuesCents: data.chartPoints,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class _ProfitChartCard extends StatelessWidget {
   const _ProfitChartCard({required this.periodName, required this.valuesCents});
 
@@ -508,82 +934,82 @@ final class _ProfitChartCard extends StatelessWidget {
     final colors = context.appColors;
     final allZeros = valuesCents.every((v) => v == 0);
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Profit trend',
-                style: Theme.of(context).textTheme.titleMedium,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Profit trend',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            Text(
+              periodName,
+              style: TextStyle(fontSize: 11, color: colors.textMuted),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.m),
+        SizedBox(
+          height: 160,
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (value) =>
+                    FlLine(color: colors.border, strokeWidth: 1),
               ),
-              Text(
-                periodName,
-                style: TextStyle(fontSize: 12, color: colors.textMuted),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.l),
-          SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) =>
-                      FlLine(color: colors.border, strokeWidth: 1),
-                ),
-                borderData: FlBorderData(show: false),
-                titlesData: const FlTitlesData(show: false),
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => colors.surfaceVariant,
-                    getTooltipItems: (spots) => [
-                      for (final spot in spots)
-                        LineTooltipItem(
-                          Money.amount(spot.y.round()),
-                          TextStyle(
-                            color: colors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(show: false),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipColor: (_) => colors.surfaceVariant,
+                  getTooltipItems: (spots) => [
+                    for (final spot in spots)
+                      LineTooltipItem(
+                        Money.amount(spot.y.round()),
+                        TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
                         ),
-                    ],
-                  ),
-                ),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [
-                      for (final (index, value) in valuesCents.indexed)
-                        FlSpot(index.toDouble(), value),
-                    ],
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: allZeros ? colors.textMuted : colors.profit,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          (allZeros ? colors.textMuted : colors.profit)
-                              .withValues(alpha: 0.2),
-                          (allZeros ? colors.textMuted : colors.profit)
-                              .withValues(alpha: 0.0),
-                        ],
                       ),
+                  ],
+                ),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: [
+                    for (final (index, value) in valuesCents.indexed)
+                      FlSpot(index.toDouble(), value),
+                  ],
+                  isCurved: true,
+                  curveSmoothness: 0.3,
+                  color: allZeros ? colors.textMuted : colors.profit,
+                  barWidth: 3,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        (allZeros ? colors.textMuted : colors.profit)
+                            .withValues(alpha: 0.2),
+                        (allZeros ? colors.textMuted : colors.profit)
+                            .withValues(alpha: 0.0),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

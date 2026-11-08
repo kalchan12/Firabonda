@@ -13,9 +13,7 @@ final class QuickSaleScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
-        title: const Text('Quick Sale'),
-      ),
+      appBar: AppBar(title: const Text('Quick Sale')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.l),
