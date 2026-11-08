@@ -82,4 +82,48 @@ final class ShopLogic {
     if (quantity > stockLeft) return SaleCheck.exceedsStock;
     return SaleCheck.ok;
   }
+
+  /// Allocates total batch cost (in cents) among items using the
+  /// largest-remainder (Hamilton) method based on quantities.
+  /// Guarantees that sum(allocated costs) == totalCostCents exactly,
+  /// with zero fractional cents created or lost.
+  static List<int> allocateBatchCost({
+    required int totalCostCents,
+    required List<int> quantities,
+  }) {
+    if (quantities.isEmpty) return const [];
+    final totalQuantity = quantities.fold<int>(0, (sum, q) => sum + q);
+    if (totalQuantity <= 0 || totalCostCents <= 0) {
+      return List<int>.filled(quantities.length, 0);
+    }
+
+    final baseShares = List<int>.filled(quantities.length, 0);
+    final remainders = List<int>.filled(quantities.length, 0);
+    var allocatedSum = 0;
+
+    for (var i = 0; i < quantities.length; i++) {
+      final q = quantities[i];
+      final exactShareNumerator = totalCostCents * q;
+      final baseShare = exactShareNumerator ~/ totalQuantity;
+      final remainder = exactShareNumerator % totalQuantity;
+
+      baseShares[i] = baseShare;
+      remainders[i] = remainder;
+      allocatedSum += baseShare;
+    }
+
+    var difference = totalCostCents - allocatedSum;
+
+    // Order indices by remainder descending
+    final indices = List<int>.generate(quantities.length, (i) => i)
+      ..sort((a, b) => remainders[b].compareTo(remainders[a]));
+
+    for (final idx in indices) {
+      if (difference <= 0) break;
+      baseShares[idx] += 1;
+      difference -= 1;
+    }
+
+    return baseShares;
+  }
 }

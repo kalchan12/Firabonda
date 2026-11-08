@@ -50,6 +50,40 @@ final class SaleInput {
   final String? customerName;
 }
 
+final class BatchItemInput {
+  const BatchItemInput({
+    required this.categoryId,
+    required this.colorId,
+    required this.quantity,
+    this.sellingPriceCents,
+    this.size,
+  });
+
+  final String categoryId;
+  final String colorId;
+  final int quantity;
+  final int? sellingPriceCents;
+  final String? size;
+}
+
+final class BatchPurchaseInput {
+  const BatchPurchaseInput({
+    this.supplierId,
+    required this.totalCostCents,
+    required this.date,
+    this.accountId = 'acc_cash',
+    this.note,
+    required this.items,
+  });
+
+  final String? supplierId;
+  final int totalCostCents;
+  final DateTime date;
+  final String? accountId;
+  final String? note;
+  final List<BatchItemInput> items;
+}
+
 /// A purchase row joined with its category/color names and remaining stock.
 final class PurchaseOverview {
   const PurchaseOverview({

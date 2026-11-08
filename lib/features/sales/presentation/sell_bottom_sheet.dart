@@ -392,66 +392,72 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
               const SizedBox(height: AppSpacing.m),
 
               // Payment Account Selection
-              Row(
-                children: [
-                  Text(
-                    'Payment to:',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textMuted,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Text(
+                      'Payment to:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.m),
-                  ChoiceChip(
-                    label: const Text('Cash'),
-                    selected: _selectedAccountId == 'acc_cash',
-                    onSelected: (val) {
-                      if (val) setState(() => _selectedAccountId = 'acc_cash');
-                    },
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  ChoiceChip(
-                    label: const Text('Telebirr'),
-                    selected: _selectedAccountId == 'acc_telebirr',
-                    onSelected: (val) {
-                      if (val) {
-                        setState(() => _selectedAccountId = 'acc_telebirr');
-                      }
-                    },
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  ChoiceChip(
-                    label: const Text('Bank'),
-                    selected: _selectedAccountId == 'acc_bank',
-                    onSelected: (val) {
-                      if (val) setState(() => _selectedAccountId = 'acc_bank');
-                    },
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.m),
+                    ChoiceChip(
+                      label: const Text('Cash'),
+                      selected: _selectedAccountId == 'acc_cash',
+                      onSelected: (val) {
+                        if (val) setState(() => _selectedAccountId = 'acc_cash');
+                      },
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    ChoiceChip(
+                      label: const Text('Telebirr'),
+                      selected: _selectedAccountId == 'acc_telebirr',
+                      onSelected: (val) {
+                        if (val) {
+                          setState(() => _selectedAccountId = 'acc_telebirr');
+                        }
+                      },
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    ChoiceChip(
+                      label: const Text('Bank'),
+                      selected: _selectedAccountId == 'acc_bank',
+                      onSelected: (val) {
+                        if (val) setState(() => _selectedAccountId = 'acc_bank');
+                      },
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.m),
 
               // Partial Payment toggle
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text(
-                  'Partial payment / Customer debt',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              Material(
+                type: MaterialType.transparency,
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    'Partial payment / Customer debt',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'Unpaid balance will be recorded in Debts',
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
+                  ),
+                  value: _isPartialPayment,
+                  onChanged: (val) {
+                    setState(() {
+                      _isPartialPayment = val;
+                      if (val && _paidAmountController.text.isEmpty) {
+                        _paidAmountController.text = Money.amount(revenue ~/ 2);
+                      }
+                    });
+                  },
                 ),
-                subtitle: Text(
-                  'Unpaid balance will be recorded in Debts',
-                  style: TextStyle(fontSize: 12, color: colors.textMuted),
-                ),
-                value: _isPartialPayment,
-                onChanged: (val) {
-                  setState(() {
-                    _isPartialPayment = val;
-                    if (val && _paidAmountController.text.isEmpty) {
-                      _paidAmountController.text = Money.amount(revenue ~/ 2);
-                    }
-                  });
-                },
               ),
 
               if (_isPartialPayment) ...[

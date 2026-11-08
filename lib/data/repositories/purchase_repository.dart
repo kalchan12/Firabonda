@@ -42,6 +42,9 @@ abstract interface class PurchaseRepository {
   /// Last unit cost paid for a category (and color when available),
   /// newest first; null when nothing was bought yet. Money in cents.
   Future<int?> lastPricePaid({required String categoryId, String? colorId});
+
+  /// Records a batch lot purchase and distributes total cost across items.
+  Future<String> addBatch(BatchPurchaseInput input);
 }
 
 final class LocalPurchaseRepository implements PurchaseRepository {
@@ -326,6 +329,63 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       );
     }
     return overviews;
+  }
+
+  @override
+  Future<String> addBatch(BatchPurchaseInput input) async {
+    return _db.transaction(() async {
+      final batchId = newUuid();
+      final now = DateTime.now().toUtc();
+      final dateUtc = _utc(input.date);
+
+      await _db.into(_db.batches).insert(
+        BatchesCompanion.insert(
+          id: batchId,
+          supplierId: Value(input.supplierId),
+          date: dateUtc,
+          totalPaid: input.totalCostCents,
+          accountId: Value(input.accountId ?? 'acc_cash'),
+          note: Value(input.note),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      // Allocate total batch cost across items using largest-remainder method
+      final quantities = input.items.map((i) => i.quantity).toList();
+      final allocatedCosts = ShopLogic.allocateBatchCost(
+        totalCostCents: input.totalCostCents,
+        quantities: quantities,
+      );
+
+      for (var idx = 0; idx < input.items.length; idx++) {
+        final item = input.items[idx];
+        final itemTotalCost = allocatedCosts[idx];
+        final itemUnitCost = (itemTotalCost / item.quantity).round();
+        final purchaseId = newUuid();
+
+        await _db.into(_db.purchases).insert(
+          PurchasesCompanion.insert(
+            id: purchaseId,
+            batchId: Value(batchId),
+            categoryId: item.categoryId,
+            colorId: item.colorId,
+            supplierId: Value(input.supplierId),
+            size: Value(item.size),
+            quantity: item.quantity,
+            unitCost: itemUnitCost,
+            totalCost: itemTotalCost,
+            sellingPrice: Value(item.sellingPriceCents),
+            note: Value(input.note),
+            date: dateUtc,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+
+      return batchId;
+    });
   }
 
   Future<PurchaseRow?> _purchaseOrNull(String id) {
