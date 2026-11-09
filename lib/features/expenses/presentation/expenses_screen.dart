@@ -147,6 +147,7 @@ final class ExpensesScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(

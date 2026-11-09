@@ -215,6 +215,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(

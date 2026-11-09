@@ -29,6 +29,7 @@ Future<CalculatorResult?> showCalculatorSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    useRootNavigator: true,
     builder: (_) =>
         CalculatorSheet(initialText: initialText, quantity: quantity),
   );

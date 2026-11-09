@@ -18,6 +18,7 @@ Future<bool?> showStockAdjustmentBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (_) => StockAdjustmentSheet(initialPurchase: purchase),
   );

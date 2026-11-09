@@ -20,6 +20,7 @@ Future<bool?> showSellBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (_) => SellBottomSheet(purchase: purchase),
   );

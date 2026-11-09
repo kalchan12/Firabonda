@@ -16,6 +16,7 @@ Future<bool?> showCloseShiftSheet(BuildContext context, ShiftRow shift) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (_) => CloseShiftSheet(shift: shift),
   );
