@@ -56,7 +56,9 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | quantity | int | > 0, cannot exceed stock left |
 | unitPrice | int | cents, price sold at |
 | costAtSale | int? | cents per piece, frozen at time of sale |
+| assumedPriceAtSale | int? | cents per piece, frozen at time of sale (Schema v3) |
 | accountId | text? FK | -> accounts (defaults to acc_cash) |
+| shiftId | text? FK | -> shifts (Schema v4) |
 | paidAmount | int? | cents paid at sale, remainder becomes debt |
 | date | datetime | |
 
@@ -67,6 +69,7 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | title | text | |
 | amount | int | cents |
 | accountId | text? FK | -> accounts (defaults to acc_cash) |
+| shiftId | text? FK | -> shifts (Schema v4) |
 | date | datetime | |
 | note | text? | |
 
@@ -110,6 +113,7 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | date | datetime | order date |
 | totalPaid | int | cents |
 | accountId | text? FK | -> accounts |
+| shiftId | text? FK | -> shifts (Schema v4) |
 | note | text? | |
 
 ### stock_adjustments
@@ -121,9 +125,24 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | quantityChange | int | pieces (negative for loss, positive for return) |
 | reason | text | `damaged`, `lost`, `returned_to_supplier`, `customer_return`, `personal_use`, `count_correction` |
 | valueAtCost | int | cents (qty x cost) |
+| shiftId | text? FK | -> shifts (Schema v4) |
 | date | datetime | adjustment date |
 | note | text? | |
 | photoPath | text? | optional photo of damage |
+
+### shifts (Schema v4)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| openedAt | datetime | shift start timestamp |
+| closedAt | datetime? | shift close timestamp (null while open) |
+| openingCash | int | cents in drawer at shift start |
+| expectedCash | int? | cents expected at close (`opening + cashSales - cashExpenses - cashPurchases`) |
+| actualCash | int? | cents counted in drawer by cashier |
+| cashDifference | int? | actualCash - expectedCash (negative = short) |
+| notes | text? | closing notes / explanation |
+| openedBy | text? | cashier or staff name who opened |
+| closedBy | text? | cashier or staff name who closed |
 
 ### reconciliations
 | Column | Type | Notes |

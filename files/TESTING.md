@@ -19,19 +19,25 @@ Business logic in pure Dart:
 
 ## 2. Database tests
 
-- Use an in-memory Drift database.
+- Use an in-memory Drift database for speed and determinism.
 - Seed creates exactly the preset categories and colors, once.
 - Foreign keys and the rule "cannot delete a used category, archive instead".
 - Recording a sale is transactional.
-- Migration tests for every schema version.
+- Automated zero-data-loss migration tests for every schema version:
+  - `migration_v1_to_v2_test.dart`: accounts, batches, stock adjustments, reconciliations.
+  - `migration_v2_to_v3_test.dart`: `sales.assumedPriceAtSale` backfill.
+  - `migration_v3_to_v4_test.dart`: `shifts` table, `shiftId` on sales, expenses, batches, adjustments.
 
 ## 3. Widget tests
 
 - Add purchase form: validation errors, automatic total, last price hint.
 - Calculator sheet: typing, "Use result" writes to the field.
-- Sell sheet: quantity limit, live profit preview.
+- Simple Sell sheet (`sell_bottom_sheet_test.dart`): stepper, quick chips, live profit preview, % of target, and no keyboard overflow.
+- Shift system UI (`shift_ui_test.dart`): OpenShiftSheet, CloseShiftSheet with live drawer cash reconciliation, ShiftHistoryScreen.
+- Profit language UI (`profit_language_test.dart`): verifies absence of "markup" or "100% target" across all views.
+- Screen overflow testing (`screen_overflow_test.dart`): verifies 360dp width screens under textScale 1.6 and keyboard open.
 - Dashboard shows correct numbers for a known data set.
-- Empty states render.
+- Empty states render across all list screens.
 
 ## 4. Manual checks on the physical phone (each phase)
 

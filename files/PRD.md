@@ -17,20 +17,20 @@ Show the owner, at any time: **money spent, money earned, profit**, and let him 
 
 | ID | Feature | Notes |
 |----|---------|-------|
-| C1 | Add / edit / delete purchase & batch lot | Category, color, quantity (+1/+5/+10 quick chips), unit cost, auto total, date, optional selling price with 100% target profit helper, supplier, note, photo. Batch purchase bundle entry with Hamilton largest-remainder exact cost allocation. |
+| C1 | Add / edit / delete purchase & batch lot | Center plus button opens Batch Purchase directly. Lines include piece-level purchase price, optional planned selling price (no arbitrary markup), two-color split, mixed colors, optional notes & photo. Cost allocation with Hamilton largest-remainder exact cent logic. |
 | C2 | Preset + custom categories | T-shirts, Shirts, Hoodies, Jackets, Trousers, Jeans, Shorts, Sweaters + smart default remembering last category. |
-| C3 | Preset + custom colors | Black, White, Gray, Blue, Navy, Red, Green, Brown, Beige, Yellow + custom color picker. |
+| C3 | Preset + custom colors | Black, White, Gray, Blue, Navy, Red, Green, Brown, Beige, Yellow + two-color split and Mixed color presets. |
 | C4 | Price memory | Show last price paid when category/color is chosen. |
 | C5 | Quick calculator | Available on every money field and via app-shell floating action button. Includes 20-entry calculation history, clipboard copy, and "Use result" button. |
-| C6 | Sales & Quick Sell | Streamlined 2-3 tap quick sale interface, 100% target profit prefill, partial payment support with automatic receivable debt creation, and stock restoration on deletion. |
-| C7 | Dashboard | Calendar-based periods (Today, Yesterday, Week, Month, All, Custom) with automatic midnight rollover. Net profit hero tile with status badge, 2x2 grid, target profit gauge (100% default), recent sales list, and expandable analytics accordion (stock value, low stock alerts, best sellers, profit curve chart). |
+| C6 | Sales & Simple Sell | Streamlined sell sheet with category/color/stock header, quantity stepper with quick chips (1, 2, 3, 5, All), planned price prefill, live profit card (+ETB, Loss, % of target), partial payment support with automatic receivable debt creation, and stock restoration on deletion. |
+| C7 | Dashboard | Calendar-based periods (Today, Yesterday, Week, Month, All, Custom) with automatic midnight rollover. Shift banner on Today view with quick open/close drawer actions. Net profit hero tile, 2x2 grid, % of target gauge, recent sales list, and expandable analytics accordion (stock value, low stock alerts, best sellers, profit curve chart). |
 | C8 | Search and filters | By category, color, supplier, date range. |
 
 ## 5. Secondary features (nice-to-have, kept out of the main flow, under "More")
 
+- Shift system (replaces end-of-day Day Close): opening drawer cash, computed expected cash (`openingCash + cashSales - cashExpenses - cashPurchases`), physical cash count reconciliation with discrepancy tracking, and complete shift history log.
 - Stock adjustments for damaged, lost, returned, personal use, or count corrections with live cost and inventory deduction
 - Cash & stock reconciliation comparing counted vs expected values with discrepancy logging
-- Day close summary report with net profit, revenue, cash collected, and one-tap clipboard report export
 - Optional size field (hidden by default, enabled in settings)
 - Suppliers list with totals
 - Expenses (rent, transport, etc.), subtracted from profit

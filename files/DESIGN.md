@@ -56,14 +56,14 @@ Floating bottom dock with 4 destinations and a prominent 68-72dp raised circular
 
 ## 7. Core screens
 
-1. **Dashboard**: period selector (Today / Yesterday / Week / Month / All / Custom), Net Profit hero tile with status badge, 2x2 grid (Sold, Cost of sold, Bought, Expenses), Target Profit gauge (100% default), recent sales in period, and expandable "More details" accordion (stock value, low stock alerts, best sellers, profit curve chart).
+1. **Dashboard**: period selector (Today / Yesterday / Week / Month / All / Custom), Today Active Shift banner (with quick open & reconcile cash action), Net Profit hero tile with status badge, 2x2 grid (Sold, Cost of sold, Bought, Expenses), % of Target Profit gauge, recent sales in period, and expandable "More details" accordion (stock value, low stock alerts, best sellers, profit curve chart).
 2. **Purchases list**: grouped by date, search bar, filter chips, each card shows category icon, color dot, quantity, unit cost, stock left.
-3. **Add / edit purchase**: category chips, color chips, quantity stepper with +1/+5/+10 quick chips, unit cost with last price hint, 100% target profit prefill helper, smart category/supplier defaults.
-4. **Batch purchase**: bundle lot entry with total cost, supplier, account, and dynamic items list with Hamilton largest-remainder exact cost allocation.
-5. **Quick sale & Sell sheet**: 2-3 tap selling flow, 100% target profit prefill, partial payment support with automatic debt receivable generation.
+3. **Add / edit purchase**: category chips, color chips, quantity stepper with +1/+5/+10 quick chips, unit cost with last price hint, optional planned selling price, smart category/supplier defaults.
+4. **Batch purchase**: piece-level purchase price, two-color split, mixed colors, optional planned selling price, optional notes & photo, and duplicate/delete line actions.
+5. **Simple sell sheet**: 3 clean inputs: category/color/stock header, quantity stepper with quick chips (1, 2, 3, 5, All), planned selling price prefill, live result card (+ETB, Loss, % of target), collapsible More options, and fixed footer Sell button.
 6. **Stock adjustments**: record damaged, lost, returned, personal use, or count corrections with live cost and stock deduction.
-7. **Reconciliation & Day close**: expected vs counted cash and stock comparison with discrepancy tracking; day close summary with one-tap clipboard report export.
-8. **More**: suppliers, expenses, debts, categories & colors, stock adjustments, reconciliation, day close, export, backup, settings.
+7. **Shift system & Cash Reconciliation**: drawer cash count reconciliation (`expected = opening + cashSales - cashExpenses - cashPurchases`), Open & Close Shift modal sheets, and shift history log with cash discrepancy audit trail.
+8. **More**: suppliers, expenses, debts, categories & colors, stock adjustments, reconciliation, shift history, export, backup, settings.
 9. **Quick calculator**: app-shell floating trigger button, 20-entry calculation history, clipboard copy, and "Use result" action.
 
 ## 7.1 Mini calculator behavior

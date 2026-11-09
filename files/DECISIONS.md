@@ -62,17 +62,32 @@
   - Smart defaults remembering last selected category and supplier for consecutive additions.
   - Undo snackbars on soft deletions (purchases, sales, expenses, debts) giving the shop owner 4 seconds to restore accidental deletions.
 
-## 2026-11-08: Fix Round V2.1 - Task 3
-- **Center Navigation Plus Button Direct to Batch Purchase:**
-  - Removed speed-dial modal sheet and speed-dial animation.
-  - Tapping the center 70dp raised circular plus button immediately routes to `/batch-purchase`.
-  - Batch purchase is the primary workflow for entering stock in a clothing boutique.
-  - Removed duplicate Add purchase entry points from main navigation while retaining single purchase editing.
-
-## 2026-11-08: Fix Round V2.1 - Task 3
-- **Center Navigation Plus Button Direct to Batch Purchase:**
-  - Removed speed-dial modal sheet and speed-dial animation.
-  - Tapping the center 70dp raised circular plus button immediately routes to `/batch-purchase`.
-  - Batch purchase is the primary workflow for entering stock in a clothing boutique.
-  - Removed duplicate Add purchase entry points from main navigation while retaining single purchase editing.
+## 2026-11-09: Fix Round V2.1
+- **Task 1: Sell Screen Scroll & Fixed Action Button:**
+  - Implemented `isScrollControlled: true` on bottom sheets with keyboard insets padding (`MediaQuery.viewInsets.bottom`).
+  - Added fixed sticky footer button ensuring primary sell/save action is always visible and tappable across 360dp screens, large text scales (1.6), and active software keyboard.
+- **Task 2: Standardized Corner Radius & AppCard:**
+  - Standardized theme tokens: `radiusCard = 24`, `radiusHero = 28`, `radiusButton = 16`, `radiusSheet = 28`, `radiusChip = 999`.
+  - Created shared `AppCard` with anti-aliased clipping (`clipBehavior: Clip.antiAlias`) across all dashboards, list items, and form containers.
+- **Task 3: Center Plus Direct to Batch Purchase:**
+  - Removed speed-dial menu and animation; center 70dp raised plus button routes directly to `/batch-purchase`.
+  - Batch purchase acts as the universal inventory ingress for clothes retail.
+- **Task 4: Batch Purchase Enhancements:**
+  - Added piece-level purchase price to every batch item line with live line total (`quantity * unitCost`).
+  - Implemented two-color split (splits quantity between color A & B) and preset Mixed color option.
+  - Added duplicate line, delete line, and batch-level optional notes/photos.
+- **Task 5: Profit Logic Overhaul (% of Target):**
+  - Removed arbitrary 100% markup default and automatic suggested price.
+  - Pure model `ProfitCalculator` calculates Actual profit, Assumed profit, and `% of target` (`actual / assumed * 100`).
+  - Clear states: Over profit, On target, Under target, Breakeven, Loss (red badge), and Target not assumed.
+  - Drift schema v3 migration adds `sales.assumedPriceAtSale` to freeze target prices at time of sale with safe backfill.
+- **Task 6: Simple Sell Screen:**
+  - Simplified sell sheet into 3 key inputs: big quantity stepper with quick chips (1, 2, 3, 5, All), planned selling price prefill or empty, and live profit result card (+ETB, Loss, % of target). Collapsible "More options" accordion for account, date, and partial payment debt.
+- **Task 7: Unified Profit Language:**
+  - Removed all occurrences of "markup", "target profit margin", and "100% target" from UI and docs.
+- **Task 8: Shift System (Replacing Day Close):**
+  - Drift schema v4 adds `shifts` table and `shiftId` tracking across `sales`, `expenses`, `batches`, and `stockAdjustments`.
+  - Formula: `expectedCash = openingCash + cashSales - cashExpenses - cashPurchases`.
+  - Open & Close Shift modal sheets with live drawer counting and discrepancy logging to `reconciliations` table.
+  - Today dashboard displays Active Shift banner with direct close/reconcile action. Shift history screen logs past shifts.
 
