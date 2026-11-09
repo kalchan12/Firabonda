@@ -91,3 +91,31 @@
   - Open & Close Shift modal sheets with live drawer counting and discrepancy logging to `reconciliations` table.
   - Today dashboard displays Active Shift banner with direct close/reconcile action. Shift history screen logs past shifts.
 
+## 2026-11-09: Post-V2.1 Improvements & Polishing
+- **Multi-Item Purchase Calculations & Scaling:**
+  - Target selling price and expected profit calculations now scale by `quantity` when `quantity > 1`.
+  - In both Single Purchase and Batch Purchase screens, live feedback displays aggregate totals alongside per-unit prices (e.g. `Target sell: ETB 1,500.00 (ETB 300.00 each) • Exp. profit: +ETB 500.00 (+ETB 100.00 each)`).
+  - Fixed purchases list cards to display total target revenue and total expected profit scaled to item quantity.
+- **Multi-Image Purchase Support:**
+  - Optional photo picker scales dynamically: allows 1 image when `quantity = 1`, and up to `quantity` images (1 per piece) when `quantity > 1`.
+  - Stored cleanly as pipe-delimited (`|`) local file paths in `purchases.photoPath`, preserving full backward compatibility without database schema changes.
+  - Built reusable `PurchasePhotoPicker` with multi-image gallery selection, thumbnail strips, remove badges, and full-screen swipeable preview dialog (`PhotoGalleryViewerDialog`).
+  - Purchase cards show an interactive photo count badge (`📷 X photos`) that opens the swipeable gallery on tap.
+  - Deleting a purchase automatically deletes all referenced image files from device storage.
+- **Credit Sales ("Not Paid") Flow & Debt Integration:**
+  - Replaced ambiguous "Partial payment" toggle with an intuitive "Not paid" toggle in `sell_bottom_sheet`.
+  - When toggled, prompts for Customer Name (mandatory for debt logging) and an optional "Amount paid now" field (defaults to ETB 0 for fully unpaid sales).
+  - Unpaid balance (`totalPrice - paidAmount`) is automatically recorded in the `debts` table as `owed_to_me` with a clear reference note to the sale.
+  - Soft-deleting a credit sale automatically cancels/removes the linked debt record.
+- **Dashboard "Paid with Credit" Card & Credit Badges:**
+  - Added dedicated "Paid with credit" stat card to the Dashboard for the active calendar period, showing total credit sales amount and credit transaction count.
+  - Credit sales remain fully counted in total sold items and gross/net profit figures (accrual basis), while distinctly highlighting unpaid revenue.
+  - Visual status badges added to Dashboard recent sales and Sales list cards: `Credit (unpaid)` (red badge) and `Credit • owes ETB X` (amber badge).
+- **Batch Purchase & Shift UI Simplifications:**
+  - Supplier field: replaced freeform inline text input with a dropdown selector populated from existing registered suppliers, including an inline shortcut to add a new supplier.
+  - Simplified segmented button labels in batch purchase to "Per item" and "Total bundle", and updated all UI terminology from "line" to "item".
+  - Removed two-color split controls to simplify entry; added standard preset `Mixed` color (`#8E8E93`).
+  - Streamlined Open & Close Shift modal bottom sheets into a clean cash amount input and one primary confirmation button.
+- **Floating Nav Bar Clearance:**
+  - Passed `useRootNavigator: true` to bottom sheet modal invocations across the app (`sell_bottom_sheet`, `calculator_sheet`, shift sheets, etc.) to guarantee bottom action buttons are never obscured by the floating nav bar dock.
+

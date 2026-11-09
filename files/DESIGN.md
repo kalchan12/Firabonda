@@ -56,14 +56,14 @@ Floating bottom dock with 4 destinations and a prominent 68-72dp raised circular
 
 ## 7. Core screens
 
-1. **Dashboard**: period selector (Today / Yesterday / Week / Month / All / Custom), Today Active Shift banner (with quick open & reconcile cash action), Net Profit hero tile with status badge, 2x2 grid (Sold, Cost of sold, Bought, Expenses), % of Target Profit gauge, recent sales in period, and expandable "More details" accordion (stock value, low stock alerts, best sellers, profit curve chart).
-2. **Purchases list**: grouped by date, search bar, filter chips, each card shows category icon, color dot, quantity, unit cost, stock left.
-3. **Add / edit purchase**: category chips, color chips, quantity stepper with +1/+5/+10 quick chips, unit cost with last price hint, optional planned selling price, smart category/supplier defaults.
-4. **Batch purchase**: piece-level purchase price, two-color split, mixed colors, optional planned selling price, optional notes & photo, and duplicate/delete line actions.
-5. **Simple sell sheet**: 3 clean inputs: category/color/stock header, quantity stepper with quick chips (1, 2, 3, 5, All), planned selling price prefill, live result card (+ETB, Loss, % of target), collapsible More options, and fixed footer Sell button.
+1. **Dashboard**: period selector (Today / Yesterday / Week / Month / All / Custom), Today Active Shift banner (with quick open & reconcile cash action), Net Profit hero tile with status badge, 2x2 grid (Sold, Cost of sold, Bought, Expenses), "Paid with credit" card (credit sales amount & transaction count), % of Target Profit gauge, recent sales in period with credit badges, and expandable "More details" accordion (stock value, low stock alerts, best sellers, profit curve chart).
+2. **Purchases list**: grouped by date, search bar, filter chips, each card shows category icon, color dot, quantity, unit cost, stock left, quantity-scaled target sell & expected profit, and interactive photo count badge (`📷 X photos`) that opens a swipeable gallery viewer dialog.
+3. **Add / edit purchase**: category chips, color chips, quantity stepper with +1/+5/+10 quick chips, unit cost with last price hint, optional planned selling price with live aggregate revenue and profit scaling preview, multi-photo picker allowing 1 image for quantity = 1 and up to quantity images for quantity > 1 with swipe viewer dialog.
+4. **Batch purchase**: existing supplier dropdown (with quick "+ New supplier" modal), simplified "Per item" vs "Total bundle" segmented modes, per-item piece-level purchase price, preset Mixed color (`#8E8E93`), optional planned selling price with per-item live profit card, optional item photos and batch notes.
+5. **Simple sell sheet**: 3 clean inputs: category/color/stock header, quantity stepper with quick chips (1, 2, 3, 5, All), planned selling price prefill, live result card (+ETB, Loss, % of target), "Not paid" credit toggle with Customer Name and Amount paid now inputs (auto-generating debt record), and fixed footer Sell button rendered via root navigator to guarantee zero nav bar overlap.
 6. **Stock adjustments**: record damaged, lost, returned, personal use, or count corrections with live cost and stock deduction.
-7. **Shift system & Cash Reconciliation**: drawer cash count reconciliation (`expected = opening + cashSales - cashExpenses - cashPurchases`), Open & Close Shift modal sheets, and shift history log with cash discrepancy audit trail.
-8. **More**: suppliers, expenses, debts, categories & colors, stock adjustments, reconciliation, shift history, export, backup, settings.
+7. **Shift system & Cash Reconciliation**: simplified Open & Close Shift modal sheets with single cash amount input, drawer cash count reconciliation (`expected = opening + cashSales - cashExpenses - cashPurchases`), and shift history log with cash discrepancy audit trail.
+8. **More**: suppliers, expenses, debts (including credit sales receivables), categories & colors, stock adjustments, reconciliation, shift history, export, backup, settings.
 9. **Quick calculator**: app-shell floating trigger button, 20-entry calculation history, clipboard copy, and "Use result" action.
 
 ## 7.1 Mini calculator behavior

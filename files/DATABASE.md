@@ -44,7 +44,7 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | unitCost | int | cents, >= 0 |
 | totalCost | int | cents, equals quantity x unitCost unless edited manually |
 | sellingPrice | int? | planned price per piece, cents |
-| photoPath | text? | local file path |
+| photoPath | text? | local file path, or pipe-delimited (`|`) paths for multi-photo items (up to quantity images) |
 | note | text? | |
 | date | datetime | purchase date |
 
@@ -59,7 +59,7 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | assumedPriceAtSale | int? | cents per piece, frozen at time of sale (Schema v3) |
 | accountId | text? FK | -> accounts (defaults to acc_cash) |
 | shiftId | text? FK | -> shifts (Schema v4) |
-| paidAmount | int? | cents paid at sale, remainder becomes debt |
+| paidAmount | int? | cents paid at sale; when < total price, unpaid remainder is logged to `debts` (`owed_to_me`) |
 | date | datetime | |
 
 ### expenses
@@ -77,12 +77,12 @@ SQLite through Drift. All ids are UUID strings. All tables include `createdAt`, 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | text PK | |
-| personName | text | |
-| amount | int | cents |
+| personName | text | customer or supplier name (required for credit sales) |
+| amount | int | cents (e.g. unpaid balance on credit sale) |
 | direction | text | `owed_to_me` or `i_owe` |
 | dueDate | datetime? | |
 | isPaid | bool | |
-| note | text? | |
+| note | text? | reference note linking to sale or transaction |
 
 ### accounts
 | Column | Type | Notes |

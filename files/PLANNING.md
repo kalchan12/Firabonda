@@ -94,6 +94,15 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Task 8: Shift system**: Shift-based Today card, Shift close with reconciliation, midnight auto-close, history.
 - [x] **Task 9: Final QA, docs and push**: Verification on device, docs sync, branch readiness check.
 
+## Post-V2.1 Improvements & Polishing
+- [x] **Multi-item Purchase Profit Scaling**: Scale target sell and expected profit by quantity (`quantity > 1`) in single and batch purchase screens, and in purchase list cards.
+- [x] **Multi-image Purchase Support**: Scalable photo picker (1 for quantity = 1, up to quantity for quantity > 1), pipe-delimited storage, swipeable gallery viewer dialog, photo count badge, and clean file cleanup on deletion.
+- [x] **Credit Sales ("Not Paid") Flow**: Replace partial payment toggle with intuitive "Not paid" toggle, mandatory customer name, amount paid now, and auto-generated debt records.
+- [x] **Dashboard "Paid with Credit" Card**: Add period credit sales card, credit count, and visual credit badges (`Credit (unpaid)` and `Credit • owes ETB X`).
+- [x] **Batch Purchase & Shift UI Simplifications**: Existing supplier dropdown, simplified "Per item" / "Total bundle" segmented buttons, preset Mixed color, and streamlined single-input Shift sheets.
+- [x] **Floating Nav Bar Clearance**: `useRootNavigator: true` across all bottom sheets ensuring footer buttons are never hidden behind the floating nav dock.
+- [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
+
 ## Later (not in this build)
 - Supabase cloud sync and backup
 - Translations (Amharic, Afaan Oromo)

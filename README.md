@@ -7,13 +7,13 @@ An offline-first Android inventory, sales, and profit tracker designed for cloth
 ## 1. Overview & Vision
 
 Fira Bonda is tailored for retail clothing shops (such as Merkato stalls and neighborhood boutiques) who need fast, zero-latency daily logging without requiring internet connectivity:
-- **Instant purchase & bundle lot logging**: Add stock in seconds with category/color presets, smart defaults, price memory, and batch purchase lot entry with Hamilton largest-remainder exact cost allocation.
-- **Fast sales & quick sell flow**: 2-3 tap quick sell interface with 100% target profit default (2x cost), partial payment support with automatic receivable debt generation, and stock restoration on deletion.
-- **Calendar-accurate Dashboard & Real Net Profit**: Calendar periods (Today, Yesterday, Week, Month, Custom) with midnight rollover; Net profit hero tile (`Profit - Expenses - Losses`), 2x2 metrics grid, target profit gauge, recent sales, and collapsible inventory analytics.
+- **Instant purchase & bundle lot logging**: Add stock in seconds with category/color presets (including Mixed), smart defaults, price memory, existing supplier dropdown, multi-image support (up to purchase quantity) with interactive swipe viewer, and batch purchase lot entry with Hamilton largest-remainder exact cost allocation.
+- **Fast sales & credit sales flow**: Simple sell sheet with planned price prefill, live profit scaling card (+ETB / Loss / % of target), and an intuitive "Not paid" credit sales toggle requiring customer name and auto-logging unpaid balances directly into debts.
+- **Calendar-accurate Dashboard & Real Net Profit**: Calendar periods (Today, Yesterday, Week, Month, Custom) with midnight rollover; Net profit hero tile (`Profit - Expenses - Losses`), 2x2 metrics grid, "Paid with credit" stat card, target profit gauge, recent sales with credit status badges, and collapsible inventory analytics.
+- **Shift System & Cash Reconciliation**: Active Shift banner on Today view, streamlined opening and closing cash drawer entry, expected vs counted balance comparisons with discrepancy logging, and shift history audit trail.
 - **Stock adjustments & losses**: Record damaged, lost, or returned items with automatic inventory deduction and loss accounting.
-- **Cash & stock reconciliation**: Expected vs counted balance comparisons with discrepancy logging and day close summary report with one-tap clipboard export.
 - **App-shell quick calculator**: 20-entry calculation history, clipboard copy, and "Use result" action accessible anywhere.
-- **Debts & Credit**: Track customer credit ("Owed to me") and supplier credit ("I owe") with due dates and payment status.
+- **Debts & Credit**: Track customer credit ("Owed to me") and supplier credit ("I owe") with due dates, payment status, and automatic sync from credit sales.
 - **Offline Data Ownership**: Full database backup and restore with automatic pre-migration backup safeguards, plus monthly business report exports to PDF and CSV through the native share sheet.
 
 ---
