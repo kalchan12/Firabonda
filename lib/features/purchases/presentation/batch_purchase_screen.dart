@@ -57,6 +57,17 @@ final class _BatchItemDraft {
     return cost * quantity;
   }
 
+  int get itemTotalPlannedSellingCents {
+    final price = parsedPlannedSellingPriceCents ?? 0;
+    return price * quantity;
+  }
+
+  int get itemTotalPlannedProfitCents {
+    final cost = parsedUnitCostCents ?? 0;
+    final price = parsedPlannedSellingPriceCents ?? 0;
+    return (price - cost) * quantity;
+  }
+
   bool get hasData {
     return categoryId != null ||
         colorId != null ||
@@ -109,7 +120,7 @@ final class _BatchPurchaseScreenState
   void initState() {
     super.initState();
     _bundleTotalCostController.addListener(() => setState(() {}));
-    _items.add(_BatchItemDraft());
+    _addItem(_BatchItemDraft());
   }
 
   @override
@@ -142,23 +153,32 @@ final class _BatchPurchaseScreenState
     return _items.fold<int>(0, (sum, item) => sum + item.itemTotalCostCents);
   }
 
-  void _addItem() {
+  void _addItem([_BatchItemDraft? initialDraft]) {
     setState(() {
       final defaultCat = _items.isNotEmpty ? _items.last.categoryId : null;
       final defaultColor = _items.isNotEmpty ? _items.last.colorId : null;
-      _items.add(
-        _BatchItemDraft(
-          categoryId: defaultCat,
-          colorId: defaultColor,
-          quantity: 1,
-        ),
-      );
+      final draft =
+          initialDraft ??
+          _BatchItemDraft(
+            categoryId: defaultCat,
+            colorId: defaultColor,
+            quantity: 1,
+          );
+      draft.unitCostController.addListener(_onItemControllerChanged);
+      draft.plannedSellingPriceController.addListener(_onItemControllerChanged);
+      _items.add(draft);
     });
+  }
+
+  void _onItemControllerChanged() {
+    if (mounted) setState(() {});
   }
 
   void _duplicateItem(int index) {
     setState(() {
       final clone = _items[index].copy();
+      clone.unitCostController.addListener(_onItemControllerChanged);
+      clone.plannedSellingPriceController.addListener(_onItemControllerChanged);
       _items.insert(index + 1, clone);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -795,7 +815,51 @@ final class _BatchItemCard extends StatelessWidget {
           MoneyField(
             label: 'Planned selling price per piece (optional)',
             controller: draft.plannedSellingPriceController,
+            quantity: draft.quantity,
           ),
+          if (draft.parsedPlannedSellingPriceCents != null &&
+              draft.parsedPlannedSellingPriceCents! > 0) ...[
+            const SizedBox(height: AppSpacing.s),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: colors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.chip),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    draft.quantity > 1
+                        ? 'Target: ${Money.etb(draft.itemTotalPlannedSellingCents)} (${Money.etb(draft.parsedPlannedSellingPriceCents!)}/pc)'
+                        : 'Target: ${Money.etb(draft.itemTotalPlannedSellingCents)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.primary,
+                    ),
+                  ),
+                  () {
+                    final unitCost = draft.parsedUnitCostCents ?? 0;
+                    final unitSell = draft.parsedPlannedSellingPriceCents ?? 0;
+                    final totalProfit = draft.itemTotalPlannedProfitCents;
+                    final unitProfit = unitSell - unitCost;
+                    final isProfit = totalProfit >= 0;
+                    return Text(
+                      isProfit
+                          ? 'Profit: +${Money.etb(totalProfit)}${draft.quantity > 1 ? ' (+${Money.etb(unitProfit)}/pc)' : ''}'
+                          : 'Loss: -${Money.etb(totalProfit.abs())}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isProfit ? colors.profit : colors.loss,
+                      ),
+                    );
+                  }(),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

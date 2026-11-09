@@ -462,15 +462,39 @@ final class _PurchaseItemCard extends StatelessWidget {
                         color: colors.textMuted,
                       ),
                     ),
-                    if (purchase.sellingPriceCents != null)
+                    if (purchase.sellingPriceCents != null) ...[
                       Text(
-                        'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
+                        purchase.quantity > 1
+                            ? 'Target sell: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${Money.etb(purchase.sellingPriceCents!)} each)'
+                            : 'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: colors.primary,
                         ),
                       ),
+                      Text(
+                        () {
+                          final totalTargetProfit =
+                              (purchase.sellingPriceCents! -
+                                  purchase.unitCostCents) *
+                              purchase.quantity;
+                          final isProfit = totalTargetProfit >= 0;
+                          return isProfit
+                              ? 'Exp. profit: +${Money.etb(totalTargetProfit)}${purchase.quantity > 1 ? ' (+${Money.etb(purchase.sellingPriceCents! - purchase.unitCostCents)} each)' : ''}'
+                              : 'Exp. loss: -${Money.etb(totalTargetProfit.abs())}';
+                        }(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              (purchase.sellingPriceCents! >=
+                                  purchase.unitCostCents)
+                              ? colors.profit
+                              : colors.loss,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 SizedBox(

@@ -567,7 +567,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  'Cost: ${Money.etb(purchase.unitCostCents)}/pc • Target: ${purchase.sellingPriceCents != null ? '${Money.etb(purchase.sellingPriceCents!)}/pc' : 'Not set'}',
+                                  _quantity > 1
+                                      ? 'Cost: ${Money.etb(purchase.unitCostCents * _quantity)} (${Money.etb(purchase.unitCostCents)}/pc) • Target: ${purchase.sellingPriceCents != null ? '${Money.etb(purchase.sellingPriceCents! * _quantity)} (${Money.etb(purchase.sellingPriceCents!)}/pc)' : 'Not set'}'
+                                      : 'Cost: ${Money.etb(purchase.unitCostCents)}/pc • Target: ${purchase.sellingPriceCents != null ? '${Money.etb(purchase.sellingPriceCents!)}/pc' : 'Not set'}',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,

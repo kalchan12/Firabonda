@@ -79,10 +79,18 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       _selectedCategoryId = _lastCategoryId;
       _selectedSupplierId = _lastSupplierId;
     }
+    _unitCost.addListener(_onCostOrPriceChanged);
+    _sellingPrice.addListener(_onCostOrPriceChanged);
+  }
+
+  void _onCostOrPriceChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _unitCost.removeListener(_onCostOrPriceChanged);
+    _sellingPrice.removeListener(_onCostOrPriceChanged);
     _unitCost.dispose();
     _sellingPrice.dispose();
     _size.dispose();
@@ -554,24 +562,91 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
 
             // Computed total cost preview
             AppCard(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Text(
-                    'Total cost',
-                    style: TextStyle(
-                      color: colors.textMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _quantity > 1
+                            ? 'Total cost ($_quantity pcs)'
+                            : 'Total cost',
+                        style: TextStyle(
+                          color: colors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        Money.etb(_totalCents),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    Money.etb(_totalCents),
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
+                  if (_tryParseCents(_sellingPrice.text) != null &&
+                      _tryParseCents(_sellingPrice.text)! > 0) ...[
+                    const SizedBox(height: 8),
+                    Divider(color: colors.border, height: 1),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _quantity > 1
+                              ? 'Target revenue ($_quantity pcs)'
+                              : 'Target revenue',
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          Money.etb(
+                            _tryParseCents(_sellingPrice.text)! * _quantity,
+                          ),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Expected profit',
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        () {
+                          final unitCost = _tryParseCents(_unitCost.text) ?? 0;
+                          final unitSell =
+                              _tryParseCents(_sellingPrice.text) ?? 0;
+                          final totalProfit = (unitSell - unitCost) * _quantity;
+                          final unitProfit = unitSell - unitCost;
+                          final isProfit = totalProfit >= 0;
+                          return Text(
+                            isProfit
+                                ? '+${Money.etb(totalProfit)}${_quantity > 1 ? ' (+${Money.etb(unitProfit)} each)' : ''}'
+                                : '-${Money.etb(totalProfit.abs())}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: isProfit ? colors.profit : colors.loss,
+                            ),
+                          );
+                        }(),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -581,6 +656,7 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
             MoneyField(
               label: 'Planned selling price (optional)',
               controller: _sellingPrice,
+              quantity: _quantity,
               helperText: 'Prefills price when marking items as sold',
             ),
             const SizedBox(height: AppSpacing.m),

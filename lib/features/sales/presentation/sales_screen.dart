@@ -303,7 +303,7 @@ final class _SaleItemCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.costAtSale)}',
+                        'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.costAtSale * sale.quantity)}${sale.quantity > 1 ? ' (${Money.etb(sale.costAtSale)} each)' : ''}',
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                     ],
