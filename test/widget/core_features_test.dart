@@ -152,7 +152,7 @@ void main() {
       expect(find.text('Purchases'), findsOneWidget);
       expect(
         find.text(
-          'No purchases yet. Tap "+ Add purchase" to record your clothing inventory.',
+          'No purchases yet. Tap "+ Batch purchase" to record your clothing inventory.',
         ),
         findsOneWidget,
       );

@@ -1,3 +1,6 @@
+import '../../core/utils/profit_calculator.dart';
+export '../../core/utils/profit_calculator.dart';
+
 /// Inputs to create or update a purchase. Money fields are int cents.
 final class PurchaseInput {
   const PurchaseInput({
@@ -35,6 +38,7 @@ final class SaleInput {
     required this.unitPriceCents,
     required this.date,
     this.costAtSaleCents,
+    this.assumedPriceAtSaleCents,
     this.accountId = 'acc_cash',
     this.paidAmountCents,
     this.customerName,
@@ -45,6 +49,7 @@ final class SaleInput {
   final int unitPriceCents;
   final DateTime date;
   final int? costAtSaleCents;
+  final int? assumedPriceAtSaleCents;
   final String? accountId;
   final int? paidAmountCents;
   final String? customerName;
@@ -142,6 +147,7 @@ final class SaleOverview {
     required this.date,
     required this.profitCents,
     this.costAtSaleCents,
+    this.assumedPriceAtSaleCents,
     this.accountId = 'acc_cash',
     this.paidAmountCents,
   });
@@ -156,8 +162,18 @@ final class SaleOverview {
   final DateTime date;
   final int profitCents;
   final int? costAtSaleCents;
+  final int? assumedPriceAtSaleCents;
   final String? accountId;
   final int? paidAmountCents;
+
+  int get costAtSale => costAtSaleCents ?? unitCostCents;
+
+  ProfitResult get profitResult => ProfitCalculator.calculate(
+    costCents: costAtSale,
+    assumedSellingPriceCents: assumedPriceAtSaleCents,
+    actualSellingPriceCents: unitPriceCents,
+    quantity: quantity,
+  );
 }
 
 /// Direction of a debt entry.

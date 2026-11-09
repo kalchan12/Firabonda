@@ -198,6 +198,8 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final saleId = newUuid();
       final now = DateTime.now().toUtc();
       final costAtSale = input.costAtSaleCents ?? purchase.unitCost;
+      final assumedPriceAtSale =
+          input.assumedPriceAtSaleCents ?? purchase.sellingPrice;
       final totalRevenue = input.unitPriceCents * input.quantity;
       final paidAmount = input.paidAmountCents ?? totalRevenue;
 
@@ -210,6 +212,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               quantity: input.quantity,
               unitPrice: input.unitPriceCents,
               costAtSale: Value(costAtSale),
+              assumedPriceAtSale: Value(assumedPriceAtSale),
               accountId: Value(input.accountId ?? 'acc_cash'),
               paidAmount: Value(paidAmount),
               date: _utc(input.date),
@@ -299,6 +302,8 @@ final class LocalPurchaseRepository implements PurchaseRepository {
           date: _asUtc(sale.date),
           profitCents: (sale.unitPrice - costPerPiece) * sale.quantity,
           costAtSaleCents: sale.costAtSale,
+          assumedPriceAtSaleCents:
+              sale.assumedPriceAtSale ?? purchase.sellingPrice,
           accountId: sale.accountId,
           paidAmountCents: sale.paidAmount,
         );

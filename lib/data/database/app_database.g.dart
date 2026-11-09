@@ -2486,6 +2486,16 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _assumedPriceAtSaleMeta =
+      const VerificationMeta('assumedPriceAtSale');
+  @override
+  late final GeneratedColumn<int> assumedPriceAtSale = GeneratedColumn<int>(
+    'assumed_price_at_sale',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _accountIdMeta = const VerificationMeta(
     'accountId',
   );
@@ -2557,6 +2567,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     quantity,
     unitPrice,
     costAtSale,
+    assumedPriceAtSale,
     accountId,
     paidAmount,
     date,
@@ -2611,6 +2622,15 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         costAtSale.isAcceptableOrUnknown(
           data['cost_at_sale']!,
           _costAtSaleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('assumed_price_at_sale')) {
+      context.handle(
+        _assumedPriceAtSaleMeta,
+        assumedPriceAtSale.isAcceptableOrUnknown(
+          data['assumed_price_at_sale']!,
+          _assumedPriceAtSaleMeta,
         ),
       );
     }
@@ -2685,6 +2705,10 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         DriftSqlType.int,
         data['${effectivePrefix}cost_at_sale'],
       ),
+      assumedPriceAtSale: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}assumed_price_at_sale'],
+      ),
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
@@ -2724,6 +2748,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
   final int quantity;
   final int unitPrice;
   final int? costAtSale;
+  final int? assumedPriceAtSale;
   final String? accountId;
   final int? paidAmount;
   final DateTime date;
@@ -2736,6 +2761,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     required this.quantity,
     required this.unitPrice,
     this.costAtSale,
+    this.assumedPriceAtSale,
     this.accountId,
     this.paidAmount,
     required this.date,
@@ -2752,6 +2778,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     map['unit_price'] = Variable<int>(unitPrice);
     if (!nullToAbsent || costAtSale != null) {
       map['cost_at_sale'] = Variable<int>(costAtSale);
+    }
+    if (!nullToAbsent || assumedPriceAtSale != null) {
+      map['assumed_price_at_sale'] = Variable<int>(assumedPriceAtSale);
     }
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<String>(accountId);
@@ -2777,6 +2806,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       costAtSale: costAtSale == null && nullToAbsent
           ? const Value.absent()
           : Value(costAtSale),
+      assumedPriceAtSale: assumedPriceAtSale == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assumedPriceAtSale),
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
           : Value(accountId),
@@ -2803,6 +2835,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       quantity: serializer.fromJson<int>(json['quantity']),
       unitPrice: serializer.fromJson<int>(json['unitPrice']),
       costAtSale: serializer.fromJson<int?>(json['costAtSale']),
+      assumedPriceAtSale: serializer.fromJson<int?>(json['assumedPriceAtSale']),
       accountId: serializer.fromJson<String?>(json['accountId']),
       paidAmount: serializer.fromJson<int?>(json['paidAmount']),
       date: serializer.fromJson<DateTime>(json['date']),
@@ -2820,6 +2853,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       'quantity': serializer.toJson<int>(quantity),
       'unitPrice': serializer.toJson<int>(unitPrice),
       'costAtSale': serializer.toJson<int?>(costAtSale),
+      'assumedPriceAtSale': serializer.toJson<int?>(assumedPriceAtSale),
       'accountId': serializer.toJson<String?>(accountId),
       'paidAmount': serializer.toJson<int?>(paidAmount),
       'date': serializer.toJson<DateTime>(date),
@@ -2835,6 +2869,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     int? quantity,
     int? unitPrice,
     Value<int?> costAtSale = const Value.absent(),
+    Value<int?> assumedPriceAtSale = const Value.absent(),
     Value<String?> accountId = const Value.absent(),
     Value<int?> paidAmount = const Value.absent(),
     DateTime? date,
@@ -2847,6 +2882,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     quantity: quantity ?? this.quantity,
     unitPrice: unitPrice ?? this.unitPrice,
     costAtSale: costAtSale.present ? costAtSale.value : this.costAtSale,
+    assumedPriceAtSale: assumedPriceAtSale.present
+        ? assumedPriceAtSale.value
+        : this.assumedPriceAtSale,
     accountId: accountId.present ? accountId.value : this.accountId,
     paidAmount: paidAmount.present ? paidAmount.value : this.paidAmount,
     date: date ?? this.date,
@@ -2865,6 +2903,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       costAtSale: data.costAtSale.present
           ? data.costAtSale.value
           : this.costAtSale,
+      assumedPriceAtSale: data.assumedPriceAtSale.present
+          ? data.assumedPriceAtSale.value
+          : this.assumedPriceAtSale,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       paidAmount: data.paidAmount.present
           ? data.paidAmount.value
@@ -2884,6 +2925,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('costAtSale: $costAtSale, ')
+          ..write('assumedPriceAtSale: $assumedPriceAtSale, ')
           ..write('accountId: $accountId, ')
           ..write('paidAmount: $paidAmount, ')
           ..write('date: $date, ')
@@ -2901,6 +2943,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     quantity,
     unitPrice,
     costAtSale,
+    assumedPriceAtSale,
     accountId,
     paidAmount,
     date,
@@ -2917,6 +2960,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           other.quantity == this.quantity &&
           other.unitPrice == this.unitPrice &&
           other.costAtSale == this.costAtSale &&
+          other.assumedPriceAtSale == this.assumedPriceAtSale &&
           other.accountId == this.accountId &&
           other.paidAmount == this.paidAmount &&
           other.date == this.date &&
@@ -2931,6 +2975,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
   final Value<int> quantity;
   final Value<int> unitPrice;
   final Value<int?> costAtSale;
+  final Value<int?> assumedPriceAtSale;
   final Value<String?> accountId;
   final Value<int?> paidAmount;
   final Value<DateTime> date;
@@ -2944,6 +2989,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.quantity = const Value.absent(),
     this.unitPrice = const Value.absent(),
     this.costAtSale = const Value.absent(),
+    this.assumedPriceAtSale = const Value.absent(),
     this.accountId = const Value.absent(),
     this.paidAmount = const Value.absent(),
     this.date = const Value.absent(),
@@ -2958,6 +3004,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     required int quantity,
     required int unitPrice,
     this.costAtSale = const Value.absent(),
+    this.assumedPriceAtSale = const Value.absent(),
     this.accountId = const Value.absent(),
     this.paidAmount = const Value.absent(),
     required DateTime date,
@@ -2978,6 +3025,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Expression<int>? quantity,
     Expression<int>? unitPrice,
     Expression<int>? costAtSale,
+    Expression<int>? assumedPriceAtSale,
     Expression<String>? accountId,
     Expression<int>? paidAmount,
     Expression<DateTime>? date,
@@ -2992,6 +3040,8 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
       if (quantity != null) 'quantity': quantity,
       if (unitPrice != null) 'unit_price': unitPrice,
       if (costAtSale != null) 'cost_at_sale': costAtSale,
+      if (assumedPriceAtSale != null)
+        'assumed_price_at_sale': assumedPriceAtSale,
       if (accountId != null) 'account_id': accountId,
       if (paidAmount != null) 'paid_amount': paidAmount,
       if (date != null) 'date': date,
@@ -3008,6 +3058,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Value<int>? quantity,
     Value<int>? unitPrice,
     Value<int?>? costAtSale,
+    Value<int?>? assumedPriceAtSale,
     Value<String?>? accountId,
     Value<int?>? paidAmount,
     Value<DateTime>? date,
@@ -3022,6 +3073,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
       costAtSale: costAtSale ?? this.costAtSale,
+      assumedPriceAtSale: assumedPriceAtSale ?? this.assumedPriceAtSale,
       accountId: accountId ?? this.accountId,
       paidAmount: paidAmount ?? this.paidAmount,
       date: date ?? this.date,
@@ -3049,6 +3101,9 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     }
     if (costAtSale.present) {
       map['cost_at_sale'] = Variable<int>(costAtSale.value);
+    }
+    if (assumedPriceAtSale.present) {
+      map['assumed_price_at_sale'] = Variable<int>(assumedPriceAtSale.value);
     }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
@@ -3082,6 +3137,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('costAtSale: $costAtSale, ')
+          ..write('assumedPriceAtSale: $assumedPriceAtSale, ')
           ..write('accountId: $accountId, ')
           ..write('paidAmount: $paidAmount, ')
           ..write('date: $date, ')
@@ -9377,6 +9433,7 @@ typedef $$SalesTableCreateCompanionBuilder =
       required int quantity,
       required int unitPrice,
       Value<int?> costAtSale,
+      Value<int?> assumedPriceAtSale,
       Value<String?> accountId,
       Value<int?> paidAmount,
       required DateTime date,
@@ -9392,6 +9449,7 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<int> quantity,
       Value<int> unitPrice,
       Value<int?> costAtSale,
+      Value<int?> assumedPriceAtSale,
       Value<String?> accountId,
       Value<int?> paidAmount,
       Value<DateTime> date,
@@ -9431,6 +9489,11 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
 
   ColumnFilters<int> get costAtSale => $composableBuilder(
     column: $table.costAtSale,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get assumedPriceAtSale => $composableBuilder(
+    column: $table.assumedPriceAtSale,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9499,6 +9562,11 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get assumedPriceAtSale => $composableBuilder(
+    column: $table.assumedPriceAtSale,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get accountId => $composableBuilder(
     column: $table.accountId,
     builder: (column) => ColumnOrderings(column),
@@ -9558,6 +9626,11 @@ class $$SalesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get assumedPriceAtSale => $composableBuilder(
+    column: $table.assumedPriceAtSale,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
 
@@ -9612,6 +9685,7 @@ class $$SalesTableTableManager
                 Value<int> quantity = const Value.absent(),
                 Value<int> unitPrice = const Value.absent(),
                 Value<int?> costAtSale = const Value.absent(),
+                Value<int?> assumedPriceAtSale = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<int?> paidAmount = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
@@ -9625,6 +9699,7 @@ class $$SalesTableTableManager
                 quantity: quantity,
                 unitPrice: unitPrice,
                 costAtSale: costAtSale,
+                assumedPriceAtSale: assumedPriceAtSale,
                 accountId: accountId,
                 paidAmount: paidAmount,
                 date: date,
@@ -9640,6 +9715,7 @@ class $$SalesTableTableManager
                 required int quantity,
                 required int unitPrice,
                 Value<int?> costAtSale = const Value.absent(),
+                Value<int?> assumedPriceAtSale = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<int?> paidAmount = const Value.absent(),
                 required DateTime date,
@@ -9653,6 +9729,7 @@ class $$SalesTableTableManager
                 quantity: quantity,
                 unitPrice: unitPrice,
                 costAtSale: costAtSale,
+                assumedPriceAtSale: assumedPriceAtSale,
                 accountId: accountId,
                 paidAmount: paidAmount,
                 date: date,

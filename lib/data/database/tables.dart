@@ -84,6 +84,7 @@ class Sales extends Table {
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()();
   IntColumn get costAtSale => integer().nullable()();
+  IntColumn get assumedPriceAtSale => integer().nullable()();
   TextColumn get accountId => text().nullable()();
   IntColumn get paidAmount => integer().nullable()();
   DateTimeColumn get date => dateTime()();

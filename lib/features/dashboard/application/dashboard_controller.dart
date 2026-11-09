@@ -157,6 +157,10 @@ final class DashboardData {
     required this.lowStockItems,
     required this.periodSales,
     required this.chartPoints,
+    this.totalAssumedProfitCents = 0,
+    this.actualProfitForAssumedCents = 0,
+    this.percentOfTarget,
+    this.targetDiffCents,
   });
 
   final PeriodRange periodRange;
@@ -166,7 +170,7 @@ final class DashboardData {
   final int earnedCents; // Sold (revenue)
   final int costOfSoldCents; // Cost of sold items
   final int salesProfitCents; // Sold - Cost of sold items
-  final double profitPercent; // Profit % markup on cost
+  final double profitPercent; // Legacy profit % markup on cost
   final int expensesCents; // Expenses
   final int lossesCents; // Losses
   final int realProfitCents; // Net profit (Profit - Expenses - Losses)
@@ -176,6 +180,10 @@ final class DashboardData {
   final List<PurchaseOverview> lowStockItems;
   final List<SaleOverview> periodSales;
   final List<double> chartPoints;
+  final int totalAssumedProfitCents;
+  final int actualProfitForAssumedCents;
+  final int? percentOfTarget;
+  final int? targetDiffCents;
 }
 
 final class DashboardBestSeller {
@@ -248,6 +256,9 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   var earnedCents = 0;
   var costOfSoldCents = 0;
   var salesProfitCents = 0;
+  var totalAssumedProfitCents = 0;
+  var actualProfitForAssumedCents = 0;
+  var assumedSalesCount = 0;
 
   for (final s in periodSales) {
     final revenue = s.unitPriceCents * s.quantity;
@@ -257,6 +268,26 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
     earnedCents += revenue;
     costOfSoldCents += totalCost;
     salesProfitCents += s.profitCents;
+
+    if (s.assumedPriceAtSaleCents != null &&
+        s.assumedPriceAtSaleCents! > s.costAtSale) {
+      assumedSalesCount++;
+      final assumedProfit =
+          (s.assumedPriceAtSaleCents! - s.costAtSale) * s.quantity;
+      totalAssumedProfitCents += assumedProfit;
+      actualProfitForAssumedCents += s.profitCents;
+    }
+  }
+
+  final int? percentOfTarget;
+  final int? targetDiffCents;
+  if (assumedSalesCount > 0 && totalAssumedProfitCents > 0) {
+    percentOfTarget =
+        ((actualProfitForAssumedCents / totalAssumedProfitCents) * 100).round();
+    targetDiffCents = actualProfitForAssumedCents - totalAssumedProfitCents;
+  } else {
+    percentOfTarget = null;
+    targetDiffCents = null;
   }
 
   // Profit %
@@ -362,6 +393,10 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       lowStockItems: lowStockItems,
       periodSales: periodSales,
       chartPoints: chartPoints,
+      totalAssumedProfitCents: totalAssumedProfitCents,
+      actualProfitForAssumedCents: actualProfitForAssumedCents,
+      percentOfTarget: percentOfTarget,
+      targetDiffCents: targetDiffCents,
     ),
   );
 });

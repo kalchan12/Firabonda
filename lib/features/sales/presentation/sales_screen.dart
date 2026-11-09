@@ -229,117 +229,173 @@ final class _SaleItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-    final isProfit = sale.profitCents >= 0;
+    final res = sale.profitResult;
+    final isLoss = res.status == ProfitStatus.loss;
+    final isOver = res.status == ProfitStatus.overProfit;
+    final isOnTarget = res.status == ProfitStatus.onTarget;
+    final isUnder = res.status == ProfitStatus.underTarget;
+
+    final (chipLabel, chipColor) = switch (res.status) {
+      ProfitStatus.overProfit => (
+        res.overProfitCents != null && res.overProfitCents! > 0
+            ? 'Over profit +${Money.etb(res.overProfitCents!)}'
+            : 'Over profit (${res.percentOfTarget ?? 100}%)',
+        colors.profit,
+      ),
+      ProfitStatus.onTarget => ('On target (100%)', colors.profit),
+      ProfitStatus.underTarget => (
+        '${res.percentOfTarget}% of target',
+        colors.warning,
+      ),
+      ProfitStatus.breakeven => ('Breakeven (0%)', colors.textMuted),
+      ProfitStatus.loss => (
+        'Loss -${Money.etb(res.actualProfitCents.abs())}',
+        colors.loss,
+      ),
+      ProfitStatus.notAssumed => ('No target', colors.textMuted),
+    };
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s),
       child: AppCard(
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isProfit
-                    ? colors.profit.withValues(alpha: 0.15)
-                    : colors.loss.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isProfit
-                    ? Icons.trending_up_rounded
-                    : Icons.trending_down_rounded,
-                color: isProfit ? colors.profit : colors.loss,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${sale.categoryName} (${sale.colorName})',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.unitCostCents)}',
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Row(
               children: [
-                Text(
-                  isProfit
-                      ? '+${Money.etb(sale.profitCents)}'
-                      : Money.etb(sale.profitCents),
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: isProfit ? colors.profit : colors.loss,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isLoss
+                        ? colors.loss.withValues(alpha: 0.15)
+                        : (isOver || isOnTarget
+                              ? colors.profit.withValues(alpha: 0.15)
+                              : (isUnder
+                                    ? colors.warning.withValues(alpha: 0.15)
+                                    : colors.surfaceVariant)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isLoss
+                        ? Icons.trending_down_rounded
+                        : Icons.trending_up_rounded,
+                    color: isLoss
+                        ? colors.loss
+                        : (isOver || isOnTarget
+                              ? colors.profit
+                              : (isUnder ? colors.warning : colors.textMuted)),
+                    size: 22,
                   ),
                 ),
-                Text(
-                  DateFormat.jm().format(sale.date),
-                  style: TextStyle(fontSize: 11, color: colors.textMuted),
-                ),
-              ],
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: 'Delete sale',
-              onPressed: () {
-                showDialog<void>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Delete Sale?'),
-                    content: Text(
-                      'Delete sale of ${sale.quantity}x ${sale.categoryName}? The ${sale.quantity} items will be restored to inventory stock.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          final messenger = ScaffoldMessenger.of(context);
-                          final nav = Navigator.of(ctx);
-                          final repo = ref.read(purchaseRepositoryProvider);
-                          await repo.softDeleteSale(sale.id);
-                          nav.pop();
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
-                              ),
-                              action: SnackBarAction(
-                                label: 'UNDO',
-                                onPressed: () async {
-                                  await repo.restoreSale(sale.id);
-                                },
-                              ),
-                              duration: const Duration(seconds: 4),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(color: Colors.red),
+                const SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${sale.categoryName} (${sale.colorName})',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.costAtSale)}',
+                        style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      isLoss
+                          ? '-${Money.etb(sale.profitCents.abs())}'
+                          : '+${Money.etb(sale.profitCents)}',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isLoss ? colors.loss : colors.profit,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      DateFormat.jm().format(sale.date),
+                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: 'Delete sale',
+                  onPressed: () {
+                    showDialog<void>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Sale?'),
+                        content: Text(
+                          'Delete sale of ${sale.quantity}x ${sale.categoryName}? The ${sale.quantity} items will be restored to inventory stock.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              final nav = Navigator.of(ctx);
+                              final repo = ref.read(purchaseRepositoryProvider);
+                              await repo.softDeleteSale(sale.id);
+                              nav.pop();
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'UNDO',
+                                    onPressed: () async {
+                                      await repo.restoreSale(sale.id);
+                                    },
+                                  ),
+                                  duration: const Duration(seconds: 4),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: chipColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(color: chipColor.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                chipLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: chipColor,
+                ),
+              ),
             ),
           ],
         ),

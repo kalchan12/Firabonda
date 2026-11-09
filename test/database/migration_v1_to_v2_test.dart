@@ -167,11 +167,11 @@ void main() {
     // 3. Open via AppDatabase (triggers automatic safety backup & Drift migration to v2)
     final db = AppDatabase.open(customPath: dbFile.path);
 
-    // Verify user_version upgraded to 2
+    // Verify user_version upgraded to at least 2 (current schema)
     final versionResult = await db
         .customSelect('PRAGMA user_version;')
         .getSingle();
-    expect(versionResult.data['user_version'], 2);
+    expect(versionResult.data['user_version'], greaterThanOrEqualTo(2));
 
     // 4. Verify safety backup file exists
     final backupFile = File('${dbFile.path}.pre_v2_backup');

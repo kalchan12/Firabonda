@@ -61,7 +61,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -144,6 +144,17 @@ class AppDatabase extends _$AppDatabase {
 
         await customStatement('''
               UPDATE expenses SET account_id = 'acc_cash' WHERE account_id IS NULL
+            ''');
+      }
+
+      if (from < 3) {
+        await m.addColumn(sales, sales.assumedPriceAtSale);
+        await customStatement('''
+              UPDATE sales SET
+                assumed_price_at_sale = (
+                  SELECT selling_price FROM purchases WHERE purchases.id = sales.purchase_id
+                )
+              WHERE assumed_price_at_sale IS NULL
             ''');
       }
     },

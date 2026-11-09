@@ -13,7 +13,6 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../../../data/models/shop_models.dart';
-import '../../settings/application/settings_controller.dart';
 import '../application/dashboard_controller.dart';
 
 final class DashboardScreen extends ConsumerWidget {
@@ -33,7 +32,6 @@ final class DashboardScreen extends ConsumerWidget {
     final colors = context.appColors;
     final selectedPeriod = ref.watch(selectedPeriodProvider);
     final dashboardAsync = ref.watch(dashboardDataProvider);
-    final targetProfit = ref.watch(targetProfitPercentProvider);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -190,6 +188,7 @@ final class DashboardScreen extends ConsumerWidget {
                       expensesCents: data.expensesCents,
                       lossesCents: data.lossesCents,
                       isPositive: isProfitPositive,
+                      targetDiffCents: data.targetDiffCents,
                     ),
                     const SizedBox(height: AppSpacing.m),
 
@@ -237,8 +236,10 @@ final class DashboardScreen extends ConsumerWidget {
 
                     // 3. Target profit gauge/bar
                     _TargetProfitCard(
-                      achievedPercent: data.profitPercent,
-                      targetPercent: targetProfit,
+                      percentOfTarget: data.percentOfTarget,
+                      totalAssumedProfitCents: data.totalAssumedProfitCents,
+                      actualProfitForAssumedCents:
+                          data.actualProfitForAssumedCents,
                     ),
                     const SizedBox(height: AppSpacing.m),
 
@@ -336,6 +337,7 @@ final class _NetProfitHeroTile extends StatelessWidget {
     required this.expensesCents,
     required this.lossesCents,
     required this.isPositive,
+    this.targetDiffCents,
   });
 
   final String periodName;
@@ -344,6 +346,7 @@ final class _NetProfitHeroTile extends StatelessWidget {
   final int expensesCents;
   final int lossesCents;
   final bool isPositive;
+  final int? targetDiffCents;
 
   @override
   Widget build(BuildContext context) {
@@ -432,14 +435,51 @@ final class _NetProfitHeroTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            expensesCents > 0
-                ? 'Includes ${Money.etb(expensesCents)} expenses deducted'
-                : lossesCents > 0
-                ? 'Includes ${Money.etb(lossesCents)} losses deducted'
-                : 'Formula: Sold profit minus expenses and losses',
-            style: TextStyle(fontSize: 12, color: colors.textMuted),
+          Row(
+            children: [
+              if (targetDiffCents != null) ...[
+                Icon(
+                  targetDiffCents! >= 0
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  size: 14,
+                  color: targetDiffCents! >= 0 ? colors.profit : colors.warning,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  targetDiffCents! >= 0
+                      ? '+${Money.etb(targetDiffCents!)} over target'
+                      : '-${Money.etb(targetDiffCents!.abs())} under target',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: targetDiffCents! >= 0
+                        ? colors.profit
+                        : colors.warning,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  'No target set',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ],
           ),
+          if (expensesCents > 0 || lossesCents > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              expensesCents > 0
+                  ? 'Includes ${Money.etb(expensesCents)} expenses deducted'
+                  : 'Includes ${Money.etb(lossesCents)} losses deducted',
+              style: TextStyle(fontSize: 11, color: colors.textMuted),
+            ),
+          ],
         ],
       ),
     );
@@ -449,21 +489,23 @@ final class _NetProfitHeroTile extends StatelessWidget {
 /// 3. Target profit gauge/bar
 final class _TargetProfitCard extends StatelessWidget {
   const _TargetProfitCard({
-    required this.achievedPercent,
-    required this.targetPercent,
+    required this.percentOfTarget,
+    required this.totalAssumedProfitCents,
+    required this.actualProfitForAssumedCents,
   });
 
-  final double achievedPercent;
-  final int targetPercent;
+  final int? percentOfTarget;
+  final int totalAssumedProfitCents;
+  final int actualProfitForAssumedCents;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final diff = achievedPercent - targetPercent;
-    final isAhead = diff >= 0;
-    final progress = targetPercent > 0
-        ? (achievedPercent / targetPercent).clamp(0.0, 1.5)
-        : 1.0;
+    final hasTarget = percentOfTarget != null && totalAssumedProfitCents > 0;
+    final isAhead = (percentOfTarget ?? 0) >= 100;
+    final progress = hasTarget
+        ? ((percentOfTarget! / 100).clamp(0.0, 1.5))
+        : 0.0;
 
     return AppCard(
       child: Column(
@@ -483,7 +525,7 @@ final class _TargetProfitCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
-                        'Target Profit Margin',
+                        'Target Achievement',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -497,64 +539,92 @@ final class _TargetProfitCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: colors.surfaceVariant,
+                  color: hasTarget
+                      ? (isAhead
+                            ? colors.profit.withValues(alpha: 0.15)
+                            : colors.warning.withValues(alpha: 0.15))
+                      : colors.surfaceVariant,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(color: colors.border),
+                  border: Border.all(
+                    color: hasTarget
+                        ? (isAhead
+                              ? colors.profit.withValues(alpha: 0.3)
+                              : colors.warning.withValues(alpha: 0.3))
+                        : colors.border,
+                  ),
                 ),
                 child: Text(
-                  'Target: $targetPercent%',
+                  hasTarget ? '$percentOfTarget% of target' : 'Not set',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
+                    fontWeight: FontWeight.w700,
+                    color: hasTarget
+                        ? (isAhead ? colors.profit : colors.warning)
+                        : colors.textMuted,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.m),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text(
-                  '${achievedPercent.toStringAsFixed(1)}% markup',
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: [FontFeature.tabularFigures()],
+          if (hasTarget) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Flexible(
+                  child: Text(
+                    '$percentOfTarget%',
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Text(
-                isAhead
-                    ? '+${diff.toStringAsFixed(1)}% vs target'
-                    : '${diff.toStringAsFixed(1)}% vs target',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: isAhead ? colors.profit : colors.loss,
+                const SizedBox(width: AppSpacing.s),
+                Text(
+                  '${Money.etb(actualProfitForAssumedCents)} / ${Money.etb(totalAssumedProfitCents)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: (progress / 1.5).clamp(0.0, 1.0),
-              minHeight: 8,
-              backgroundColor: colors.surfaceVariant,
-              valueColor: AlwaysStoppedAnimation(
-                isAhead ? colors.profit : colors.primary,
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              child: LinearProgressIndicator(
+                value: (progress / 1.5).clamp(0.0, 1.0),
+                minHeight: 8,
+                backgroundColor: colors.surfaceVariant,
+                valueColor: AlwaysStoppedAnimation(
+                  isAhead ? colors.profit : colors.warning,
+                ),
               ),
             ),
-          ),
+          ] else ...[
+            Text(
+              'Target: not assumed',
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: colors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Set planned selling prices on batch purchases to track target achievement.',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+          ],
         ],
       ),
     );
