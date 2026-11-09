@@ -43,7 +43,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
 
   int _quantity = 1;
   bool _isSaving = false;
-  bool _isPartialPayment = false;
+  bool _isNotPaid = false;
   String _selectedAccountId = 'acc_cash';
   DateTime _selectedDate = DateTime.now();
 
@@ -112,7 +112,15 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
 
     final totalRevenue = priceCents * _quantity;
     int? paidAmount;
-    if (_isPartialPayment) {
+    if (_isNotPaid) {
+      if (_customerNameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter customer name for credit/unpaid sale'),
+          ),
+        );
+        return;
+      }
       paidAmount = _parsedPaidAmountCents ?? 0;
       if (paidAmount > totalRevenue) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -155,11 +163,15 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
             : Money.etb(profitResult.actualProfitCents);
 
         Navigator.of(context).pop(true);
+        final actualPaid = paidAmount ?? totalRevenue;
+        final unpaid = totalRevenue - actualPaid;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isPartialPayment && (paidAmount ?? totalRevenue) < totalRevenue
-                  ? 'Sale recorded! Unpaid balance logged in Debts.'
+              _isNotPaid && unpaid > 0
+                  ? (actualPaid == 0
+                        ? 'Sale recorded on credit! ${Money.etb(unpaid)} logged in Debts.'
+                        : 'Sale recorded! ${Money.etb(unpaid)} unpaid balance logged in Debts.')
                   : 'Sale recorded! ($profitStr profit)',
             ),
           ),
@@ -184,9 +196,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
     final hasPrice = priceCents != null && priceCents > 0;
 
     final revenue = hasPrice ? priceCents * _quantity : 0;
-    final paidAmount = _isPartialPayment
-        ? (_parsedPaidAmountCents ?? 0)
-        : revenue;
+    final paidAmount = _isNotPaid ? (_parsedPaidAmountCents ?? 0) : revenue;
     final unpaidBalance = (revenue - paidAmount).clamp(0, revenue);
     final colorVal = purchase.colorHex;
 
@@ -607,7 +617,118 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                       ),
                       const SizedBox(height: AppSpacing.m),
 
-                      // 4. Collapsed "More options" accordion
+                      // 4. Payment status: "Not paid" toggle
+                      AppCard(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.m,
+                          vertical: AppSpacing.xs,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                'Not paid',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                _isNotPaid
+                                    ? 'Sale on credit. Balance logged in Debts'
+                                    : 'Turn on if the customer did not pay or paid partially',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _isNotPaid
+                                      ? colors.warning
+                                      : colors.textMuted,
+                                ),
+                              ),
+                              value: _isNotPaid,
+                              activeThumbColor: colors.warning,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isNotPaid = val;
+                                  if (val &&
+                                      _paidAmountController.text.isEmpty) {
+                                    _paidAmountController.text = '0';
+                                  }
+                                });
+                              },
+                            ),
+                            if (_isNotPaid) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              TextField(
+                                controller: _customerNameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Customer name *',
+                                  hintText: 'e.g. Abebe',
+                                  prefixIcon: Icon(Icons.person_outline),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              MoneyField(
+                                label: 'Amount paid now',
+                                controller: _paidAmountController,
+                                helperText:
+                                    'Enter 0 if the person did not pay at all',
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.warning.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.chip,
+                                  ),
+                                  border: Border.all(
+                                    color: colors.warning.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      paidAmount == 0
+                                          ? 'Total logged to Debts:'
+                                          : 'Customer owes (Debts):',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.warning,
+                                      ),
+                                    ),
+                                    Text(
+                                      Money.etb(unpaidBalance),
+                                      style: TextStyle(
+                                        fontFamily: 'Sora',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: colors.warning,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+
+                      // 5. Collapsed "More options" accordion
                       Theme(
                         data: Theme.of(
                           context,
@@ -624,7 +745,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                             ),
                           ),
                           subtitle: Text(
-                            'Date, account, partial payment, note',
+                            'Date, account, note',
                             style: TextStyle(
                               fontSize: 11,
                               color: colors.textMuted,
@@ -718,69 +839,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                             ),
                             const SizedBox(height: AppSpacing.m),
 
-                            // Partial Payment toggle
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text(
-                                'Partial payment / Customer debt',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Unpaid balance will be recorded in Debts',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                              value: _isPartialPayment,
-                              onChanged: (val) {
-                                setState(() {
-                                  _isPartialPayment = val;
-                                  if (val &&
-                                      _paidAmountController.text.isEmpty) {
-                                    _paidAmountController.text = Money.amount(
-                                      revenue ~/ 2,
-                                    );
-                                  }
-                                });
-                              },
-                            ),
-
-                            if (_isPartialPayment) ...[
-                              TextField(
-                                controller: _customerNameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Customer name',
-                                  hintText: 'e.g. Abebe',
-                                  prefixIcon: Icon(Icons.person_outline),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.s),
-                              MoneyField(
-                                label: 'Amount paid now',
-                                controller: _paidAmountController,
-                              ),
-                              if (unpaidBalance > 0)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 6,
-                                    bottom: 6,
-                                  ),
-                                  child: Text(
-                                    'Customer owes: ${Money.etb(unpaidBalance)}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: colors.loss,
-                                    ),
-                                  ),
-                                ),
-                            ],
-
-                            const SizedBox(height: AppSpacing.s),
+                            // Note field
                             TextField(
                               controller: _noteController,
                               decoration: const InputDecoration(

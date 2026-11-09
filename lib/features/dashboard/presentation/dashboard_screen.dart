@@ -253,14 +253,22 @@ final class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // 4. Sales in period (recent sales)
+                    // 4. Paid with credit card
+                    _PaidWithCreditCard(
+                      periodName: periodName,
+                      creditCents: data.creditSalesCents,
+                      creditCount: data.creditSalesCount,
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
+                    // 5. Sales in period (recent sales)
                     _SalesPeriodListCard(
                       periodName: periodName,
                       sales: data.periodSales,
                     ),
                     const SizedBox(height: AppSpacing.m),
 
-                    // 5. Expandable "More details" accordion
+                    // 6. Expandable "More details" accordion
                     _MoreDetailsAccordion(data: data, periodName: periodName),
                     const SizedBox(height: 100), // bottom nav clearance
                   ],
@@ -641,7 +649,122 @@ final class _TargetProfitCard extends StatelessWidget {
   }
 }
 
-/// 4. Sales in period (recent sales list)
+/// 4. Paid with credit card
+final class _PaidWithCreditCard extends StatelessWidget {
+  const _PaidWithCreditCard({
+    required this.periodName,
+    required this.creditCents,
+    required this.creditCount,
+  });
+
+  final String periodName;
+  final int creditCents;
+  final int creditCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final hasCredit = creditCents > 0;
+
+    return AppCard(
+      onTap: () => context.push('/debts'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: hasCredit
+                      ? colors.warning.withValues(alpha: 0.15)
+                      : colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: Icon(
+                  Icons.assignment_late_outlined,
+                  color: hasCredit ? colors.warning : colors.textMuted,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Paid with credit ($periodName)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      hasCredit
+                          ? '$creditCount sale${creditCount > 1 ? 's' : ''} on credit (logged in Debts)'
+                          : 'No credit sales this period',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: hasCredit ? colors.warning : colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    Money.etb(creditCents),
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: hasCredit ? colors.warning : colors.textPrimary,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View debts',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 14,
+                        color: colors.primary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Included in profit and sold items',
+            style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: colors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 5. Sales in period (recent sales list)
 final class _SalesPeriodListCard extends StatelessWidget {
   const _SalesPeriodListCard({required this.periodName, required this.sales});
 
@@ -743,12 +866,46 @@ final class _SalesPeriodListCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(
-                            '${sale.colorName} • x${sale.quantity}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textMuted,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                '${sale.colorName} • x${sale.quantity}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                              if (sale.isCreditSale) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.warning.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: colors.warning.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    sale.isFullyUnpaid
+                                        ? 'Credit (unpaid)'
+                                        : 'Credit • owes ${Money.etb(sale.creditAmountCents)}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.warning,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),

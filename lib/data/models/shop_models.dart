@@ -185,6 +185,14 @@ final class SaleOverview {
 
   int get costAtSale => costAtSaleCents ?? unitCostCents;
 
+  int get totalRevenueCents => unitPriceCents * quantity;
+  int get actualPaidAmountCents => paidAmountCents ?? totalRevenueCents;
+  int get creditAmountCents =>
+      (totalRevenueCents - actualPaidAmountCents).clamp(0, totalRevenueCents);
+  bool get isCreditSale => creditAmountCents > 0;
+  bool get isFullyUnpaid =>
+      creditAmountCents == totalRevenueCents && totalRevenueCents > 0;
+
   ProfitResult get profitResult => ProfitCalculator.calculate(
     costCents: costAtSale,
     assumedSellingPriceCents: assumedPriceAtSaleCents,

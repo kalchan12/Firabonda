@@ -163,6 +163,8 @@ final class DashboardData {
     this.percentOfTarget,
     this.targetDiffCents,
     this.activeShift,
+    this.creditSalesCents = 0,
+    this.creditSalesCount = 0,
   });
 
   final PeriodRange periodRange;
@@ -173,6 +175,8 @@ final class DashboardData {
   final int spentCents; // Bought
   final int earnedCents; // Sold (revenue)
   final int costOfSoldCents; // Cost of sold items
+  final int creditSalesCents; // Sales paid with credit (unpaid portion)
+  final int creditSalesCount; // Count of credit sales
   final int salesProfitCents; // Sold - Cost of sold items
   final double profitPercent; // Legacy profit % markup on cost
   final int expensesCents; // Expenses
@@ -264,6 +268,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   var totalAssumedProfitCents = 0;
   var actualProfitForAssumedCents = 0;
   var assumedSalesCount = 0;
+  var creditSalesCents = 0;
+  var creditSalesCount = 0;
 
   for (final s in periodSales) {
     final revenue = s.unitPriceCents * s.quantity;
@@ -273,6 +279,11 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
     earnedCents += revenue;
     costOfSoldCents += totalCost;
     salesProfitCents += s.profitCents;
+
+    if (s.isCreditSale) {
+      creditSalesCents += s.creditAmountCents;
+      creditSalesCount++;
+    }
 
     if (s.assumedPriceAtSaleCents != null &&
         s.assumedPriceAtSaleCents! > s.costAtSale) {
@@ -402,6 +413,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       actualProfitForAssumedCents: actualProfitForAssumedCents,
       percentOfTarget: percentOfTarget,
       targetDiffCents: targetDiffCents,
+      creditSalesCents: creditSalesCents,
+      creditSalesCount: creditSalesCount,
       activeShift: currentShift,
     ),
   );

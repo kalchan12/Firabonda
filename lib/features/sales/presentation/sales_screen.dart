@@ -306,6 +306,36 @@ final class _SaleItemCard extends ConsumerWidget {
                         'Sold ${sale.quantity}x @ ${Money.etb(sale.unitPriceCents)} • Cost: ${Money.etb(sale.costAtSale * sale.quantity)}${sale.quantity > 1 ? ' (${Money.etb(sale.costAtSale)} each)' : ''}',
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
                       ),
+                      if (sale.isCreditSale) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.warning.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: colors.warning.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Text(
+                                sale.isFullyUnpaid
+                                    ? 'Paid with credit (unpaid)'
+                                    : 'Paid with credit • owes ${Money.etb(sale.creditAmountCents)}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.warning,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
