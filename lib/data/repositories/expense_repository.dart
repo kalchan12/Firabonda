@@ -33,6 +33,16 @@ final class LocalExpenseRepository implements ExpenseRepository {
   Future<String> add(ExpenseInput input) async {
     final now = DateTime.now().toUtc();
     final id = newUuid();
+
+    final openShift = input.shiftId != null
+        ? null
+        : await (_db.select(_db.shifts)
+                ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
+                ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
+                ..limit(1))
+              .getSingleOrNull();
+    final shiftId = input.shiftId ?? openShift?.id;
+
     await _db
         .into(_db.expenses)
         .insert(
@@ -41,6 +51,8 @@ final class LocalExpenseRepository implements ExpenseRepository {
             title: input.title.trim(),
             amount: input.amountCents,
             date: _utc(input.date),
+            accountId: const Value('acc_cash'),
+            shiftId: Value(shiftId),
             note: Value(input.note),
             createdAt: now,
             updatedAt: now,

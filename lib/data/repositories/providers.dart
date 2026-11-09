@@ -8,6 +8,7 @@ import 'debt_repository.dart';
 import 'expense_repository.dart';
 import 'inventory_repository.dart';
 import 'purchase_repository.dart';
+import 'shift_repository.dart';
 import 'supplier_repository.dart';
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
@@ -84,4 +85,17 @@ final reconciliationsStreamProvider = StreamProvider<List<ReconciliationRow>>((
   ref,
 ) {
   return ref.watch(inventoryRepositoryProvider).watchReconciliations();
+});
+
+final shiftRepositoryProvider = Provider<ShiftRepository>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return LocalShiftRepository(db);
+});
+
+final currentShiftStreamProvider = StreamProvider<ShiftRow?>((ref) {
+  return ref.watch(shiftRepositoryProvider).watchCurrentShift();
+});
+
+final shiftHistoryStreamProvider = StreamProvider<List<ShiftOverview>>((ref) {
+  return ref.watch(shiftRepositoryProvider).watchShiftHistory();
 });

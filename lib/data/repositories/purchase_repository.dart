@@ -203,6 +203,15 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final totalRevenue = input.unitPriceCents * input.quantity;
       final paidAmount = input.paidAmountCents ?? totalRevenue;
 
+      final openShift = input.shiftId != null
+          ? null
+          : await (_db.select(_db.shifts)
+                  ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
+                  ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
+                  ..limit(1))
+                .getSingleOrNull();
+      final shiftId = input.shiftId ?? openShift?.id;
+
       await _db
           .into(_db.sales)
           .insert(
@@ -214,6 +223,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               costAtSale: Value(costAtSale),
               assumedPriceAtSale: Value(assumedPriceAtSale),
               accountId: Value(input.accountId ?? 'acc_cash'),
+              shiftId: Value(shiftId),
               paidAmount: Value(paidAmount),
               date: _utc(input.date),
               createdAt: now,
@@ -372,6 +382,15 @@ final class LocalPurchaseRepository implements PurchaseRepository {
       final now = DateTime.now().toUtc();
       final dateUtc = _utc(input.date);
 
+      final openShift = input.shiftId != null
+          ? null
+          : await (_db.select(_db.shifts)
+                  ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
+                  ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
+                  ..limit(1))
+                .getSingleOrNull();
+      final shiftId = input.shiftId ?? openShift?.id;
+
       await _db
           .into(_db.batches)
           .insert(
@@ -381,6 +400,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               date: dateUtc,
               totalPaid: input.totalCostCents,
               accountId: Value(input.accountId ?? 'acc_cash'),
+              shiftId: Value(shiftId),
               note: Value(input.note),
               createdAt: now,
               updatedAt: now,

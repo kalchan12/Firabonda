@@ -87,6 +87,7 @@ class Sales extends Table {
   IntColumn get assumedPriceAtSale => integer().nullable()();
   TextColumn get accountId => text().nullable()();
   IntColumn get paidAmount => integer().nullable()();
+  TextColumn get shiftId => text().nullable()();
   DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -103,6 +104,7 @@ class Expenses extends Table {
   IntColumn get amount => integer()();
   DateTimeColumn get date => dateTime()();
   TextColumn get accountId => text().nullable()();
+  TextColumn get shiftId => text().nullable()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -191,6 +193,7 @@ class Batches extends Table {
   DateTimeColumn get date => dateTime()();
   IntColumn get totalPaid => integer()();
   TextColumn get accountId => text().nullable()();
+  TextColumn get shiftId => text().nullable()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -212,6 +215,7 @@ class StockAdjustments extends Table {
   TextColumn get reason => text()();
   IntColumn get valueAtCost => integer()();
   DateTimeColumn get date => dateTime()();
+  TextColumn get shiftId => text().nullable()();
   TextColumn get note => text().nullable()();
   TextColumn get photoPath => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
@@ -254,6 +258,27 @@ class EditHistory extends Table {
   TextColumn get newValue => text().nullable()();
   DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Shifts tracking cash, transactions, and end-of-shift reconciliation.
+@DataClassName('ShiftRow')
+class Shifts extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get openedAt => dateTime()();
+  DateTimeColumn get closedAt => dateTime().nullable()();
+  IntColumn get openingCash => integer().withDefault(const Constant(0))();
+  IntColumn get expectedCash => integer().nullable()();
+  IntColumn get actualCash => integer().nullable()();
+  IntColumn get cashDifference => integer().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get openedBy => text().nullable()();
+  TextColumn get closedBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

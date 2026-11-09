@@ -42,6 +42,7 @@ final class SaleInput {
     this.accountId = 'acc_cash',
     this.paidAmountCents,
     this.customerName,
+    this.shiftId,
   });
 
   final String purchaseId;
@@ -53,6 +54,7 @@ final class SaleInput {
   final String? accountId;
   final int? paidAmountCents;
   final String? customerName;
+  final String? shiftId;
 }
 
 final class BatchItemInput {
@@ -81,6 +83,7 @@ final class BatchPurchaseInput {
     required this.totalCostCents,
     required this.date,
     this.accountId = 'acc_cash',
+    this.shiftId,
     this.note,
     required this.items,
   });
@@ -89,6 +92,7 @@ final class BatchPurchaseInput {
   final int totalCostCents;
   final DateTime date;
   final String? accountId;
+  final String? shiftId;
   final String? note;
   final List<BatchItemInput> items;
 }
@@ -206,12 +210,14 @@ final class ExpenseInput {
     required this.title,
     required this.amountCents,
     required this.date,
+    this.shiftId,
     this.note,
   });
 
   final String title;
   final int amountCents;
   final DateTime date;
+  final String? shiftId;
   final String? note;
 }
 
@@ -316,4 +322,41 @@ final class ReconciliationInput {
   final int countedCents;
   final DateTime date;
   final String? note;
+}
+
+final class ShiftOverview {
+  const ShiftOverview({
+    required this.id,
+    required this.openedAt,
+    this.closedAt,
+    this.openingCashCents = 0,
+    this.expectedCashCents,
+    this.actualCashCents,
+    this.cashDifferenceCents,
+    this.notes,
+    this.openedBy,
+    this.closedBy,
+    this.totalSalesCents = 0,
+    this.totalProfitCents = 0,
+    this.totalExpensesCents = 0,
+    this.salesCount = 0,
+  });
+
+  final String id;
+  final DateTime openedAt;
+  final DateTime? closedAt;
+  final int openingCashCents;
+  final int? expectedCashCents;
+  final int? actualCashCents;
+  final int? cashDifferenceCents;
+  final String? notes;
+  final String? openedBy;
+  final String? closedBy;
+
+  final int totalSalesCents;
+  final int totalProfitCents;
+  final int totalExpensesCents;
+  final int salesCount;
+
+  bool get isOpen => closedAt == null;
 }

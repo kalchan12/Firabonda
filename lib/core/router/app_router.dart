@@ -13,11 +13,11 @@ import '../../features/more/presentation/more_screen.dart';
 import '../../features/purchases/presentation/add_purchase_screen.dart';
 import '../../features/purchases/presentation/batch_purchase_screen.dart';
 import '../../features/purchases/presentation/purchases_screen.dart';
-import '../../features/reconciliation/presentation/day_close_screen.dart';
 import '../../features/reconciliation/presentation/reconciliation_screen.dart';
 import '../../features/sales/presentation/quick_sale_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/shifts/presentation/shift_history_screen.dart';
 import '../../features/suppliers/presentation/suppliers_screen.dart';
 import '../widgets/app_shell.dart';
 
@@ -112,7 +112,12 @@ GoRouter buildAppRouter() {
       GoRoute(
         path: '/day-close',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const DayCloseScreen(),
+        builder: (context, state) => const ShiftHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/shift-history',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ShiftHistoryScreen(),
       ),
       GoRoute(
         path: '/categories-colors',

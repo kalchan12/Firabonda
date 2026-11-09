@@ -91,7 +91,7 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Task 5: Profit logic**: Assumed profit, over profit, loss, not assumed; replace markup % with % of target.
 - [x] **Task 6: Simple sell screen**: Clean 3-input sell sheet, live result card (+ETB / Loss / Target), fixed footer.
 - [x] **Task 7: Update dashboard and lists for new profit language**: Unified profit status colors and labels.
-- [ ] **Task 8: Shift system**: Shift-based Today card, Shift close with reconciliation, midnight auto-close, history.
+- [x] **Task 8: Shift system**: Shift-based Today card, Shift close with reconciliation, midnight auto-close, history.
 - [ ] **Task 9: Final QA, docs and push**: Verification on device, docs sync, branch readiness check.
 
 ## Later (not in this build)

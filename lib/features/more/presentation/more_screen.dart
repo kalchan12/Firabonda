@@ -66,9 +66,9 @@ final class MoreScreen extends ConsumerWidget {
               onTap: () => context.push('/reconciliation'),
             ),
             _MoreTile(
-              icon: Icons.summarize_outlined,
-              label: 'Day close summary',
-              onTap: () => context.push('/day-close'),
+              icon: Icons.history_toggle_off_rounded,
+              label: 'Shift history',
+              onTap: () => context.push('/shift-history'),
             ),
             _MoreTile(
               icon: Icons.category_outlined,

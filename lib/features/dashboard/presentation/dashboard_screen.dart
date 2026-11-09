@@ -9,10 +9,14 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../core/utils/business_logic.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/stat_tile.dart';
+import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
+import '../../shifts/presentation/close_shift_sheet.dart';
+import '../../shifts/presentation/open_shift_sheet.dart';
 import '../application/dashboard_controller.dart';
 
 final class DashboardScreen extends ConsumerWidget {
@@ -180,6 +184,12 @@ final class DashboardScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Shift status banner (Today tab)
+                    if (data.period == Period.today) ...[
+                      _TodayShiftBanner(activeShift: data.activeShift),
+                      const SizedBox(height: AppSpacing.m),
+                    ],
+
                     // 1. Net Profit Hero Tile with status badge
                     _NetProfitHeroTile(
                       periodName: periodName,
@@ -1081,6 +1091,148 @@ final class _ProfitChartCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+final class _TodayShiftBanner extends StatelessWidget {
+  const _TodayShiftBanner({required this.activeShift});
+
+  final ShiftRow? activeShift;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    if (activeShift == null) {
+      return AppCard(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  child: Icon(
+                    Icons.access_time_filled_rounded,
+                    color: colors.warning,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No Active Shift',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Open a shift to track sales & cash drawer',
+                        style: TextStyle(fontSize: 12, color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.history_rounded),
+                  tooltip: 'Shift history',
+                  onPressed: () => context.push('/shift-history'),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.m),
+            AppButton(
+              label: 'Open shift',
+              icon: Icons.play_arrow_rounded,
+              onPressed: () => showOpenShiftSheet(context),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final shift = activeShift!;
+    final timeStr = DateFormat('h:mm a').format(shift.openedAt);
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.profit.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: Icon(
+                  Icons.timelapse_rounded,
+                  color: colors.profit,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Active Shift',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: colors.profit,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Opened at $timeStr • Base cash: ${Money.etb(shift.openingCash)}',
+                      style: TextStyle(fontSize: 12, color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.history_rounded),
+                tooltip: 'Shift history',
+                onPressed: () => context.push('/shift-history'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.m),
+          AppButton(
+            label: 'Close shift & reconcile cash',
+            icon: Icons.check_circle_outline_rounded,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => showCloseShiftSheet(context, shift),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2518,6 +2518,17 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _shiftIdMeta = const VerificationMeta(
+    'shiftId',
+  );
+  @override
+  late final GeneratedColumn<String> shiftId = GeneratedColumn<String>(
+    'shift_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
@@ -2570,6 +2581,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     assumedPriceAtSale,
     accountId,
     paidAmount,
+    shiftId,
     date,
     createdAt,
     updatedAt,
@@ -2646,6 +2658,12 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         paidAmount.isAcceptableOrUnknown(data['paid_amount']!, _paidAmountMeta),
       );
     }
+    if (data.containsKey('shift_id')) {
+      context.handle(
+        _shiftIdMeta,
+        shiftId.isAcceptableOrUnknown(data['shift_id']!, _shiftIdMeta),
+      );
+    }
     if (data.containsKey('date')) {
       context.handle(
         _dateMeta,
@@ -2717,6 +2735,10 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         DriftSqlType.int,
         data['${effectivePrefix}paid_amount'],
       ),
+      shiftId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_id'],
+      ),
       date: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}date'],
@@ -2751,6 +2773,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
   final int? assumedPriceAtSale;
   final String? accountId;
   final int? paidAmount;
+  final String? shiftId;
   final DateTime date;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2764,6 +2787,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     this.assumedPriceAtSale,
     this.accountId,
     this.paidAmount,
+    this.shiftId,
     required this.date,
     required this.createdAt,
     required this.updatedAt,
@@ -2787,6 +2811,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     }
     if (!nullToAbsent || paidAmount != null) {
       map['paid_amount'] = Variable<int>(paidAmount);
+    }
+    if (!nullToAbsent || shiftId != null) {
+      map['shift_id'] = Variable<String>(shiftId);
     }
     map['date'] = Variable<DateTime>(date);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -2815,6 +2842,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       paidAmount: paidAmount == null && nullToAbsent
           ? const Value.absent()
           : Value(paidAmount),
+      shiftId: shiftId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftId),
       date: Value(date),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -2838,6 +2868,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       assumedPriceAtSale: serializer.fromJson<int?>(json['assumedPriceAtSale']),
       accountId: serializer.fromJson<String?>(json['accountId']),
       paidAmount: serializer.fromJson<int?>(json['paidAmount']),
+      shiftId: serializer.fromJson<String?>(json['shiftId']),
       date: serializer.fromJson<DateTime>(json['date']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2856,6 +2887,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       'assumedPriceAtSale': serializer.toJson<int?>(assumedPriceAtSale),
       'accountId': serializer.toJson<String?>(accountId),
       'paidAmount': serializer.toJson<int?>(paidAmount),
+      'shiftId': serializer.toJson<String?>(shiftId),
       'date': serializer.toJson<DateTime>(date),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2872,6 +2904,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     Value<int?> assumedPriceAtSale = const Value.absent(),
     Value<String?> accountId = const Value.absent(),
     Value<int?> paidAmount = const Value.absent(),
+    Value<String?> shiftId = const Value.absent(),
     DateTime? date,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -2887,6 +2920,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
         : this.assumedPriceAtSale,
     accountId: accountId.present ? accountId.value : this.accountId,
     paidAmount: paidAmount.present ? paidAmount.value : this.paidAmount,
+    shiftId: shiftId.present ? shiftId.value : this.shiftId,
     date: date ?? this.date,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2910,6 +2944,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       paidAmount: data.paidAmount.present
           ? data.paidAmount.value
           : this.paidAmount,
+      shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       date: data.date.present ? data.date.value : this.date,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2928,6 +2963,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           ..write('assumedPriceAtSale: $assumedPriceAtSale, ')
           ..write('accountId: $accountId, ')
           ..write('paidAmount: $paidAmount, ')
+          ..write('shiftId: $shiftId, ')
           ..write('date: $date, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2946,6 +2982,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     assumedPriceAtSale,
     accountId,
     paidAmount,
+    shiftId,
     date,
     createdAt,
     updatedAt,
@@ -2963,6 +3000,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           other.assumedPriceAtSale == this.assumedPriceAtSale &&
           other.accountId == this.accountId &&
           other.paidAmount == this.paidAmount &&
+          other.shiftId == this.shiftId &&
           other.date == this.date &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -2978,6 +3016,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
   final Value<int?> assumedPriceAtSale;
   final Value<String?> accountId;
   final Value<int?> paidAmount;
+  final Value<String?> shiftId;
   final Value<DateTime> date;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2992,6 +3031,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.assumedPriceAtSale = const Value.absent(),
     this.accountId = const Value.absent(),
     this.paidAmount = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.date = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3007,6 +3047,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.assumedPriceAtSale = const Value.absent(),
     this.accountId = const Value.absent(),
     this.paidAmount = const Value.absent(),
+    this.shiftId = const Value.absent(),
     required DateTime date,
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -3028,6 +3069,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Expression<int>? assumedPriceAtSale,
     Expression<String>? accountId,
     Expression<int>? paidAmount,
+    Expression<String>? shiftId,
     Expression<DateTime>? date,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3044,6 +3086,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
         'assumed_price_at_sale': assumedPriceAtSale,
       if (accountId != null) 'account_id': accountId,
       if (paidAmount != null) 'paid_amount': paidAmount,
+      if (shiftId != null) 'shift_id': shiftId,
       if (date != null) 'date': date,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3061,6 +3104,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Value<int?>? assumedPriceAtSale,
     Value<String?>? accountId,
     Value<int?>? paidAmount,
+    Value<String?>? shiftId,
     Value<DateTime>? date,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -3076,6 +3120,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
       assumedPriceAtSale: assumedPriceAtSale ?? this.assumedPriceAtSale,
       accountId: accountId ?? this.accountId,
       paidAmount: paidAmount ?? this.paidAmount,
+      shiftId: shiftId ?? this.shiftId,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3111,6 +3156,9 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     if (paidAmount.present) {
       map['paid_amount'] = Variable<int>(paidAmount.value);
     }
+    if (shiftId.present) {
+      map['shift_id'] = Variable<String>(shiftId.value);
+    }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
@@ -3140,6 +3188,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
           ..write('assumedPriceAtSale: $assumedPriceAtSale, ')
           ..write('accountId: $accountId, ')
           ..write('paidAmount: $paidAmount, ')
+          ..write('shiftId: $shiftId, ')
           ..write('date: $date, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3203,6 +3252,17 @@ class $ExpensesTable extends Expenses
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _shiftIdMeta = const VerificationMeta(
+    'shiftId',
+  );
+  @override
+  late final GeneratedColumn<String> shiftId = GeneratedColumn<String>(
+    'shift_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -3252,6 +3312,7 @@ class $ExpensesTable extends Expenses
     amount,
     date,
     accountId,
+    shiftId,
     note,
     createdAt,
     updatedAt,
@@ -3302,6 +3363,12 @@ class $ExpensesTable extends Expenses
       context.handle(
         _accountIdMeta,
         accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
+    if (data.containsKey('shift_id')) {
+      context.handle(
+        _shiftIdMeta,
+        shiftId.isAcceptableOrUnknown(data['shift_id']!, _shiftIdMeta),
       );
     }
     if (data.containsKey('note')) {
@@ -3361,6 +3428,10 @@ class $ExpensesTable extends Expenses
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
       ),
+      shiftId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_id'],
+      ),
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
@@ -3392,6 +3463,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   final int amount;
   final DateTime date;
   final String? accountId;
+  final String? shiftId;
   final String? note;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -3402,6 +3474,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     required this.amount,
     required this.date,
     this.accountId,
+    this.shiftId,
     this.note,
     required this.createdAt,
     required this.updatedAt,
@@ -3416,6 +3489,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     map['date'] = Variable<DateTime>(date);
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || shiftId != null) {
+      map['shift_id'] = Variable<String>(shiftId);
     }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
@@ -3437,6 +3513,9 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
           : Value(accountId),
+      shiftId: shiftId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftId),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -3457,6 +3536,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       amount: serializer.fromJson<int>(json['amount']),
       date: serializer.fromJson<DateTime>(json['date']),
       accountId: serializer.fromJson<String?>(json['accountId']),
+      shiftId: serializer.fromJson<String?>(json['shiftId']),
       note: serializer.fromJson<String?>(json['note']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -3472,6 +3552,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       'amount': serializer.toJson<int>(amount),
       'date': serializer.toJson<DateTime>(date),
       'accountId': serializer.toJson<String?>(accountId),
+      'shiftId': serializer.toJson<String?>(shiftId),
       'note': serializer.toJson<String?>(note),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -3485,6 +3566,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     int? amount,
     DateTime? date,
     Value<String?> accountId = const Value.absent(),
+    Value<String?> shiftId = const Value.absent(),
     Value<String?> note = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -3495,6 +3577,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     amount: amount ?? this.amount,
     date: date ?? this.date,
     accountId: accountId.present ? accountId.value : this.accountId,
+    shiftId: shiftId.present ? shiftId.value : this.shiftId,
     note: note.present ? note.value : this.note,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -3507,6 +3590,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
       amount: data.amount.present ? data.amount.value : this.amount,
       date: data.date.present ? data.date.value : this.date,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       note: data.note.present ? data.note.value : this.note,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -3522,6 +3606,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('accountId: $accountId, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3537,6 +3622,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
     amount,
     date,
     accountId,
+    shiftId,
     note,
     createdAt,
     updatedAt,
@@ -3551,6 +3637,7 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
           other.amount == this.amount &&
           other.date == this.date &&
           other.accountId == this.accountId &&
+          other.shiftId == this.shiftId &&
           other.note == this.note &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -3563,6 +3650,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
   final Value<int> amount;
   final Value<DateTime> date;
   final Value<String?> accountId;
+  final Value<String?> shiftId;
   final Value<String?> note;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -3574,6 +3662,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.amount = const Value.absent(),
     this.date = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3586,6 +3675,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     required int amount,
     required DateTime date,
     this.accountId = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -3603,6 +3693,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Expression<int>? amount,
     Expression<DateTime>? date,
     Expression<String>? accountId,
+    Expression<String>? shiftId,
     Expression<String>? note,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3615,6 +3706,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       if (amount != null) 'amount': amount,
       if (date != null) 'date': date,
       if (accountId != null) 'account_id': accountId,
+      if (shiftId != null) 'shift_id': shiftId,
       if (note != null) 'note': note,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3629,6 +3721,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     Value<int>? amount,
     Value<DateTime>? date,
     Value<String?>? accountId,
+    Value<String?>? shiftId,
     Value<String?>? note,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -3641,6 +3734,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
       amount: amount ?? this.amount,
       date: date ?? this.date,
       accountId: accountId ?? this.accountId,
+      shiftId: shiftId ?? this.shiftId,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3666,6 +3760,9 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (shiftId.present) {
+      map['shift_id'] = Variable<String>(shiftId.value);
     }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
@@ -3693,6 +3790,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('accountId: $accountId, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -5747,6 +5845,17 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _shiftIdMeta = const VerificationMeta(
+    'shiftId',
+  );
+  @override
+  late final GeneratedColumn<String> shiftId = GeneratedColumn<String>(
+    'shift_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -5796,6 +5905,7 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
     date,
     totalPaid,
     accountId,
+    shiftId,
     note,
     createdAt,
     updatedAt,
@@ -5844,6 +5954,12 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
       context.handle(
         _accountIdMeta,
         accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
+    if (data.containsKey('shift_id')) {
+      context.handle(
+        _shiftIdMeta,
+        shiftId.isAcceptableOrUnknown(data['shift_id']!, _shiftIdMeta),
       );
     }
     if (data.containsKey('note')) {
@@ -5903,6 +6019,10 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
       ),
+      shiftId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_id'],
+      ),
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
@@ -5934,6 +6054,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
   final DateTime date;
   final int totalPaid;
   final String? accountId;
+  final String? shiftId;
   final String? note;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5944,6 +6065,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     required this.date,
     required this.totalPaid,
     this.accountId,
+    this.shiftId,
     this.note,
     required this.createdAt,
     required this.updatedAt,
@@ -5960,6 +6082,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     map['total_paid'] = Variable<int>(totalPaid);
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || shiftId != null) {
+      map['shift_id'] = Variable<String>(shiftId);
     }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
@@ -5983,6 +6108,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
           : Value(accountId),
+      shiftId: shiftId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftId),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -6003,6 +6131,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
       date: serializer.fromJson<DateTime>(json['date']),
       totalPaid: serializer.fromJson<int>(json['totalPaid']),
       accountId: serializer.fromJson<String?>(json['accountId']),
+      shiftId: serializer.fromJson<String?>(json['shiftId']),
       note: serializer.fromJson<String?>(json['note']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -6018,6 +6147,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
       'date': serializer.toJson<DateTime>(date),
       'totalPaid': serializer.toJson<int>(totalPaid),
       'accountId': serializer.toJson<String?>(accountId),
+      'shiftId': serializer.toJson<String?>(shiftId),
       'note': serializer.toJson<String?>(note),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -6031,6 +6161,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     DateTime? date,
     int? totalPaid,
     Value<String?> accountId = const Value.absent(),
+    Value<String?> shiftId = const Value.absent(),
     Value<String?> note = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -6041,6 +6172,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     date: date ?? this.date,
     totalPaid: totalPaid ?? this.totalPaid,
     accountId: accountId.present ? accountId.value : this.accountId,
+    shiftId: shiftId.present ? shiftId.value : this.shiftId,
     note: note.present ? note.value : this.note,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -6055,6 +6187,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
       date: data.date.present ? data.date.value : this.date,
       totalPaid: data.totalPaid.present ? data.totalPaid.value : this.totalPaid,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       note: data.note.present ? data.note.value : this.note,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -6070,6 +6203,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
           ..write('date: $date, ')
           ..write('totalPaid: $totalPaid, ')
           ..write('accountId: $accountId, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6085,6 +6219,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     date,
     totalPaid,
     accountId,
+    shiftId,
     note,
     createdAt,
     updatedAt,
@@ -6099,6 +6234,7 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
           other.date == this.date &&
           other.totalPaid == this.totalPaid &&
           other.accountId == this.accountId &&
+          other.shiftId == this.shiftId &&
           other.note == this.note &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -6111,6 +6247,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
   final Value<DateTime> date;
   final Value<int> totalPaid;
   final Value<String?> accountId;
+  final Value<String?> shiftId;
   final Value<String?> note;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -6122,6 +6259,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     this.date = const Value.absent(),
     this.totalPaid = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -6134,6 +6272,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     required DateTime date,
     required int totalPaid,
     this.accountId = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -6150,6 +6289,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     Expression<DateTime>? date,
     Expression<int>? totalPaid,
     Expression<String>? accountId,
+    Expression<String>? shiftId,
     Expression<String>? note,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -6162,6 +6302,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
       if (date != null) 'date': date,
       if (totalPaid != null) 'total_paid': totalPaid,
       if (accountId != null) 'account_id': accountId,
+      if (shiftId != null) 'shift_id': shiftId,
       if (note != null) 'note': note,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -6176,6 +6317,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     Value<DateTime>? date,
     Value<int>? totalPaid,
     Value<String?>? accountId,
+    Value<String?>? shiftId,
     Value<String?>? note,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -6188,6 +6330,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
       date: date ?? this.date,
       totalPaid: totalPaid ?? this.totalPaid,
       accountId: accountId ?? this.accountId,
+      shiftId: shiftId ?? this.shiftId,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -6213,6 +6356,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (shiftId.present) {
+      map['shift_id'] = Variable<String>(shiftId.value);
     }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
@@ -6240,6 +6386,7 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
           ..write('date: $date, ')
           ..write('totalPaid: $totalPaid, ')
           ..write('accountId: $accountId, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6327,6 +6474,17 @@ class $StockAdjustmentsTable extends StockAdjustments
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _shiftIdMeta = const VerificationMeta(
+    'shiftId',
+  );
+  @override
+  late final GeneratedColumn<String> shiftId = GeneratedColumn<String>(
+    'shift_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -6389,6 +6547,7 @@ class $StockAdjustmentsTable extends StockAdjustments
     reason,
     valueAtCost,
     date,
+    shiftId,
     note,
     photoPath,
     createdAt,
@@ -6462,6 +6621,12 @@ class $StockAdjustmentsTable extends StockAdjustments
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
+    if (data.containsKey('shift_id')) {
+      context.handle(
+        _shiftIdMeta,
+        shiftId.isAcceptableOrUnknown(data['shift_id']!, _shiftIdMeta),
+      );
+    }
     if (data.containsKey('note')) {
       context.handle(
         _noteMeta,
@@ -6533,6 +6698,10 @@ class $StockAdjustmentsTable extends StockAdjustments
         DriftSqlType.dateTime,
         data['${effectivePrefix}date'],
       )!,
+      shiftId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_id'],
+      ),
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
@@ -6573,6 +6742,7 @@ class StockAdjustmentRow extends DataClass
   final String reason;
   final int valueAtCost;
   final DateTime date;
+  final String? shiftId;
   final String? note;
   final String? photoPath;
   final DateTime createdAt;
@@ -6586,6 +6756,7 @@ class StockAdjustmentRow extends DataClass
     required this.reason,
     required this.valueAtCost,
     required this.date,
+    this.shiftId,
     this.note,
     this.photoPath,
     required this.createdAt,
@@ -6606,6 +6777,9 @@ class StockAdjustmentRow extends DataClass
     map['reason'] = Variable<String>(reason);
     map['value_at_cost'] = Variable<int>(valueAtCost);
     map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || shiftId != null) {
+      map['shift_id'] = Variable<String>(shiftId);
+    }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
@@ -6633,6 +6807,9 @@ class StockAdjustmentRow extends DataClass
       reason: Value(reason),
       valueAtCost: Value(valueAtCost),
       date: Value(date),
+      shiftId: shiftId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftId),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       photoPath: photoPath == null && nullToAbsent
           ? const Value.absent()
@@ -6658,6 +6835,7 @@ class StockAdjustmentRow extends DataClass
       reason: serializer.fromJson<String>(json['reason']),
       valueAtCost: serializer.fromJson<int>(json['valueAtCost']),
       date: serializer.fromJson<DateTime>(json['date']),
+      shiftId: serializer.fromJson<String?>(json['shiftId']),
       note: serializer.fromJson<String?>(json['note']),
       photoPath: serializer.fromJson<String?>(json['photoPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -6676,6 +6854,7 @@ class StockAdjustmentRow extends DataClass
       'reason': serializer.toJson<String>(reason),
       'valueAtCost': serializer.toJson<int>(valueAtCost),
       'date': serializer.toJson<DateTime>(date),
+      'shiftId': serializer.toJson<String?>(shiftId),
       'note': serializer.toJson<String?>(note),
       'photoPath': serializer.toJson<String?>(photoPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -6692,6 +6871,7 @@ class StockAdjustmentRow extends DataClass
     String? reason,
     int? valueAtCost,
     DateTime? date,
+    Value<String?> shiftId = const Value.absent(),
     Value<String?> note = const Value.absent(),
     Value<String?> photoPath = const Value.absent(),
     DateTime? createdAt,
@@ -6705,6 +6885,7 @@ class StockAdjustmentRow extends DataClass
     reason: reason ?? this.reason,
     valueAtCost: valueAtCost ?? this.valueAtCost,
     date: date ?? this.date,
+    shiftId: shiftId.present ? shiftId.value : this.shiftId,
     note: note.present ? note.value : this.note,
     photoPath: photoPath.present ? photoPath.value : this.photoPath,
     createdAt: createdAt ?? this.createdAt,
@@ -6728,6 +6909,7 @@ class StockAdjustmentRow extends DataClass
           ? data.valueAtCost.value
           : this.valueAtCost,
       date: data.date.present ? data.date.value : this.date,
+      shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       note: data.note.present ? data.note.value : this.note,
       photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -6746,6 +6928,7 @@ class StockAdjustmentRow extends DataClass
           ..write('reason: $reason, ')
           ..write('valueAtCost: $valueAtCost, ')
           ..write('date: $date, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('photoPath: $photoPath, ')
           ..write('createdAt: $createdAt, ')
@@ -6764,6 +6947,7 @@ class StockAdjustmentRow extends DataClass
     reason,
     valueAtCost,
     date,
+    shiftId,
     note,
     photoPath,
     createdAt,
@@ -6781,6 +6965,7 @@ class StockAdjustmentRow extends DataClass
           other.reason == this.reason &&
           other.valueAtCost == this.valueAtCost &&
           other.date == this.date &&
+          other.shiftId == this.shiftId &&
           other.note == this.note &&
           other.photoPath == this.photoPath &&
           other.createdAt == this.createdAt &&
@@ -6796,6 +6981,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
   final Value<String> reason;
   final Value<int> valueAtCost;
   final Value<DateTime> date;
+  final Value<String?> shiftId;
   final Value<String?> note;
   final Value<String?> photoPath;
   final Value<DateTime> createdAt;
@@ -6810,6 +6996,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
     this.reason = const Value.absent(),
     this.valueAtCost = const Value.absent(),
     this.date = const Value.absent(),
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     this.photoPath = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6825,6 +7012,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
     required String reason,
     required int valueAtCost,
     required DateTime date,
+    this.shiftId = const Value.absent(),
     this.note = const Value.absent(),
     this.photoPath = const Value.absent(),
     required DateTime createdAt,
@@ -6846,6 +7034,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
     Expression<String>? reason,
     Expression<int>? valueAtCost,
     Expression<DateTime>? date,
+    Expression<String>? shiftId,
     Expression<String>? note,
     Expression<String>? photoPath,
     Expression<DateTime>? createdAt,
@@ -6861,6 +7050,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
       if (reason != null) 'reason': reason,
       if (valueAtCost != null) 'value_at_cost': valueAtCost,
       if (date != null) 'date': date,
+      if (shiftId != null) 'shift_id': shiftId,
       if (note != null) 'note': note,
       if (photoPath != null) 'photo_path': photoPath,
       if (createdAt != null) 'created_at': createdAt,
@@ -6878,6 +7068,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
     Value<String>? reason,
     Value<int>? valueAtCost,
     Value<DateTime>? date,
+    Value<String?>? shiftId,
     Value<String?>? note,
     Value<String?>? photoPath,
     Value<DateTime>? createdAt,
@@ -6893,6 +7084,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
       reason: reason ?? this.reason,
       valueAtCost: valueAtCost ?? this.valueAtCost,
       date: date ?? this.date,
+      shiftId: shiftId ?? this.shiftId,
       note: note ?? this.note,
       photoPath: photoPath ?? this.photoPath,
       createdAt: createdAt ?? this.createdAt,
@@ -6926,6 +7118,9 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
+    if (shiftId.present) {
+      map['shift_id'] = Variable<String>(shiftId.value);
+    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
@@ -6957,6 +7152,7 @@ class StockAdjustmentsCompanion extends UpdateCompanion<StockAdjustmentRow> {
           ..write('reason: $reason, ')
           ..write('valueAtCost: $valueAtCost, ')
           ..write('date: $date, ')
+          ..write('shiftId: $shiftId, ')
           ..write('note: $note, ')
           ..write('photoPath: $photoPath, ')
           ..write('createdAt: $createdAt, ')
@@ -8136,6 +8332,780 @@ class EditHistoryCompanion extends UpdateCompanion<EditHistoryRow> {
   }
 }
 
+class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, ShiftRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShiftsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _openedAtMeta = const VerificationMeta(
+    'openedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
+    'opened_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> closedAt = GeneratedColumn<DateTime>(
+    'closed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openingCashMeta = const VerificationMeta(
+    'openingCash',
+  );
+  @override
+  late final GeneratedColumn<int> openingCash = GeneratedColumn<int>(
+    'opening_cash',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _expectedCashMeta = const VerificationMeta(
+    'expectedCash',
+  );
+  @override
+  late final GeneratedColumn<int> expectedCash = GeneratedColumn<int>(
+    'expected_cash',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actualCashMeta = const VerificationMeta(
+    'actualCash',
+  );
+  @override
+  late final GeneratedColumn<int> actualCash = GeneratedColumn<int>(
+    'actual_cash',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cashDifferenceMeta = const VerificationMeta(
+    'cashDifference',
+  );
+  @override
+  late final GeneratedColumn<int> cashDifference = GeneratedColumn<int>(
+    'cash_difference',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openedByMeta = const VerificationMeta(
+    'openedBy',
+  );
+  @override
+  late final GeneratedColumn<String> openedBy = GeneratedColumn<String>(
+    'opened_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  @override
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    openedAt,
+    closedAt,
+    openingCash,
+    expectedCash,
+    actualCash,
+    cashDifference,
+    notes,
+    openedBy,
+    closedBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shifts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShiftRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('opened_at')) {
+      context.handle(
+        _openedAtMeta,
+        openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_openedAtMeta);
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    }
+    if (data.containsKey('opening_cash')) {
+      context.handle(
+        _openingCashMeta,
+        openingCash.isAcceptableOrUnknown(
+          data['opening_cash']!,
+          _openingCashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_cash')) {
+      context.handle(
+        _expectedCashMeta,
+        expectedCash.isAcceptableOrUnknown(
+          data['expected_cash']!,
+          _expectedCashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_cash')) {
+      context.handle(
+        _actualCashMeta,
+        actualCash.isAcceptableOrUnknown(data['actual_cash']!, _actualCashMeta),
+      );
+    }
+    if (data.containsKey('cash_difference')) {
+      context.handle(
+        _cashDifferenceMeta,
+        cashDifference.isAcceptableOrUnknown(
+          data['cash_difference']!,
+          _cashDifferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('opened_by')) {
+      context.handle(
+        _openedByMeta,
+        openedBy.isAcceptableOrUnknown(data['opened_by']!, _openedByMeta),
+      );
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ShiftRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShiftRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}opened_at'],
+      )!,
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}closed_at'],
+      ),
+      openingCash: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opening_cash'],
+      )!,
+      expectedCash: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expected_cash'],
+      ),
+      actualCash: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_cash'],
+      ),
+      cashDifference: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cash_difference'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      openedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opened_by'],
+      ),
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $ShiftsTable createAlias(String alias) {
+    return $ShiftsTable(attachedDatabase, alias);
+  }
+}
+
+class ShiftRow extends DataClass implements Insertable<ShiftRow> {
+  final String id;
+  final DateTime openedAt;
+  final DateTime? closedAt;
+  final int openingCash;
+  final int? expectedCash;
+  final int? actualCash;
+  final int? cashDifference;
+  final String? notes;
+  final String? openedBy;
+  final String? closedBy;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const ShiftRow({
+    required this.id,
+    required this.openedAt,
+    this.closedAt,
+    required this.openingCash,
+    this.expectedCash,
+    this.actualCash,
+    this.cashDifference,
+    this.notes,
+    this.openedBy,
+    this.closedBy,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['opened_at'] = Variable<DateTime>(openedAt);
+    if (!nullToAbsent || closedAt != null) {
+      map['closed_at'] = Variable<DateTime>(closedAt);
+    }
+    map['opening_cash'] = Variable<int>(openingCash);
+    if (!nullToAbsent || expectedCash != null) {
+      map['expected_cash'] = Variable<int>(expectedCash);
+    }
+    if (!nullToAbsent || actualCash != null) {
+      map['actual_cash'] = Variable<int>(actualCash);
+    }
+    if (!nullToAbsent || cashDifference != null) {
+      map['cash_difference'] = Variable<int>(cashDifference);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || openedBy != null) {
+      map['opened_by'] = Variable<String>(openedBy);
+    }
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  ShiftsCompanion toCompanion(bool nullToAbsent) {
+    return ShiftsCompanion(
+      id: Value(id),
+      openedAt: Value(openedAt),
+      closedAt: closedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedAt),
+      openingCash: Value(openingCash),
+      expectedCash: expectedCash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedCash),
+      actualCash: actualCash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualCash),
+      cashDifference: cashDifference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cashDifference),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      openedBy: openedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedBy),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory ShiftRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShiftRow(
+      id: serializer.fromJson<String>(json['id']),
+      openedAt: serializer.fromJson<DateTime>(json['openedAt']),
+      closedAt: serializer.fromJson<DateTime?>(json['closedAt']),
+      openingCash: serializer.fromJson<int>(json['openingCash']),
+      expectedCash: serializer.fromJson<int?>(json['expectedCash']),
+      actualCash: serializer.fromJson<int?>(json['actualCash']),
+      cashDifference: serializer.fromJson<int?>(json['cashDifference']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      openedBy: serializer.fromJson<String?>(json['openedBy']),
+      closedBy: serializer.fromJson<String?>(json['closedBy']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'openedAt': serializer.toJson<DateTime>(openedAt),
+      'closedAt': serializer.toJson<DateTime?>(closedAt),
+      'openingCash': serializer.toJson<int>(openingCash),
+      'expectedCash': serializer.toJson<int?>(expectedCash),
+      'actualCash': serializer.toJson<int?>(actualCash),
+      'cashDifference': serializer.toJson<int?>(cashDifference),
+      'notes': serializer.toJson<String?>(notes),
+      'openedBy': serializer.toJson<String?>(openedBy),
+      'closedBy': serializer.toJson<String?>(closedBy),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  ShiftRow copyWith({
+    String? id,
+    DateTime? openedAt,
+    Value<DateTime?> closedAt = const Value.absent(),
+    int? openingCash,
+    Value<int?> expectedCash = const Value.absent(),
+    Value<int?> actualCash = const Value.absent(),
+    Value<int?> cashDifference = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> openedBy = const Value.absent(),
+    Value<String?> closedBy = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => ShiftRow(
+    id: id ?? this.id,
+    openedAt: openedAt ?? this.openedAt,
+    closedAt: closedAt.present ? closedAt.value : this.closedAt,
+    openingCash: openingCash ?? this.openingCash,
+    expectedCash: expectedCash.present ? expectedCash.value : this.expectedCash,
+    actualCash: actualCash.present ? actualCash.value : this.actualCash,
+    cashDifference: cashDifference.present
+        ? cashDifference.value
+        : this.cashDifference,
+    notes: notes.present ? notes.value : this.notes,
+    openedBy: openedBy.present ? openedBy.value : this.openedBy,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  ShiftRow copyWithCompanion(ShiftsCompanion data) {
+    return ShiftRow(
+      id: data.id.present ? data.id.value : this.id,
+      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      openingCash: data.openingCash.present
+          ? data.openingCash.value
+          : this.openingCash,
+      expectedCash: data.expectedCash.present
+          ? data.expectedCash.value
+          : this.expectedCash,
+      actualCash: data.actualCash.present
+          ? data.actualCash.value
+          : this.actualCash,
+      cashDifference: data.cashDifference.present
+          ? data.cashDifference.value
+          : this.cashDifference,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      openedBy: data.openedBy.present ? data.openedBy.value : this.openedBy,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftRow(')
+          ..write('id: $id, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('openingCash: $openingCash, ')
+          ..write('expectedCash: $expectedCash, ')
+          ..write('actualCash: $actualCash, ')
+          ..write('cashDifference: $cashDifference, ')
+          ..write('notes: $notes, ')
+          ..write('openedBy: $openedBy, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    openedAt,
+    closedAt,
+    openingCash,
+    expectedCash,
+    actualCash,
+    cashDifference,
+    notes,
+    openedBy,
+    closedBy,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShiftRow &&
+          other.id == this.id &&
+          other.openedAt == this.openedAt &&
+          other.closedAt == this.closedAt &&
+          other.openingCash == this.openingCash &&
+          other.expectedCash == this.expectedCash &&
+          other.actualCash == this.actualCash &&
+          other.cashDifference == this.cashDifference &&
+          other.notes == this.notes &&
+          other.openedBy == this.openedBy &&
+          other.closedBy == this.closedBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class ShiftsCompanion extends UpdateCompanion<ShiftRow> {
+  final Value<String> id;
+  final Value<DateTime> openedAt;
+  final Value<DateTime?> closedAt;
+  final Value<int> openingCash;
+  final Value<int?> expectedCash;
+  final Value<int?> actualCash;
+  final Value<int?> cashDifference;
+  final Value<String?> notes;
+  final Value<String?> openedBy;
+  final Value<String?> closedBy;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const ShiftsCompanion({
+    this.id = const Value.absent(),
+    this.openedAt = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.openingCash = const Value.absent(),
+    this.expectedCash = const Value.absent(),
+    this.actualCash = const Value.absent(),
+    this.cashDifference = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.openedBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShiftsCompanion.insert({
+    required String id,
+    required DateTime openedAt,
+    this.closedAt = const Value.absent(),
+    this.openingCash = const Value.absent(),
+    this.expectedCash = const Value.absent(),
+    this.actualCash = const Value.absent(),
+    this.cashDifference = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.openedBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       openedAt = Value(openedAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ShiftRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? openedAt,
+    Expression<DateTime>? closedAt,
+    Expression<int>? openingCash,
+    Expression<int>? expectedCash,
+    Expression<int>? actualCash,
+    Expression<int>? cashDifference,
+    Expression<String>? notes,
+    Expression<String>? openedBy,
+    Expression<String>? closedBy,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (openedAt != null) 'opened_at': openedAt,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (openingCash != null) 'opening_cash': openingCash,
+      if (expectedCash != null) 'expected_cash': expectedCash,
+      if (actualCash != null) 'actual_cash': actualCash,
+      if (cashDifference != null) 'cash_difference': cashDifference,
+      if (notes != null) 'notes': notes,
+      if (openedBy != null) 'opened_by': openedBy,
+      if (closedBy != null) 'closed_by': closedBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShiftsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? openedAt,
+    Value<DateTime?>? closedAt,
+    Value<int>? openingCash,
+    Value<int?>? expectedCash,
+    Value<int?>? actualCash,
+    Value<int?>? cashDifference,
+    Value<String?>? notes,
+    Value<String?>? openedBy,
+    Value<String?>? closedBy,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return ShiftsCompanion(
+      id: id ?? this.id,
+      openedAt: openedAt ?? this.openedAt,
+      closedAt: closedAt ?? this.closedAt,
+      openingCash: openingCash ?? this.openingCash,
+      expectedCash: expectedCash ?? this.expectedCash,
+      actualCash: actualCash ?? this.actualCash,
+      cashDifference: cashDifference ?? this.cashDifference,
+      notes: notes ?? this.notes,
+      openedBy: openedBy ?? this.openedBy,
+      closedBy: closedBy ?? this.closedBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (openedAt.present) {
+      map['opened_at'] = Variable<DateTime>(openedAt.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<DateTime>(closedAt.value);
+    }
+    if (openingCash.present) {
+      map['opening_cash'] = Variable<int>(openingCash.value);
+    }
+    if (expectedCash.present) {
+      map['expected_cash'] = Variable<int>(expectedCash.value);
+    }
+    if (actualCash.present) {
+      map['actual_cash'] = Variable<int>(actualCash.value);
+    }
+    if (cashDifference.present) {
+      map['cash_difference'] = Variable<int>(cashDifference.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (openedBy.present) {
+      map['opened_by'] = Variable<String>(openedBy.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftsCompanion(')
+          ..write('id: $id, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('openingCash: $openingCash, ')
+          ..write('expectedCash: $expectedCash, ')
+          ..write('actualCash: $actualCash, ')
+          ..write('cashDifference: $cashDifference, ')
+          ..write('notes: $notes, ')
+          ..write('openedBy: $openedBy, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8158,6 +9128,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $EditHistoryTable editHistory = $EditHistoryTable(this);
+  late final $ShiftsTable shifts = $ShiftsTable(this);
   late final Index categoriesName = Index(
     'categories_name',
     'CREATE INDEX categories_name ON categories (name)',
@@ -8197,6 +9168,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockAdjustments,
     reconciliations,
     editHistory,
+    shifts,
     categoriesName,
     purchasesCategoryDate,
     salesPurchaseDate,
@@ -9436,6 +10408,7 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<int?> assumedPriceAtSale,
       Value<String?> accountId,
       Value<int?> paidAmount,
+      Value<String?> shiftId,
       required DateTime date,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -9452,6 +10425,7 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<int?> assumedPriceAtSale,
       Value<String?> accountId,
       Value<int?> paidAmount,
+      Value<String?> shiftId,
       Value<DateTime> date,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -9504,6 +10478,11 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
 
   ColumnFilters<int> get paidAmount => $composableBuilder(
     column: $table.paidAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9577,6 +10556,11 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get date => $composableBuilder(
     column: $table.date,
     builder: (column) => ColumnOrderings(column),
@@ -9639,6 +10623,9 @@ class $$SalesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get shiftId =>
+      $composableBuilder(column: $table.shiftId, builder: (column) => column);
+
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
@@ -9688,6 +10675,7 @@ class $$SalesTableTableManager
                 Value<int?> assumedPriceAtSale = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<int?> paidAmount = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -9702,6 +10690,7 @@ class $$SalesTableTableManager
                 assumedPriceAtSale: assumedPriceAtSale,
                 accountId: accountId,
                 paidAmount: paidAmount,
+                shiftId: shiftId,
                 date: date,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -9718,6 +10707,7 @@ class $$SalesTableTableManager
                 Value<int?> assumedPriceAtSale = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<int?> paidAmount = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 required DateTime date,
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -9732,6 +10722,7 @@ class $$SalesTableTableManager
                 assumedPriceAtSale: assumedPriceAtSale,
                 accountId: accountId,
                 paidAmount: paidAmount,
+                shiftId: shiftId,
                 date: date,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -9776,6 +10767,7 @@ typedef $$ExpensesTableCreateCompanionBuilder =
       required int amount,
       required DateTime date,
       Value<String?> accountId,
+      Value<String?> shiftId,
       Value<String?> note,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -9789,6 +10781,7 @@ typedef $$ExpensesTableUpdateCompanionBuilder =
       Value<int> amount,
       Value<DateTime> date,
       Value<String?> accountId,
+      Value<String?> shiftId,
       Value<String?> note,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -9827,6 +10820,11 @@ class $$ExpensesTableFilterComposer
 
   ColumnFilters<String> get accountId => $composableBuilder(
     column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9885,6 +10883,11 @@ class $$ExpensesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get note => $composableBuilder(
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
@@ -9929,6 +10932,9 @@ class $$ExpensesTableAnnotationComposer
 
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get shiftId =>
+      $composableBuilder(column: $table.shiftId, builder: (column) => column);
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
@@ -9979,6 +10985,7 @@ class $$ExpensesTableTableManager
                 Value<int> amount = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -9990,6 +10997,7 @@ class $$ExpensesTableTableManager
                 amount: amount,
                 date: date,
                 accountId: accountId,
+                shiftId: shiftId,
                 note: note,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -10003,6 +11011,7 @@ class $$ExpensesTableTableManager
                 required int amount,
                 required DateTime date,
                 Value<String?> accountId = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -10014,6 +11023,7 @@ class $$ExpensesTableTableManager
                 amount: amount,
                 date: date,
                 accountId: accountId,
+                shiftId: shiftId,
                 note: note,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -11107,6 +12117,7 @@ typedef $$BatchesTableCreateCompanionBuilder =
       required DateTime date,
       required int totalPaid,
       Value<String?> accountId,
+      Value<String?> shiftId,
       Value<String?> note,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -11120,6 +12131,7 @@ typedef $$BatchesTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<int> totalPaid,
       Value<String?> accountId,
+      Value<String?> shiftId,
       Value<String?> note,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -11158,6 +12170,11 @@ class $$BatchesTableFilterComposer
 
   ColumnFilters<String> get accountId => $composableBuilder(
     column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11216,6 +12233,11 @@ class $$BatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get note => $composableBuilder(
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
@@ -11263,6 +12285,9 @@ class $$BatchesTableAnnotationComposer
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
 
+  GeneratedColumn<String> get shiftId =>
+      $composableBuilder(column: $table.shiftId, builder: (column) => column);
+
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
@@ -11309,6 +12334,7 @@ class $$BatchesTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<int> totalPaid = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -11320,6 +12346,7 @@ class $$BatchesTableTableManager
                 date: date,
                 totalPaid: totalPaid,
                 accountId: accountId,
+                shiftId: shiftId,
                 note: note,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -11333,6 +12360,7 @@ class $$BatchesTableTableManager
                 required DateTime date,
                 required int totalPaid,
                 Value<String?> accountId = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -11344,6 +12372,7 @@ class $$BatchesTableTableManager
                 date: date,
                 totalPaid: totalPaid,
                 accountId: accountId,
+                shiftId: shiftId,
                 note: note,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -11390,6 +12419,7 @@ typedef $$StockAdjustmentsTableCreateCompanionBuilder =
       required String reason,
       required int valueAtCost,
       required DateTime date,
+      Value<String?> shiftId,
       Value<String?> note,
       Value<String?> photoPath,
       required DateTime createdAt,
@@ -11406,6 +12436,7 @@ typedef $$StockAdjustmentsTableUpdateCompanionBuilder =
       Value<String> reason,
       Value<int> valueAtCost,
       Value<DateTime> date,
+      Value<String?> shiftId,
       Value<String?> note,
       Value<String?> photoPath,
       Value<DateTime> createdAt,
@@ -11455,6 +12486,11 @@ class $$StockAdjustmentsTableFilterComposer
 
   ColumnFilters<DateTime> get date => $composableBuilder(
     column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11528,6 +12564,11 @@ class $$StockAdjustmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shiftId => $composableBuilder(
+    column: $table.shiftId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get note => $composableBuilder(
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
@@ -11592,6 +12633,9 @@ class $$StockAdjustmentsTableAnnotationComposer
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
+  GeneratedColumn<String> get shiftId =>
+      $composableBuilder(column: $table.shiftId, builder: (column) => column);
+
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
@@ -11652,6 +12696,7 @@ class $$StockAdjustmentsTableTableManager
                 Value<String> reason = const Value.absent(),
                 Value<int> valueAtCost = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -11666,6 +12711,7 @@ class $$StockAdjustmentsTableTableManager
                 reason: reason,
                 valueAtCost: valueAtCost,
                 date: date,
+                shiftId: shiftId,
                 note: note,
                 photoPath: photoPath,
                 createdAt: createdAt,
@@ -11682,6 +12728,7 @@ class $$StockAdjustmentsTableTableManager
                 required String reason,
                 required int valueAtCost,
                 required DateTime date,
+                Value<String?> shiftId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
                 required DateTime createdAt,
@@ -11696,6 +12743,7 @@ class $$StockAdjustmentsTableTableManager
                 reason: reason,
                 valueAtCost: valueAtCost,
                 date: date,
+                shiftId: shiftId,
                 note: note,
                 photoPath: photoPath,
                 createdAt: createdAt,
@@ -12342,6 +13390,369 @@ typedef $$EditHistoryTableProcessedTableManager =
       EditHistoryRow,
       PrefetchHooks Function()
     >;
+typedef $$ShiftsTableCreateCompanionBuilder =
+    ShiftsCompanion Function({
+      required String id,
+      required DateTime openedAt,
+      Value<DateTime?> closedAt,
+      Value<int> openingCash,
+      Value<int?> expectedCash,
+      Value<int?> actualCash,
+      Value<int?> cashDifference,
+      Value<String?> notes,
+      Value<String?> openedBy,
+      Value<String?> closedBy,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$ShiftsTableUpdateCompanionBuilder =
+    ShiftsCompanion Function({
+      Value<String> id,
+      Value<DateTime> openedAt,
+      Value<DateTime?> closedAt,
+      Value<int> openingCash,
+      Value<int?> expectedCash,
+      Value<int?> actualCash,
+      Value<int?> cashDifference,
+      Value<String?> notes,
+      Value<String?> openedBy,
+      Value<String?> closedBy,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$ShiftsTableFilterComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get openingCash => $composableBuilder(
+    column: $table.openingCash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expectedCash => $composableBuilder(
+    column: $table.expectedCash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualCash => $composableBuilder(
+    column: $table.actualCash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cashDifference => $composableBuilder(
+    column: $table.cashDifference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openedBy => $composableBuilder(
+    column: $table.openedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ShiftsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get openingCash => $composableBuilder(
+    column: $table.openingCash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expectedCash => $composableBuilder(
+    column: $table.expectedCash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualCash => $composableBuilder(
+    column: $table.actualCash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cashDifference => $composableBuilder(
+    column: $table.cashDifference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openedBy => $composableBuilder(
+    column: $table.openedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShiftsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get openedAt =>
+      $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get openingCash => $composableBuilder(
+    column: $table.openingCash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get expectedCash => $composableBuilder(
+    column: $table.expectedCash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualCash => $composableBuilder(
+    column: $table.actualCash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get cashDifference => $composableBuilder(
+    column: $table.cashDifference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get openedBy =>
+      $composableBuilder(column: $table.openedBy, builder: (column) => column);
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$ShiftsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShiftsTable,
+          ShiftRow,
+          $$ShiftsTableFilterComposer,
+          $$ShiftsTableOrderingComposer,
+          $$ShiftsTableAnnotationComposer,
+          $$ShiftsTableCreateCompanionBuilder,
+          $$ShiftsTableUpdateCompanionBuilder,
+          (ShiftRow, BaseReferences<_$AppDatabase, $ShiftsTable, ShiftRow>),
+          ShiftRow,
+          PrefetchHooks Function()
+        > {
+  $$ShiftsTableTableManager(_$AppDatabase db, $ShiftsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShiftsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShiftsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShiftsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> openedAt = const Value.absent(),
+                Value<DateTime?> closedAt = const Value.absent(),
+                Value<int> openingCash = const Value.absent(),
+                Value<int?> expectedCash = const Value.absent(),
+                Value<int?> actualCash = const Value.absent(),
+                Value<int?> cashDifference = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> openedBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftsCompanion(
+                id: id,
+                openedAt: openedAt,
+                closedAt: closedAt,
+                openingCash: openingCash,
+                expectedCash: expectedCash,
+                actualCash: actualCash,
+                cashDifference: cashDifference,
+                notes: notes,
+                openedBy: openedBy,
+                closedBy: closedBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime openedAt,
+                Value<DateTime?> closedAt = const Value.absent(),
+                Value<int> openingCash = const Value.absent(),
+                Value<int?> expectedCash = const Value.absent(),
+                Value<int?> actualCash = const Value.absent(),
+                Value<int?> cashDifference = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> openedBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftsCompanion.insert(
+                id: id,
+                openedAt: openedAt,
+                closedAt: closedAt,
+                openingCash: openingCash,
+                expectedCash: expectedCash,
+                actualCash: actualCash,
+                cashDifference: cashDifference,
+                notes: notes,
+                openedBy: openedBy,
+                closedBy: closedBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ShiftsTable, ShiftRow>(table),
+                  BaseReferences<_$AppDatabase, $ShiftsTable, ShiftRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ShiftsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShiftsTable,
+      ShiftRow,
+      $$ShiftsTableFilterComposer,
+      $$ShiftsTableOrderingComposer,
+      $$ShiftsTableAnnotationComposer,
+      $$ShiftsTableCreateCompanionBuilder,
+      $$ShiftsTableUpdateCompanionBuilder,
+      (ShiftRow, BaseReferences<_$AppDatabase, $ShiftsTable, ShiftRow>),
+      ShiftRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12374,4 +13785,6 @@ class $AppDatabaseManager {
       $$ReconciliationsTableTableManager(_db, _db.reconciliations);
   $$EditHistoryTableTableManager get editHistory =>
       $$EditHistoryTableTableManager(_db, _db.editHistory);
+  $$ShiftsTableTableManager get shifts =>
+      $$ShiftsTableTableManager(_db, _db.shifts);
 }

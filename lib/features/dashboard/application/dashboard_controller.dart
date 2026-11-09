@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/business_logic.dart';
 import '../../../core/utils/clock.dart';
 import '../../../core/utils/period_range.dart';
+import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
 import '../../settings/application/settings_controller.dart';
@@ -161,10 +162,13 @@ final class DashboardData {
     this.actualProfitForAssumedCents = 0,
     this.percentOfTarget,
     this.targetDiffCents,
+    this.activeShift,
   });
 
   final PeriodRange periodRange;
   Period get period => periodRange.period;
+
+  final ShiftRow? activeShift;
 
   final int spentCents; // Bought
   final int earnedCents; // Sold (revenue)
@@ -205,6 +209,7 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final expensesAsync = ref.watch(expensesStreamProvider);
   final adjustmentsAsync = ref.watch(stockAdjustmentsStreamProvider);
   final lowStockThreshold = ref.watch(lowStockThresholdProvider);
+  final currentShift = ref.watch(currentShiftStreamProvider).value;
 
   if (purchasesAsync.isLoading ||
       salesAsync.isLoading ||
@@ -397,6 +402,7 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       actualProfitForAssumedCents: actualProfitForAssumedCents,
       percentOfTarget: percentOfTarget,
       targetDiffCents: targetDiffCents,
+      activeShift: currentShift,
     ),
   );
 });

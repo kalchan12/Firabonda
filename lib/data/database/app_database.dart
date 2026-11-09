@@ -28,6 +28,7 @@ part 'app_database.g.dart';
     StockAdjustments,
     Reconciliations,
     EditHistory,
+    Shifts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -48,9 +49,13 @@ class AppDatabase extends _$AppDatabase {
         // Safety backup before migration
         if (dbFile.existsSync()) {
           try {
-            final backupFile = File('${dbFile.path}.pre_v2_backup');
+            final backupFile = File('${dbFile.path}.pre_v4_backup');
             if (!backupFile.existsSync()) {
               await dbFile.copy(backupFile.path);
+            }
+            final legacyBackup = File('${dbFile.path}.pre_v2_backup');
+            if (!legacyBackup.existsSync()) {
+              await dbFile.copy(legacyBackup.path);
             }
           } catch (_) {}
         }
@@ -61,7 +66,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -156,6 +161,16 @@ class AppDatabase extends _$AppDatabase {
                 )
               WHERE assumed_price_at_sale IS NULL
             ''');
+      }
+
+      if (from < 4) {
+        await m.createTable(shifts);
+        await m.addColumn(sales, sales.shiftId);
+        await m.addColumn(expenses, expenses.shiftId);
+        if (from >= 2) {
+          await m.addColumn(batches, batches.shiftId);
+          await m.addColumn(stockAdjustments, stockAdjustments.shiftId);
+        }
       }
     },
   );

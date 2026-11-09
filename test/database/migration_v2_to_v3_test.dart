@@ -272,11 +272,11 @@ void main() {
     // 3. Open via AppDatabase (triggers automatic Drift migration to v3)
     final db = AppDatabase.open(customPath: dbFile.path);
 
-    // Verify user_version upgraded to 3
+    // Verify user_version upgraded to at least 3
     final versionResult = await db
         .customSelect('PRAGMA user_version;')
         .getSingle();
-    expect(versionResult.data['user_version'], 3);
+    expect(versionResult.data['user_version'], greaterThanOrEqualTo(3));
 
     // 4. Verify existing sales data preserved and assumed_price_at_sale backfilled from purchase
     final sales = await db.select(db.sales).get();
