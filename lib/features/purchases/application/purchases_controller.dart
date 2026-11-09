@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
 
+enum PurchaseStockFilter { all, inStock, lowStock, soldOut }
+
 final class PurchaseFilters {
   const PurchaseFilters({
     this.searchQuery = '',
@@ -11,6 +13,7 @@ final class PurchaseFilters {
     this.colorId,
     this.supplierId,
     this.dateRange,
+    this.stockFilter = PurchaseStockFilter.all,
   });
 
   final String searchQuery;
@@ -18,6 +21,7 @@ final class PurchaseFilters {
   final String? colorId;
   final String? supplierId;
   final DateTimeRange? dateRange;
+  final PurchaseStockFilter stockFilter;
 
   PurchaseFilters copyWith({
     String? searchQuery,
@@ -25,6 +29,7 @@ final class PurchaseFilters {
     String? Function()? colorId,
     String? Function()? supplierId,
     DateTimeRange? Function()? dateRange,
+    PurchaseStockFilter? stockFilter,
   }) {
     return PurchaseFilters(
       searchQuery: searchQuery ?? this.searchQuery,
@@ -32,6 +37,7 @@ final class PurchaseFilters {
       colorId: colorId != null ? colorId() : this.colorId,
       supplierId: supplierId != null ? supplierId() : this.supplierId,
       dateRange: dateRange != null ? dateRange() : this.dateRange,
+      stockFilter: stockFilter ?? this.stockFilter,
     );
   }
 }
@@ -60,6 +66,10 @@ final class PurchaseFiltersNotifier extends Notifier<PurchaseFilters> {
     state = state.copyWith(dateRange: () => range);
   }
 
+  void setStockFilter(PurchaseStockFilter filter) {
+    state = state.copyWith(stockFilter: filter);
+  }
+
   void reset() {
     state = const PurchaseFilters();
   }
@@ -85,6 +95,18 @@ final filteredPurchasesProvider = Provider<AsyncValue<List<PurchaseOverview>>>((
         return false;
       }
       if (filters.supplierId != null && item.supplierId != filters.supplierId) {
+        return false;
+      }
+      if (filters.stockFilter == PurchaseStockFilter.inStock &&
+          item.stockLeft <= 0) {
+        return false;
+      }
+      if (filters.stockFilter == PurchaseStockFilter.lowStock &&
+          (item.stockLeft <= 0 || item.stockLeft > 3)) {
+        return false;
+      }
+      if (filters.stockFilter == PurchaseStockFilter.soldOut &&
+          item.stockLeft > 0) {
         return false;
       }
       if (filters.dateRange != null) {

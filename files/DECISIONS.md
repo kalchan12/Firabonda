@@ -119,3 +119,21 @@
 - **Floating Nav Bar Clearance:**
   - Passed `useRootNavigator: true` to bottom sheet modal invocations across the app (`sell_bottom_sheet`, `calculator_sheet`, shift sheets, etc.) to guarantee bottom action buttons are never obscured by the floating nav bar dock.
 
+## 2026-11-09: Shift Reconciliation & Screen UI Upgrades
+- **Shift Automatic Money Earned & Multi-Account Reconciliation:**
+  - The active shift automatically tracks all sales money earned, broken down into Cash, Bank, and Telebirr/Debit.
+  - When closing the shift, the seller reconciles drawer cash against `expectedCashCents`, and can optionally insert actual amounts for Bank and Debit/Telebirr accounts (logging separate reconciliation records). All inputs are optional.
+  - If any items were purchased or sold on credit that day during the shift, the Close Shift sheet and Active Shift card automatically display a dedicated credit section with item details and unpaid totals.
+- **Purchases Screen Layout & Modern Dropdown Filters:**
+  - Fixed horizontal overflow in `_PurchaseItemCard` when quantities and money values are large by wrapping financial details in `Expanded` and text in `Flexible`/`FittedBox`, guaranteeing the "Sell" button is never pushed away or obscured.
+  - Replaced horizontal category chips with modern dropdown filter menus: Categories dropdown, Stock Status dropdown (All stock, In stock, Low stock ≤ 3, Sold out), and Suppliers dropdown, with a quick Clear button.
+- **Sales Screen Redesign & Modern Dropdown Filters:**
+  - Completely redesigned `SalesScreen` with an improved layout, summary banner (Revenue, Profit, Items sold, Credit owed), and clean item cards displaying payment badges (Cash, Bank, Telebirr, Credit).
+  - Added modern scrollable dropdown filters for Cloth Type (Categories), Days (All time, Today, Yesterday, This week, This month), and Payment Method (All, Cash, Bank, Telebirr, Credit only).
+- **Batch Purchase Streamlining & Overflow Fixes:**
+  - Removed "Total bundle" mode and logic entirely, standardizing on the per-item purchase pricing plan.
+  - Removed all UI components and labels referencing "Per item" vs "Total bundle" in the bundle details section.
+  - Fixed form overflows in `_BatchItemCard` and `AddPurchaseScreen` by converting target and profit preview rows into responsive layouts with `FittedBox(fit: BoxFit.scaleDown)`.
+- **Photo Section Compact UI:**
+  - Shortened button text from "Take photo" to a clean, compact "Photo" button with camera icon alongside "Gallery".
+

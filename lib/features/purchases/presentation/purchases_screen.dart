@@ -9,7 +9,6 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../data/models/shop_models.dart';
@@ -60,6 +59,12 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
     final purchasesAsync = ref.watch(filteredPurchasesProvider);
     final filters = ref.watch(purchaseFiltersProvider);
     final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final suppliersAsync = ref.watch(suppliersStreamProvider);
+    final hasActiveFilter =
+        filters.categoryId != null ||
+        filters.supplierId != null ||
+        filters.stockFilter != PurchaseStockFilter.all ||
+        filters.searchQuery.isNotEmpty;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -79,7 +84,7 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
               ],
             ),
 
-            // Search bar & Category filter chips
+            // Search bar & Modern dropdown filters
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -122,37 +127,107 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                    categoriesAsync.when(
-                      data: (categories) => SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            AppChip(
-                              label: 'All',
-                              selected: filters.categoryId == null,
-                              onTap: () => ref
-                                  .read(purchaseFiltersProvider.notifier)
-                                  .setCategory(null),
-                            ),
-                            const SizedBox(width: AppSpacing.s),
-                            for (final c in categories) ...[
-                              AppChip(
-                                label: c.name,
-                                selected: filters.categoryId == c.id,
-                                onTap: () => ref
-                                    .read(purchaseFiltersProvider.notifier)
-                                    .setCategory(
-                                      filters.categoryId == c.id ? null : c.id,
-                                    ),
+                    const SizedBox(height: AppSpacing.s),
+
+                    // Modern Dropdown Filter Bar
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          // Category Dropdown
+                          _ModernFilterDropdown<String?>(
+                            icon: Icons.category_outlined,
+                            value: filters.categoryId,
+                            hint: 'All categories',
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('All categories'),
                               ),
-                              const SizedBox(width: AppSpacing.s),
+                              if (categoriesAsync.hasValue)
+                                for (final c in categoriesAsync.value!)
+                                  DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.name),
+                                  ),
                             ],
+                            onChanged: (val) => ref
+                                .read(purchaseFiltersProvider.notifier)
+                                .setCategory(val),
+                          ),
+                          const SizedBox(width: AppSpacing.s),
+
+                          // Stock Status Dropdown
+                          _ModernFilterDropdown<PurchaseStockFilter>(
+                            icon: Icons.inventory_2_outlined,
+                            value: filters.stockFilter,
+                            hint: 'All stock',
+                            items: const [
+                              DropdownMenuItem(
+                                value: PurchaseStockFilter.all,
+                                child: Text('All stock'),
+                              ),
+                              DropdownMenuItem(
+                                value: PurchaseStockFilter.inStock,
+                                child: Text('In stock'),
+                              ),
+                              DropdownMenuItem(
+                                value: PurchaseStockFilter.lowStock,
+                                child: Text('Low stock (≤3)'),
+                              ),
+                              DropdownMenuItem(
+                                value: PurchaseStockFilter.soldOut,
+                                child: Text('Sold out'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                ref
+                                    .read(purchaseFiltersProvider.notifier)
+                                    .setStockFilter(val);
+                              }
+                            },
+                          ),
+                          const SizedBox(width: AppSpacing.s),
+
+                          // Supplier Dropdown
+                          _ModernFilterDropdown<String?>(
+                            icon: Icons.storefront_outlined,
+                            value: filters.supplierId,
+                            hint: 'All suppliers',
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('All suppliers'),
+                              ),
+                              if (suppliersAsync.hasValue)
+                                for (final s in suppliersAsync.value!)
+                                  DropdownMenuItem(
+                                    value: s.id,
+                                    child: Text(s.name),
+                                  ),
+                            ],
+                            onChanged: (val) => ref
+                                .read(purchaseFiltersProvider.notifier)
+                                .setSupplier(val),
+                          ),
+
+                          // Reset button if filtering
+                          if (hasActiveFilter) ...[
+                            const SizedBox(width: AppSpacing.s),
+                            ActionChip(
+                              avatar: const Icon(Icons.close_rounded, size: 16),
+                              label: const Text('Clear'),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref
+                                    .read(purchaseFiltersProvider.notifier)
+                                    .reset();
+                              },
+                            ),
                           ],
-                        ),
+                        ],
                       ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (err, stack) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
@@ -541,56 +616,61 @@ final class _PurchaseItemCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.m),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total invested: ${Money.etb(purchase.totalCostCents)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textMuted,
-                      ),
-                    ),
-                    if (purchase.sellingPriceCents != null) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        purchase.quantity > 1
-                            ? 'Target sell: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${Money.etb(purchase.sellingPriceCents!)} each)'
-                            : 'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
+                        'Total invested: ${Money.etb(purchase.totalCostCents)}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: colors.primary,
+                          color: colors.textMuted,
                         ),
                       ),
-                      Text(
-                        () {
-                          final totalTargetProfit =
-                              (purchase.sellingPriceCents! -
-                                  purchase.unitCostCents) *
-                              purchase.quantity;
-                          final isProfit = totalTargetProfit >= 0;
-                          return isProfit
-                              ? 'Exp. profit: +${Money.etb(totalTargetProfit)}${purchase.quantity > 1 ? ' (+${Money.etb(purchase.sellingPriceCents! - purchase.unitCostCents)} each)' : ''}'
-                              : 'Exp. loss: -${Money.etb(totalTargetProfit.abs())}';
-                        }(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              (purchase.sellingPriceCents! >=
-                                  purchase.unitCostCents)
-                              ? colors.profit
-                              : colors.loss,
+                      if (purchase.sellingPriceCents != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          purchase.quantity > 1
+                              ? 'Target: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${Money.etb(purchase.sellingPriceCents!)} each)'
+                              : 'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: colors.primary,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Text(
+                          () {
+                            final totalTargetProfit =
+                                (purchase.sellingPriceCents! -
+                                    purchase.unitCostCents) *
+                                purchase.quantity;
+                            final isProfit = totalTargetProfit >= 0;
+                            return isProfit
+                                ? 'Exp. profit: +${Money.etb(totalTargetProfit)}${purchase.quantity > 1 ? ' (+${Money.etb(purchase.sellingPriceCents! - purchase.unitCostCents)} each)' : ''}'
+                                : 'Exp. loss: -${Money.etb(totalTargetProfit.abs())}';
+                          }(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                (purchase.sellingPriceCents! >=
+                                    purchase.unitCostCents)
+                                ? colors.profit
+                                : colors.loss,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
+                const SizedBox(width: AppSpacing.s),
                 SizedBox(
-                  height: 36,
+                  height: 38,
                   child: ElevatedButton.icon(
                     onPressed: isSoldOut ? null : onSell,
                     icon: const Icon(Icons.sell_outlined, size: 16),
@@ -600,6 +680,7 @@ final class _PurchaseItemCard extends StatelessWidget {
                       foregroundColor: colors.onPrimary,
                       disabledBackgroundColor: colors.surfaceVariant,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -609,6 +690,66 @@ final class _PurchaseItemCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _ModernFilterDropdown<T> extends StatelessWidget {
+  const _ModernFilterDropdown({
+    required this.icon,
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final T value;
+  final String hint;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isSelected = value != null && value != items.first.value;
+
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? colors.primary.withValues(alpha: 0.12)
+            : colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+        border: Border.all(
+          color: isSelected
+              ? colors.primary.withValues(alpha: 0.6)
+              : colors.border,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          icon: Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: isSelected ? colors.primary : colors.textMuted,
+            ),
+          ),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? colors.primary : colors.textPrimary,
+          ),
+          dropdownColor: colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          items: items,
+          onChanged: onChanged,
         ),
       ),
     );

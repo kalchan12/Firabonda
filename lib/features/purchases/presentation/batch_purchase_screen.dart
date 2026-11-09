@@ -99,8 +99,6 @@ final class _BatchItemDraft {
   }
 }
 
-enum BatchPricingMode { pricePerItem, bundleTotal }
-
 final class BatchPurchaseScreen extends ConsumerStatefulWidget {
   const BatchPurchaseScreen({super.key});
 
@@ -111,12 +109,10 @@ final class BatchPurchaseScreen extends ConsumerStatefulWidget {
 
 final class _BatchPurchaseScreenState
     extends ConsumerState<BatchPurchaseScreen> {
-  final _bundleTotalCostController = TextEditingController();
   final _noteController = TextEditingController();
   DateTime _date = DateTime.now();
   String? _selectedSupplierId;
   String _selectedAccountId = 'acc_cash';
-  BatchPricingMode _pricingMode = BatchPricingMode.pricePerItem;
   bool _isSaving = false;
 
   final List<_BatchItemDraft> _items = [];
@@ -124,13 +120,11 @@ final class _BatchPurchaseScreenState
   @override
   void initState() {
     super.initState();
-    _bundleTotalCostController.addListener(() => setState(() {}));
     _addItem(_BatchItemDraft());
   }
 
   @override
   void dispose() {
-    _bundleTotalCostController.dispose();
     _noteController.dispose();
     for (final item in _items) {
       item.dispose();
@@ -138,25 +132,11 @@ final class _BatchPurchaseScreenState
     super.dispose();
   }
 
-  int? get _parsedBundleTotalCostCents {
-    try {
-      final t = _bundleTotalCostController.text.trim();
-      if (t.isEmpty) return null;
-      return Money.parseCents(t);
-    } catch (_) {
-      return null;
-    }
-  }
-
   int get _totalPieces =>
       _items.fold<int>(0, (sum, item) => sum + item.quantity);
 
-  int get _totalCostCents {
-    if (_pricingMode == BatchPricingMode.bundleTotal) {
-      return _parsedBundleTotalCostCents ?? 0;
-    }
-    return _items.fold<int>(0, (sum, item) => sum + item.itemTotalCostCents);
-  }
+  int get _totalCostCents =>
+      _items.fold<int>(0, (sum, item) => sum + item.itemTotalCostCents);
 
   void _addItem([_BatchItemDraft? initialDraft]) {
     setState(() {
@@ -280,16 +260,14 @@ final class _BatchPurchaseScreenState
         return;
       }
 
-      if (_pricingMode == BatchPricingMode.pricePerItem) {
-        final cost = item.parsedUnitCostCents;
-        if (cost == null || cost <= 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Please enter purchase price for item #${i + 1}'),
-            ),
-          );
-          return;
-        }
+      final cost = item.parsedUnitCostCents;
+      if (cost == null || cost <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter purchase price for item #${i + 1}'),
+          ),
+        );
+        return;
       }
     }
 
@@ -298,9 +276,7 @@ final class _BatchPurchaseScreenState
       final List<BatchItemInput> batchItems = [];
 
       for (final draft in _items) {
-        final unitCost = _pricingMode == BatchPricingMode.pricePerItem
-            ? draft.parsedUnitCostCents
-            : null;
+        final unitCost = draft.parsedUnitCostCents;
         final sellingPrice = draft.parsedPlannedSellingPriceCents;
 
         batchItems.add(
@@ -410,13 +386,18 @@ final class _BatchPurchaseScreenState
                       color: colors.textMuted,
                     ),
                   ),
-                  Text(
-                    Money.etb(totalCost),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Sora',
-                      color: colors.textPrimary,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        Money.etb(totalCost),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Sora',
+                          color: colors.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -448,38 +429,12 @@ final class _BatchPurchaseScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Bundle Details',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-
-                  // Pricing Mode: Per item vs Total bundle
-                  SegmentedButton<BatchPricingMode>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: BatchPricingMode.pricePerItem,
-                        label: Text('Per item'),
-                      ),
-                      ButtonSegment(
-                        value: BatchPricingMode.bundleTotal,
-                        label: Text('Total bundle'),
-                      ),
-                    ],
-                    selected: {_pricingMode},
-                    onSelectionChanged: (val) {
-                      setState(() => _pricingMode = val.first);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-
-                  if (_pricingMode == BatchPricingMode.bundleTotal) ...[
-                    MoneyField(
-                      label: 'Total bundle cost',
-                      controller: _bundleTotalCostController,
+                    'Batch Details',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                  ],
+                  ),
+                  const SizedBox(height: AppSpacing.m),
 
                   // Date picker row
                   Row(
@@ -583,7 +538,7 @@ final class _BatchPurchaseScreenState
                     controller: _noteController,
                     decoration: const InputDecoration(
                       labelText: 'Batch note (optional)',
-                      hintText: 'e.g. Merkato bundle #4',
+                      hintText: 'e.g. Merkato order #4',
                       prefixIcon: Icon(Icons.note_alt_outlined),
                     ),
                   ),
@@ -597,7 +552,7 @@ final class _BatchPurchaseScreenState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Bundle Items (${_items.length})',
+                  'Batch Items (${_items.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -617,7 +572,6 @@ final class _BatchPurchaseScreenState
                 key: ObjectKey(_items[i]),
                 index: i,
                 draft: _items[i],
-                pricingMode: _pricingMode,
                 categoriesAsync: categoriesAsync,
                 colorsAsync: colorsAsync,
                 onDuplicate: () => _duplicateItem(i),
@@ -638,7 +592,6 @@ final class _BatchItemCard extends StatelessWidget {
     super.key,
     required this.index,
     required this.draft,
-    required this.pricingMode,
     required this.categoriesAsync,
     required this.colorsAsync,
     required this.onDuplicate,
@@ -648,7 +601,6 @@ final class _BatchItemCard extends StatelessWidget {
 
   final int index;
   final _BatchItemDraft draft;
-  final BatchPricingMode pricingMode;
   final AsyncValue<List<CategoryRow>> categoriesAsync;
   final AsyncValue<List<ColorRow>> colorsAsync;
   final VoidCallback onDuplicate;
@@ -677,8 +629,7 @@ final class _BatchItemCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.s),
-                    if (pricingMode == BatchPricingMode.pricePerItem &&
-                        draft.parsedUnitCostCents != null)
+                    if (draft.parsedUnitCostCents != null)
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -809,15 +760,13 @@ final class _BatchItemCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.m),
 
-          // Purchase price per piece (in pricePerItem mode)
-          if (pricingMode == BatchPricingMode.pricePerItem) ...[
-            MoneyField(
-              label: 'Purchase price (per piece) *',
-              controller: draft.unitCostController,
-              quantity: draft.quantity,
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
+          // Purchase price per piece
+          MoneyField(
+            label: 'Purchase price (per piece) *',
+            controller: draft.unitCostController,
+            quantity: draft.quantity,
+          ),
+          const SizedBox(height: AppSpacing.m),
 
           // Optional planned selling price
           MoneyField(
@@ -829,41 +778,81 @@ final class _BatchItemCard extends StatelessWidget {
               draft.parsedPlannedSellingPriceCents! > 0) ...[
             const SizedBox(height: AppSpacing.s),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: AppSpacing.s,
+              ),
               decoration: BoxDecoration(
                 color: colors.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppRadius.chip),
+                borderRadius: BorderRadius.circular(AppRadius.card),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Text(
-                    draft.quantity > 1
-                        ? 'Target: ${Money.etb(draft.itemTotalPlannedSellingCents)} (${Money.etb(draft.parsedPlannedSellingPriceCents!)}/pc)'
-                        : 'Target: ${Money.etb(draft.itemTotalPlannedSellingCents)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: colors.primary,
-                    ),
-                  ),
-                  () {
-                    final unitCost = draft.parsedUnitCostCents ?? 0;
-                    final unitSell = draft.parsedPlannedSellingPriceCents ?? 0;
-                    final totalProfit = draft.itemTotalPlannedProfitCents;
-                    final unitProfit = unitSell - unitCost;
-                    final isProfit = totalProfit >= 0;
-                    return Text(
-                      isProfit
-                          ? 'Profit: +${Money.etb(totalProfit)}${draft.quantity > 1 ? ' (+${Money.etb(unitProfit)}/pc)' : ''}'
-                          : 'Loss: -${Money.etb(totalProfit.abs())}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: isProfit ? colors.profit : colors.loss,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Target revenue:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textMuted,
+                        ),
                       ),
-                    );
-                  }(),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            draft.quantity > 1
+                                ? '${Money.etb(draft.itemTotalPlannedSellingCents)} (${Money.etb(draft.parsedPlannedSellingPriceCents!)}/pc)'
+                                : Money.etb(draft.itemTotalPlannedSellingCents),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Expected profit:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      () {
+                        final unitCost = draft.parsedUnitCostCents ?? 0;
+                        final unitSell =
+                            draft.parsedPlannedSellingPriceCents ?? 0;
+                        final totalProfit = draft.itemTotalPlannedProfitCents;
+                        final unitProfit = unitSell - unitCost;
+                        final isProfit = totalProfit >= 0;
+                        return Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              isProfit
+                                  ? '+${Money.etb(totalProfit)}${draft.quantity > 1 ? ' (+${Money.etb(unitProfit)}/pc)' : ''}'
+                                  : '-${Money.etb(totalProfit.abs())}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isProfit ? colors.profit : colors.loss,
+                              ),
+                            ),
+                          ),
+                        );
+                      }(),
+                    ],
+                  ),
                 ],
               ),
             ),

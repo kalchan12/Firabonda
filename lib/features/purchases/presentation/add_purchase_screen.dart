@@ -539,12 +539,17 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Text(
-                        Money.etb(_totalCents),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            Money.etb(_totalCents),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -566,14 +571,19 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Text(
-                          Money.etb(
-                            _tryParseCents(_sellingPrice.text)! * _quantity,
-                          ),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: colors.primary,
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              Money.etb(
+                                _tryParseCents(_sellingPrice.text)! * _quantity,
+                              ),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -596,14 +606,19 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
                           final totalProfit = (unitSell - unitCost) * _quantity;
                           final unitProfit = unitSell - unitCost;
                           final isProfit = totalProfit >= 0;
-                          return Text(
-                            isProfit
-                                ? '+${Money.etb(totalProfit)}${_quantity > 1 ? ' (+${Money.etb(unitProfit)} each)' : ''}'
-                                : '-${Money.etb(totalProfit.abs())}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: isProfit ? colors.profit : colors.loss,
+                          return Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                isProfit
+                                    ? '+${Money.etb(totalProfit)}${_quantity > 1 ? ' (+${Money.etb(unitProfit)} each)' : ''}'
+                                    : '-${Money.etb(totalProfit.abs())}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: isProfit ? colors.profit : colors.loss,
+                                ),
+                              ),
                             ),
                           );
                         }(),

@@ -386,22 +386,38 @@ final class PurchasePhotoPicker extends StatelessWidget {
             ),
           ),
         ] else ...[
-          // Empty state: Take photo & From gallery buttons
+          // Empty state: Photo & Gallery buttons
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _pickFromCamera(context),
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  label: const Text('Take photo'),
+                child: SizedBox(
+                  height: 42,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickFromCamera(context),
+                    icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                    label: const Text('Photo'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.m),
+              const SizedBox(width: AppSpacing.s),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _pickFromGallery(context),
-                  icon: const Icon(Icons.photo_library_outlined),
-                  label: Text(_effectiveMax > 1 ? 'From gallery' : 'Gallery'),
+                child: SizedBox(
+                  height: 42,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _pickFromGallery(context),
+                    icon: const Icon(Icons.photo_library_outlined, size: 18),
+                    label: const Text('Gallery'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

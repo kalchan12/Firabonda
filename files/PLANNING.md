@@ -101,6 +101,11 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Dashboard "Paid with Credit" Card**: Add period credit sales card, credit count, and visual credit badges (`Credit (unpaid)` and `Credit • owes ETB X`).
 - [x] **Batch Purchase & Shift UI Simplifications**: Existing supplier dropdown, simplified "Per item" / "Total bundle" segmented buttons, preset Mixed color, and streamlined single-input Shift sheets.
 - [x] **Floating Nav Bar Clearance**: `useRootNavigator: true` across all bottom sheets ensuring footer buttons are never hidden behind the floating nav dock.
+- [x] **Shift Auto-Earnings & Optional Reconciliation**: Auto-tracked sales earnings (Cash, Bank, Debit), optional reconciliation inputs for cash drawer, bank, and debit accounts, and automatic display of items on credit today.
+- [x] **Purchases Screen Overflow Fix & Dropdown Filters**: Overflow-proof layout ensuring Sell button visibility, plus modern dropdown menus for Categories, Stock Status, and Suppliers.
+- [x] **Sales Screen UI Redesign & Dropdown Filters**: Modern scrollable layout, summary banner, payment badges, and dropdown filter bar for Cloth Type, Days, and Payment Method.
+- [x] **Batch Purchase Streamlining**: Removed Total bundle mode, eliminated "per item" / "total bundle" labels, and fixed form overflows with responsive layouts and `FittedBox`.
+- [x] **Photo Picker Compact UI**: Shortened button text to "Photo" and "Gallery" with compact modern styling.
 - [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
 
 ## Later (not in this build)

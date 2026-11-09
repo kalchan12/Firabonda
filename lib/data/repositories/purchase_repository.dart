@@ -309,6 +309,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
         return SaleOverview(
           id: sale.id,
           purchaseId: sale.purchaseId,
+          categoryId: category.id,
           categoryName: category.name,
           colorName: color.name,
           quantity: sale.quantity,

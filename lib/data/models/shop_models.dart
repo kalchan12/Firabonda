@@ -156,6 +156,7 @@ final class SaleOverview {
   const SaleOverview({
     required this.id,
     required this.purchaseId,
+    this.categoryId,
     required this.categoryName,
     required this.colorName,
     required this.quantity,
@@ -171,6 +172,7 @@ final class SaleOverview {
 
   final String id;
   final String purchaseId;
+  final String? categoryId;
   final String categoryName;
   final String colorName;
   final int quantity;
@@ -380,4 +382,56 @@ final class ShiftOverview {
   final int salesCount;
 
   bool get isOpen => closedAt == null;
+}
+
+final class ShiftCreditItem {
+  const ShiftCreditItem({
+    required this.id,
+    required this.personName,
+    required this.itemDescription,
+    required this.totalAmountCents,
+    required this.paidAmountCents,
+    required this.creditAmountCents,
+    this.isSupplierCredit = false,
+  });
+
+  final String id;
+  final String personName;
+  final String itemDescription;
+  final int totalAmountCents;
+  final int paidAmountCents;
+  final int creditAmountCents;
+  final bool isSupplierCredit;
+}
+
+final class ShiftSummaryData {
+  const ShiftSummaryData({
+    required this.shiftId,
+    required this.openingCashCents,
+    required this.cashSalesCents,
+    required this.bankSalesCents,
+    required this.debitSalesCents,
+    required this.totalEarnedCents,
+    required this.totalSalesRevenueCents,
+    required this.cashExpensesCents,
+    required this.cashPurchasesCents,
+    required this.expectedCashCents,
+    required this.creditItems,
+    required this.creditTotalCents,
+  });
+
+  final String shiftId;
+  final int openingCashCents;
+  final int cashSalesCents;
+  final int bankSalesCents;
+  final int debitSalesCents;
+  final int totalEarnedCents;
+  final int totalSalesRevenueCents;
+  final int cashExpensesCents;
+  final int cashPurchasesCents;
+  final int expectedCashCents;
+  final List<ShiftCreditItem> creditItems;
+  final int creditTotalCents;
+
+  bool get hasCreditItems => creditItems.isNotEmpty;
 }

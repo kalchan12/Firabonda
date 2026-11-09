@@ -15,6 +15,7 @@ import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
+import '../../../data/repositories/providers.dart';
 import '../../shifts/presentation/close_shift_sheet.dart';
 import '../../shifts/presentation/open_shift_sheet.dart';
 import '../application/dashboard_controller.dart';
@@ -1252,13 +1253,13 @@ final class _ProfitChartCard extends StatelessWidget {
   }
 }
 
-final class _TodayShiftBanner extends StatelessWidget {
+final class _TodayShiftBanner extends ConsumerWidget {
   const _TodayShiftBanner({required this.activeShift});
 
   final ShiftRow? activeShift;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
 
     if (activeShift == null) {
@@ -1381,9 +1382,51 @@ final class _TodayShiftBanner extends StatelessWidget {
               ),
             ],
           ),
+          FutureBuilder<ShiftSummaryData>(
+            future: ref.read(shiftRepositoryProvider).getShiftSummary(shift.id),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+              final summary = snapshot.data!;
+              return Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.s),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Earned this shift: ${Money.etb(summary.totalEarnedCents)}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.primary,
+                      ),
+                    ),
+                    if (summary.hasCreditItems)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.warning.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Text(
+                          '${summary.creditItems.length} credit items today',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: colors.warning,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
           const SizedBox(height: AppSpacing.m),
           AppButton(
-            label: 'Close shift & reconcile cash',
+            label: 'Close shift & reconcile',
             icon: Icons.check_circle_outline_rounded,
             variant: AppButtonVariant.secondary,
             onPressed: () => showCloseShiftSheet(context, shift),
