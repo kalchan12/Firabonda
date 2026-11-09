@@ -89,7 +89,7 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Task 3: Center plus button opens only Batch purchase**: Remove speed-dial; plus button navigates straight to Batch purchase.
 - [x] **Task 4: Batch purchase fields**: Purchase price per piece, Two colors / Mixed colors, optional note, photo.
 - [x] **Task 5: Profit logic**: Assumed profit, over profit, loss, not assumed; replace markup % with % of target.
-- [ ] **Task 6: Simple sell screen**: Clean 3-input sell sheet, live result card (+ETB / Loss / Target), fixed footer.
+- [x] **Task 6: Simple sell screen**: Clean 3-input sell sheet, live result card (+ETB / Loss / Target), fixed footer.
 - [ ] **Task 7: Update dashboard and lists for new profit language**: Unified profit status colors and labels.
 - [ ] **Task 8: Shift system**: Shift-based Today card, Shift close with reconciliation, midnight auto-close, history.
 - [ ] **Task 9: Final QA, docs and push**: Verification on device, docs sync, branch readiness check.

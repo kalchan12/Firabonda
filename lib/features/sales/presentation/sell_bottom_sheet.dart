@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/business_logic.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -35,24 +35,28 @@ final class SellBottomSheet extends ConsumerStatefulWidget {
 }
 
 final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
-  final _unitPrice = TextEditingController();
+  late final TextEditingController _unitPrice;
   final _paidAmountController = TextEditingController();
   final _customerNameController = TextEditingController();
+  final _noteController = TextEditingController();
 
   int _quantity = 1;
   bool _isSaving = false;
   bool _isPartialPayment = false;
   String _selectedAccountId = 'acc_cash';
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    final sellingPrice = widget.purchase.sellingPriceCents;
-    if (sellingPrice != null && sellingPrice > 0) {
-      _unitPrice.text = Money.amount(sellingPrice);
+    final assumedPrice = widget.purchase.sellingPriceCents;
+    if (assumedPrice != null && assumedPrice > 0) {
+      final text = assumedPrice % 100 == 0
+          ? '${assumedPrice ~/ 100}'
+          : Money.amount(assumedPrice);
+      _unitPrice = TextEditingController(text: text);
     } else {
-      // 100% target profit default (2x cost)
-      _unitPrice.text = Money.amount(widget.purchase.unitCostCents * 2);
+      _unitPrice = TextEditingController(text: '');
     }
     _unitPrice.addListener(() => setState(() {}));
     _paidAmountController.addListener(() => setState(() {}));
@@ -63,12 +67,15 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
     _unitPrice.dispose();
     _paidAmountController.dispose();
     _customerNameController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
   int? get _parsedPriceCents {
     try {
-      return Money.parseCents(_unitPrice.text);
+      final text = _unitPrice.text.trim();
+      if (text.isEmpty) return null;
+      return Money.parseCents(text);
     } catch (_) {
       return null;
     }
@@ -124,7 +131,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
           purchaseId: widget.purchase.id,
           quantity: _quantity,
           unitPriceCents: priceCents,
-          date: DateTime.now(),
+          costAtSaleCents: widget.purchase.unitCostCents,
+          assumedPriceAtSaleCents: widget.purchase.sellingPriceCents,
+          date: _selectedDate,
           accountId: _selectedAccountId,
           paidAmountCents: paidAmount,
           customerName: _customerNameController.text.trim(),
@@ -134,14 +143,16 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
       await HapticFeedback.lightImpact();
 
       if (mounted) {
-        final profit = ShopLogic.saleProfit(
+        final profitResult = ProfitCalculator.calculate(
+          costCents: widget.purchase.unitCostCents,
+          assumedSellingPriceCents: widget.purchase.sellingPriceCents,
+          actualSellingPriceCents: priceCents,
           quantity: _quantity,
-          unitPriceCents: priceCents,
-          unitCostCents: widget.purchase.unitCostCents,
         );
-        final profitStr = profit >= 0
-            ? '+${Money.etb(profit)}'
-            : Money.etb(profit);
+        final profitStr = profitResult.actualProfitCents >= 0
+            ? '+${Money.etb(profitResult.actualProfitCents)}'
+            : Money.etb(profitResult.actualProfitCents);
+
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -171,20 +182,51 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
     final priceCents = _parsedPriceCents;
     final hasPrice = priceCents != null && priceCents > 0;
 
-    final profit = hasPrice
-        ? ShopLogic.saleProfit(
-            quantity: _quantity,
-            unitPriceCents: priceCents,
-            unitCostCents: purchase.unitCostCents,
-          )
-        : 0;
-
     final revenue = hasPrice ? priceCents * _quantity : 0;
     final paidAmount = _isPartialPayment
         ? (_parsedPaidAmountCents ?? 0)
         : revenue;
     final unpaidBalance = (revenue - paidAmount).clamp(0, revenue);
     final colorVal = purchase.colorHex;
+
+    final ProfitResult? profitResult = hasPrice
+        ? ProfitCalculator.calculate(
+            costCents: purchase.unitCostCents,
+            assumedSellingPriceCents: purchase.sellingPriceCents,
+            actualSellingPriceCents: priceCents,
+            quantity: _quantity,
+          )
+        : null;
+
+    final isLoss = profitResult?.status == ProfitStatus.loss;
+    final isOver = profitResult?.status == ProfitStatus.overProfit;
+    final isOnTarget = profitResult?.status == ProfitStatus.onTarget;
+    final isUnder = profitResult?.status == ProfitStatus.underTarget;
+
+    final (chipLabel, chipColor) = switch (profitResult?.status) {
+      ProfitStatus.overProfit => (
+        profitResult?.overProfitCents != null &&
+                profitResult!.overProfitCents! > 0
+            ? 'Over profit +${Money.etb(profitResult.overProfitCents!)}'
+            : 'Over profit (${profitResult?.percentOfTarget ?? 100}%)',
+        colors.profit,
+      ),
+      ProfitStatus.onTarget => ('On target (100%)', colors.profit),
+      ProfitStatus.underTarget => (
+        '${profitResult?.percentOfTarget}% of target',
+        colors.warning,
+      ),
+      ProfitStatus.breakeven => ('Breakeven (0%)', colors.textMuted),
+      ProfitStatus.loss => (
+        'Loss -${Money.etb(profitResult?.actualProfitCents.abs() ?? 0)}',
+        colors.loss,
+      ),
+      ProfitStatus.notAssumed => (
+        'No target (+${Money.etb(profitResult?.actualProfitCents ?? 0)})',
+        colors.textMuted,
+      ),
+      null => ('No target', colors.textMuted),
+    };
 
     return Padding(
       padding: EdgeInsets.only(
@@ -207,7 +249,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Fixed Top Header
+              // 1. Top Header: Category, Color, Stock left
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
@@ -230,19 +272,29 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                       ),
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Color(colorVal),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: colors.border),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Record Sale',
+                            '${purchase.categoryName} • ${purchase.colorName}',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -267,55 +319,13 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.s),
-                    // Item info row
-                    Row(
-                      children: [
-                        Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: Color(colorVal),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: colors.border),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${purchase.categoryName} • ${purchase.colorName}',
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'Cost: ${Money.etb(purchase.unitCostCents)}',
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
 
               Divider(color: colors.border, height: 1),
 
-              // Scrollable Middle Form
+              // 2. Scrollable Middle Form
               Flexible(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
@@ -328,9 +338,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Quantity Stepper
+                      // Big Quantity Stepper (- 1 +)
                       Text(
-                        'Quantity to sell',
+                        'Quantity',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: AppSpacing.s),
@@ -350,8 +360,10 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                             child: Text(
                               '$_quantity',
                               style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Sora',
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                fontFeatures: [FontFeature.tabularFigures()],
                               ),
                             ),
                           ),
@@ -362,181 +374,108 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                 ? () => setState(() => _quantity++)
                                 : null,
                           ),
-                          const Spacer(),
-                          if (_quantity == purchase.stockLeft)
-                            Text(
-                              'All in stock',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: colors.warning,
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+
+                      // Quick quantity chips: 1, 2, 3, 5, All
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          for (final q in [1, 2, 3, 5])
+                            if (q <= purchase.stockLeft)
+                              ChoiceChip(
+                                label: Text('$q'),
+                                selected: _quantity == q,
+                                onSelected: (_) =>
+                                    setState(() => _quantity = q),
+                              ),
+                          if (purchase.stockLeft > 1 &&
+                              ![1, 2, 3, 5].contains(purchase.stockLeft))
+                            ChoiceChip(
+                              label: Text('All (${purchase.stockLeft})'),
+                              selected: _quantity == purchase.stockLeft,
+                              onSelected: (_) => setState(
+                                () => _quantity = purchase.stockLeft,
                               ),
                             ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.l),
 
-                      // Selling Price Field
-                      MoneyField(
-                        label: 'Selling price per piece',
+                      // Big Selling Price Per Piece
+                      TextField(
+                        key: const ValueKey('sell_price_field'),
                         controller: _unitPrice,
-                        quantity: _quantity,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-
-                      // Pricing quick presets (Step 6)
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          ActionChip(
-                            avatar: const Icon(Icons.bolt, size: 16),
-                            label: const Text('100% Target (2x)'),
-                            onPressed: () {
-                              _unitPrice.text = Money.amount(
-                                widget.purchase.unitCostCents * 2,
-                              );
-                            },
-                          ),
-                          ActionChip(
-                            label: const Text('+50%'),
-                            onPressed: () {
-                              _unitPrice.text = Money.amount(
-                                (widget.purchase.unitCostCents * 1.5).round(),
-                              );
-                            },
-                          ),
-                          ActionChip(
-                            label: const Text('+75%'),
-                            onPressed: () {
-                              _unitPrice.text = Money.amount(
-                                (widget.purchase.unitCostCents * 1.75).round(),
-                              );
-                            },
+                        autofocus: purchase.sellingPriceCents == null,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.m),
-
-                      // Payment Account Selection
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Payment to:',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textMuted,
-                              ),
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Selling price per piece',
+                          prefixText: 'ETB ',
+                          prefixStyle: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textMuted,
+                          ),
+                          suffixText: '/ pc',
+                          hintText: '0.00',
+                          filled: true,
+                          fillColor: colors.surfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.button,
                             ),
-                            const SizedBox(width: AppSpacing.m),
-                            ChoiceChip(
-                              label: const Text('Cash'),
-                              selected: _selectedAccountId == 'acc_cash',
-                              onSelected: (val) {
-                                if (val) {
-                                  setState(
-                                    () => _selectedAccountId = 'acc_cash',
-                                  );
-                                }
-                              },
+                            borderSide: BorderSide(color: colors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.button,
                             ),
-                            const SizedBox(width: AppSpacing.xs),
-                            ChoiceChip(
-                              label: const Text('Telebirr'),
-                              selected: _selectedAccountId == 'acc_telebirr',
-                              onSelected: (val) {
-                                if (val) {
-                                  setState(
-                                    () => _selectedAccountId = 'acc_telebirr',
-                                  );
-                                }
-                              },
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            ChoiceChip(
-                              label: const Text('Bank'),
-                              selected: _selectedAccountId == 'acc_bank',
-                              onSelected: (val) {
-                                if (val) {
-                                  setState(
-                                    () => _selectedAccountId = 'acc_bank',
-                                  );
-                                }
-                              },
-                            ),
-                          ],
+                            borderSide: BorderSide(color: colors.border),
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.m),
 
-                      // Partial Payment toggle
-                      Material(
-                        type: MaterialType.transparency,
-                        child: SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text(
-                            'Partial payment / Customer debt',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Unpaid balance will be recorded in Debts',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                          value: _isPartialPayment,
-                          onChanged: (val) {
-                            setState(() {
-                              _isPartialPayment = val;
-                              if (val && _paidAmountController.text.isEmpty) {
-                                _paidAmountController.text = Money.amount(
-                                  revenue ~/ 2,
-                                );
-                              }
-                            });
-                          },
-                        ),
-                      ),
-
-                      if (_isPartialPayment) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        TextField(
-                          controller: _customerNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Customer name',
-                            hintText: 'e.g. Abebe',
-                            prefixIcon: Icon(Icons.person_outline),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.s),
-                        MoneyField(
-                          label: 'Amount paid now',
-                          controller: _paidAmountController,
-                        ),
-                        if (unpaidBalance > 0)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6, bottom: 6),
-                            child: Text(
-                              'Customer will owe: ${Money.etb(unpaidBalance)}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: colors.loss,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: AppSpacing.s),
-                      ],
-
-                      // Live Profit Card
+                      // 3. Live Result Card
                       AppCard(
+                        gradient: isLoss
+                            ? LinearGradient(
+                                colors: [
+                                  colors.surfaceVariant,
+                                  colors.loss.withValues(alpha: 0.1),
+                                ],
+                              )
+                            : (isOver || isOnTarget)
+                            ? LinearGradient(
+                                colors: [
+                                  colors.surfaceVariant,
+                                  colors.profit.withValues(alpha: 0.1),
+                                ],
+                              )
+                            : isUnder
+                            ? LinearGradient(
+                                colors: [
+                                  colors.surfaceVariant,
+                                  colors.warning.withValues(alpha: 0.1),
+                                ],
+                              )
+                            : null,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -546,6 +485,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                     'Total revenue',
                                     style: TextStyle(
                                       fontSize: 13,
+                                      fontWeight: FontWeight.w600,
                                       color: colors.textMuted,
                                     ),
                                   ),
@@ -557,27 +497,30 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       hasPrice ? Money.etb(revenue) : '—',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: colors.textPrimary,
+                                      style: const TextStyle(
+                                        fontFamily: 'Sora',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        fontFeatures: [
+                                          FontFeature.tabularFigures(),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.s),
                             Divider(color: colors.border, height: 1),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.s),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Flexible(
                                   child: Text(
-                                    'Estimated profit',
+                                    isLoss ? 'Net loss' : 'Profit preview',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: colors.textPrimary,
                                     ),
@@ -590,24 +533,260 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       hasPrice
-                                          ? (profit >= 0
-                                                ? '+${Money.etb(profit)}'
-                                                : Money.etb(profit))
+                                          ? (isLoss
+                                                ? Money.etb(
+                                                    profitResult!
+                                                        .actualProfitCents,
+                                                  )
+                                                : '+${Money.etb(profitResult!.actualProfitCents)}')
                                           : '—',
                                       style: TextStyle(
+                                        fontFamily: 'Sora',
                                         fontSize: 18,
                                         fontWeight: FontWeight.w800,
                                         color: !hasPrice
                                             ? colors.textMuted
-                                            : (profit >= 0
-                                                  ? colors.profit
-                                                  : colors.loss),
+                                            : (isLoss
+                                                  ? colors.loss
+                                                  : colors.profit),
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  'Cost: ${Money.etb(purchase.unitCostCents)}/pc • Target: ${purchase.sellingPriceCents != null ? '${Money.etb(purchase.sellingPriceCents!)}/pc' : 'Not set'}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
+                                if (hasPrice)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: chipColor.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.pill,
+                                      ),
+                                      border: Border.all(
+                                        color: chipColor.withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      chipLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: chipColor,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+
+                      // 4. Collapsed "More options" accordion
+                      Theme(
+                        data: Theme.of(
+                          context,
+                        ).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          tilePadding: EdgeInsets.zero,
+                          initiallyExpanded: false,
+                          leading: const Icon(Icons.tune_rounded, size: 20),
+                          title: const Text(
+                            'More options',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Date, account, partial payment, note',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          children: [
+                            // Date selector
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                              ),
+                              title: const Text(
+                                'Sale date',
+                                style: TextStyle(fontSize: 13),
+                              ),
+                              trailing: TextButton(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: _selectedDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 365),
+                                    ),
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _selectedDate = picked);
+                                  }
+                                },
+                                child: Text(
+                                  DateFormat.yMMMd().format(_selectedDate),
+                                ),
+                              ),
+                            ),
+
+                            // Payment Account selection
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Account:',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.m),
+                                  ChoiceChip(
+                                    label: const Text('Cash'),
+                                    selected: _selectedAccountId == 'acc_cash',
+                                    onSelected: (val) {
+                                      if (val) {
+                                        setState(
+                                          () => _selectedAccountId = 'acc_cash',
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  ChoiceChip(
+                                    label: const Text('Telebirr'),
+                                    selected:
+                                        _selectedAccountId == 'acc_telebirr',
+                                    onSelected: (val) {
+                                      if (val) {
+                                        setState(
+                                          () => _selectedAccountId =
+                                              'acc_telebirr',
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  ChoiceChip(
+                                    label: const Text('Bank'),
+                                    selected: _selectedAccountId == 'acc_bank',
+                                    onSelected: (val) {
+                                      if (val) {
+                                        setState(
+                                          () => _selectedAccountId = 'acc_bank',
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.m),
+
+                            // Partial Payment toggle
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                'Partial payment / Customer debt',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Unpaid balance will be recorded in Debts',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                              value: _isPartialPayment,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isPartialPayment = val;
+                                  if (val &&
+                                      _paidAmountController.text.isEmpty) {
+                                    _paidAmountController.text = Money.amount(
+                                      revenue ~/ 2,
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+
+                            if (_isPartialPayment) ...[
+                              TextField(
+                                controller: _customerNameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Customer name',
+                                  hintText: 'e.g. Abebe',
+                                  prefixIcon: Icon(Icons.person_outline),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              MoneyField(
+                                label: 'Amount paid now',
+                                controller: _paidAmountController,
+                              ),
+                              if (unpaidBalance > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 6,
+                                    bottom: 6,
+                                  ),
+                                  child: Text(
+                                    'Customer owes: ${Money.etb(unpaidBalance)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.loss,
+                                    ),
+                                  ),
+                                ),
+                            ],
+
+                            const SizedBox(height: AppSpacing.s),
+                            TextField(
+                              controller: _noteController,
+                              decoration: const InputDecoration(
+                                labelText: 'Note (optional)',
+                                hintText: 'e.g. Discount given for friend',
+                                prefixIcon: Icon(Icons.edit_note_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.s),
                           ],
                         ),
                       ),
@@ -616,7 +795,7 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                 ),
               ),
 
-              // Fixed Action Footer
+              // 5. Fixed Action Footer
               Container(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
@@ -630,8 +809,8 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                 ),
                 child: AppButton(
                   key: const ValueKey('confirm_sale_button'),
-                  label: _isSaving ? 'Recording...' : 'Confirm sale',
-                  onPressed: (purchase.stockLeft <= 0 || _isSaving)
+                  label: _isSaving ? 'Selling...' : 'Sell',
+                  onPressed: (purchase.stockLeft <= 0 || _isSaving || !hasPrice)
                       ? null
                       : _recordSale,
                 ),

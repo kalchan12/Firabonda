@@ -235,14 +235,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Record Sale'), findsOneWidget);
         expect(find.text('10 in stock'), findsOneWidget);
         expect(find.text('T-shirts • Black'), findsOneWidget);
-        expect(find.text('Cost: ETB 400.00'), findsOneWidget);
-        expect(find.text('Confirm sale'), findsOneWidget);
+        expect(find.text('Sell'), findsOneWidget);
 
-        // Pre-filled selling price is 650.00
-        expect(find.text('650.00'), findsOneWidget);
+        // Pre-filled selling price is 650
+        expect(find.text('650'), findsOneWidget);
         // Expected profit for qty 1: (650 - 400) * 1 = 250
         expect(find.text('+ETB 250.00'), findsOneWidget);
 
