@@ -66,6 +66,7 @@ final class BatchItemInput {
     this.sellingPriceCents,
     this.size,
     this.note,
+    this.photoPath,
   });
 
   final String categoryId;
@@ -75,6 +76,7 @@ final class BatchItemInput {
   final int? sellingPriceCents;
   final String? size;
   final String? note;
+  final String? photoPath;
 }
 
 final class BatchPurchaseInput {
@@ -136,6 +138,17 @@ final class PurchaseOverview {
   final String? note;
   final DateTime date;
   final int stockLeft;
+
+  List<String> get photoPaths {
+    if (photoPath == null || photoPath!.trim().isEmpty) return const [];
+    return photoPath!
+        .split('|')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
+  String? get firstPhotoPath => photoPaths.firstOrNull;
 }
 
 /// A sale row joined with what it was sold from, with computed profit.

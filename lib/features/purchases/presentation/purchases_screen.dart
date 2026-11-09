@@ -313,52 +313,144 @@ final class _PurchaseItemCard extends StatelessWidget {
                 // Photo thumbnail or category initial
                 GestureDetector(
                   onTap: () {
-                    if (purchase.photoPath != null &&
-                        File(purchase.photoPath!).existsSync()) {
-                      showDialog<void>(
-                        context: context,
-                        builder: (ctx) => Dialog(
+                    final validPhotos = purchase.photoPaths
+                        .where((p) => File(p).existsSync())
+                        .toList();
+                    if (validPhotos.isEmpty) return;
+
+                    showDialog<void>(
+                      context: context,
+                      builder: (ctx) {
+                        final controller = PageController();
+                        return Dialog(
                           backgroundColor: Colors.transparent,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(AppRadius.card),
-                            child: Image.file(
-                              File(purchase.photoPath!),
-                              fit: BoxFit.contain,
+                          insetPadding: const EdgeInsets.all(AppSpacing.m),
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.card,
+                                ),
+                                child: Container(
+                                  color: Colors.black,
+                                  height: 420,
+                                  child: PageView.builder(
+                                    controller: controller,
+                                    itemCount: validPhotos.length,
+                                    itemBuilder: (context, idx) {
+                                      return InteractiveViewer(
+                                        child: Image.file(
+                                          File(validPhotos[idx]),
+                                          fit: BoxFit.contain,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              if (validPhotos.length > 1)
+                                Positioned(
+                                  bottom: 12,
+                                  left: 0,
+                                  right: 0,
+                                  child: Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadius.pill,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Swipe to view ${validPhotos.length} photos',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              IconButton(
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                icon: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: colors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child:
+                            (purchase.firstPhotoPath != null &&
+                                File(purchase.firstPhotoPath!).existsSync())
+                            ? Image.file(
+                                File(purchase.firstPhotoPath!),
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.cover,
+                              )
+                            : Center(
+                                child: Text(
+                                  purchase.categoryName.isNotEmpty
+                                      ? purchase.categoryName[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.primary,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      if (purchase.photoPaths.length > 1)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${purchase.photoPaths.length}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: colors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child:
-                        (purchase.photoPath != null &&
-                            File(purchase.photoPath!).existsSync())
-                        ? Image.file(
-                            File(purchase.photoPath!),
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.cover,
-                          )
-                        : Center(
-                            child: Text(
-                              purchase.categoryName.isNotEmpty
-                                  ? purchase.categoryName[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: colors.primary,
-                              ),
-                            ),
-                          ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: AppSpacing.m),

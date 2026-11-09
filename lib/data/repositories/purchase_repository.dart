@@ -116,11 +116,16 @@ final class LocalPurchaseRepository implements PurchaseRepository {
         _db.purchases,
       )..where((row) => row.id.equals(id))).getSingleOrNull();
       if (purchase?.photoPath != null) {
-        final photo = File(purchase!.photoPath!);
-        if (photo.existsSync()) {
-          try {
-            await photo.delete();
-          } catch (_) {}
+        for (final p in purchase!.photoPath!.split('|')) {
+          final trimmed = p.trim();
+          if (trimmed.isNotEmpty) {
+            final photo = File(trimmed);
+            if (photo.existsSync()) {
+              try {
+                await photo.delete();
+              } catch (_) {}
+            }
+          }
         }
       }
       await (_db.update(_db.sales)..where((row) => row.purchaseId.equals(id)))
@@ -447,6 +452,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
                 unitCost: itemUnitCost,
                 totalCost: itemTotalCost,
                 sellingPrice: Value(item.sellingPriceCents),
+                photoPath: Value(item.photoPath),
                 note: Value(item.note ?? input.note),
                 date: dateUtc,
                 createdAt: now,

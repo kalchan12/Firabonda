@@ -1,18 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/money.dart';
-import '../../../core/utils/uuid.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -24,6 +18,7 @@ import '../../settings/application/settings_controller.dart';
 import '../application/purchases_controller.dart';
 import 'widgets/add_category_dialog.dart';
 import 'widgets/custom_color_dialog.dart';
+import 'widgets/purchase_photo_picker.dart';
 
 final class AddPurchaseScreen extends ConsumerStatefulWidget {
   const AddPurchaseScreen({super.key, this.initialPurchase});
@@ -48,7 +43,7 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
   String? _selectedColorId;
   String? _selectedSupplierId;
   DateTime _date = DateTime.now();
-  String? _photoPath;
+  List<String> _photoPaths = [];
   bool _showSizeInput = false;
   bool _isSaving = false;
 
@@ -72,7 +67,7 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       if (initial.note != null) {
         _note.text = initial.note!;
       }
-      _photoPath = initial.photoPath;
+      _photoPaths = List<String>.from(initial.photoPaths);
       _date = initial.date;
     } else {
       // Smart default: remember category and supplier from last added purchase
@@ -108,38 +103,6 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
       return Money.parseCents(text);
     } on FormatException {
       return null;
-    }
-  }
-
-  Future<void> _pickPhoto(ImageSource source) async {
-    try {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 85,
-      );
-      if (picked == null) return;
-
-      final docsDir = await getApplicationDocumentsDirectory();
-      final photosDir = Directory(p.join(docsDir.path, 'photos'));
-      if (!photosDir.existsSync()) {
-        await photosDir.create(recursive: true);
-      }
-      final ext = p.extension(picked.path);
-      final destPath = p.join(photosDir.path, '${newUuid()}$ext');
-      final saved = await File(picked.path).copy(destPath);
-
-      if (mounted) {
-        setState(() => _photoPath = saved.path);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to pick photo: $e')));
-      }
     }
   }
 
@@ -236,7 +199,7 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
         quantity: _quantity,
         unitCostCents: unitCostCents,
         sellingPriceCents: sellingPriceCents,
-        photoPath: _photoPath,
+        photoPath: _photoPaths.isEmpty ? null : _photoPaths.join('|'),
         note: _note.text.trim().isEmpty ? null : _note.text.trim(),
         date: _date,
       );
@@ -765,62 +728,12 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
             const SizedBox(height: AppSpacing.m),
 
             // Photo picker
-            Text(
-              'Photo (optional)',
-              style: Theme.of(context).textTheme.titleMedium,
+            PurchasePhotoPicker(
+              photoPaths: _photoPaths,
+              maxPhotos: _quantity,
+              onPhotosChanged: (updated) =>
+                  setState(() => _photoPaths = updated),
             ),
-            const SizedBox(height: AppSpacing.s),
-            if (_photoPath != null && File(_photoPath!).existsSync()) ...[
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    child: Image.file(
-                      File(_photoPath!),
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => setState(() => _photoPath = null),
-                    icon: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickPhoto(ImageSource.camera),
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Take photo'),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.m),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickPhoto(ImageSource.gallery),
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('From gallery'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
             const SizedBox(height: AppSpacing.xl),
 
             // Save button

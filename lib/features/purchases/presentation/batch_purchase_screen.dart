@@ -12,6 +12,7 @@ import '../../../core/widgets/money_field.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
+import 'widgets/purchase_photo_picker.dart';
 
 final class _BatchItemDraft {
   _BatchItemDraft({
@@ -72,8 +73,11 @@ final class _BatchItemDraft {
     return categoryId != null ||
         colorId != null ||
         unitCostController.text.trim().isNotEmpty ||
-        plannedSellingPriceController.text.trim().isNotEmpty;
+        plannedSellingPriceController.text.trim().isNotEmpty ||
+        photoPaths.isNotEmpty;
   }
+
+  final List<String> photoPaths = [];
 
   _BatchItemDraft copy() {
     final draft = _BatchItemDraft(
@@ -82,6 +86,7 @@ final class _BatchItemDraft {
       quantity: quantity,
       note: note,
     );
+    draft.photoPaths.addAll(photoPaths);
     draft.unitCostController.text = unitCostController.text;
     draft.plannedSellingPriceController.text =
         plannedSellingPriceController.text;
@@ -305,6 +310,9 @@ final class _BatchPurchaseScreenState
             quantity: draft.quantity,
             unitCostCents: unitCost,
             sellingPriceCents: sellingPrice,
+            photoPath: draft.photoPaths.isEmpty
+                ? null
+                : draft.photoPaths.join('|'),
             note: draft.note,
           ),
         );
@@ -860,6 +868,18 @@ final class _BatchItemCard extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: AppSpacing.m),
+
+          // Photo picker for this item (supports 1 or up to draft.quantity images)
+          PurchasePhotoPicker(
+            photoPaths: draft.photoPaths,
+            maxPhotos: draft.quantity,
+            onPhotosChanged: (updated) {
+              draft.photoPaths.clear();
+              draft.photoPaths.addAll(updated);
+              onChanged();
+            },
+          ),
         ],
       ),
     );
