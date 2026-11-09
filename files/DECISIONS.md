@@ -137,3 +137,14 @@
 - **Photo Section Compact UI:**
   - Shortened button text from "Take photo" to a clean, compact "Photo" button with camera icon alongside "Gallery".
 
+## 2026-11-09: Custom App Launcher Icon & Default Branch Migration
+- **Custom App Launcher Icon Integration:**
+  - Configured `flutter_launcher_icons` via `flutter_launcher_icons.yaml` and dev dependencies.
+  - Sourced from brand asset `assets/App Icon/Firabondicon.png` (512x512 RGBA).
+  - Legacy Mipmaps (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`): converted exterior white corners to alpha transparent to eliminate white artifacts on circular and squircle launchers.
+  - Android 8.0+ Adaptive Icons (`mipmap-anydpi-v26/ic_launcher.xml`): paired a `#0D2045` navy background (`values/colors.xml`) with a 16% safe-zone inset foreground drawable (`drawable-*/ic_launcher_foreground.png`), preventing edge-clipping across manufacturer masks (Samsung, Pixel, Xiaomi).
+- **Default Branch Migration (`main`):**
+  - Consolidated all phase 2, v2.1 polish, and minor fix commits from `fix/v2-1-minor-fixes` and `phase-2-design` into `main`.
+  - Configured GitHub remote default branch to `main` via `gh repo edit --default-branch main`.
+  - Updated local `remotes/origin/HEAD` tracking to `origin/main`.
+

@@ -106,6 +106,8 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Sales Screen UI Redesign & Dropdown Filters**: Modern scrollable layout, summary banner, payment badges, and dropdown filter bar for Cloth Type, Days, and Payment Method.
 - [x] **Batch Purchase Streamlining**: Removed Total bundle mode, eliminated "per item" / "total bundle" labels, and fixed form overflows with responsive layouts and `FittedBox`.
 - [x] **Photo Picker Compact UI**: Shortened button text to "Photo" and "Gallery" with compact modern styling.
+- [x] **Custom App Launcher Icon**: Generated adaptive and legacy Android launcher icons from `assets/App Icon/` with transparent corners and `#0D2045` background.
+- [x] **Merge & Default Branch Migration**: Merged `fix/v2-1-minor-fixes` into `main`, pushed to `origin`, and set `main` as the default branch on GitHub.
 - [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
 
 ## Later (not in this build)

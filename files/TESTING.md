@@ -33,11 +33,14 @@ Business logic in pure Dart:
 - Add purchase form: validation errors, automatic total, last price hint.
 - Calculator sheet: typing, "Use result" writes to the field.
 - Simple Sell sheet (`sell_bottom_sheet_test.dart`): stepper, quick chips, live profit preview, % of target, and no keyboard overflow.
-- Shift system UI (`shift_ui_test.dart`): OpenShiftSheet, CloseShiftSheet with live drawer cash reconciliation, ShiftHistoryScreen.
+- Shift system UI (`shift_ui_test.dart`): OpenShiftSheet, CloseShiftSheet with live drawer cash reconciliation, multi-account reconciliation, and ShiftHistoryScreen.
 - Profit language UI (`profit_language_test.dart`): verifies absence of "markup" or "100% target" across all views.
-- Screen overflow testing (`screen_overflow_test.dart`): verifies 360dp width screens under textScale 1.6 and keyboard open.
-- Dashboard shows correct numbers for a known data set.
+- Screen overflow testing (`screen_overflow_test.dart`): verifies 360dp width screens under textScale 1.6 and keyboard open for purchases, sales, and forms.
+- Purchase photos (`purchase_photo_test.dart`): verifies multi-image parsing, storage, and deletion.
+- Batch purchase tests (`batch_purchase_test.dart`): Hamilton cost allocation and per-item pricing calculations.
+- Dashboard shows correct numbers for a known data set, including "Paid with credit" card.
 - Empty states render across all list screens.
+- **Test suite count**: 121 automated tests across unit, migration, and widget layers (100% passing).
 
 ## 4. Manual checks on the physical phone (each phase)
 

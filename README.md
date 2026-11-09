@@ -7,12 +7,14 @@ An offline-first Android inventory, sales, and profit tracker designed for cloth
 ## 1. Overview & Vision
 
 Fira Bonda is tailored for retail clothing shops (such as Merkato stalls and neighborhood boutiques) who need fast, zero-latency daily logging without requiring internet connectivity:
-- **Instant purchase & bundle lot logging**: Add stock in seconds with category/color presets (including Mixed), smart defaults, price memory, existing supplier dropdown, multi-image support (up to purchase quantity) with interactive swipe viewer, and batch purchase lot entry with Hamilton largest-remainder exact cost allocation.
+- **Instant purchase & bundle lot logging**: Add stock in seconds with category/color presets (including Mixed), smart defaults, price memory, existing supplier dropdown, multi-image support (up to purchase quantity) with interactive swipe viewer, and streamlined batch purchase entry with responsive layouts.
 - **Fast sales & credit sales flow**: Simple sell sheet with planned price prefill, live profit scaling card (+ETB / Loss / % of target), and an intuitive "Not paid" credit sales toggle requiring customer name and auto-logging unpaid balances directly into debts.
 - **Calendar-accurate Dashboard & Real Net Profit**: Calendar periods (Today, Yesterday, Week, Month, Custom) with midnight rollover; Net profit hero tile (`Profit - Expenses - Losses`), 2x2 metrics grid, "Paid with credit" stat card, target profit gauge, recent sales with credit status badges, and collapsible inventory analytics.
-- **Shift System & Cash Reconciliation**: Active Shift banner on Today view, streamlined opening and closing cash drawer entry, expected vs counted balance comparisons with discrepancy logging, and shift history audit trail.
+- **Shift System & Multi-Account Reconciliation**: Active Shift banner on Today view, automatically tracking earned money across Cash, Bank, and Telebirr/Debit, displaying credit purchases/sales today, and allowing optional multi-account drawer reconciliation.
+- **Modern Dropdown Filters**: Overflow-proof modern dropdown menus across Purchases and Sales for Cloth Type (categories), Stock Status, Suppliers, Days, and Payment Method.
 - **Stock adjustments & losses**: Record damaged, lost, or returned items with automatic inventory deduction and loss accounting.
 - **App-shell quick calculator**: 20-entry calculation history, clipboard copy, and "Use result" action accessible anywhere.
+- **Branded App Icon**: Custom adaptive and legacy Android launcher icons with anti-aliased transparency and deep navy theme background.
 - **Debts & Credit**: Track customer credit ("Owed to me") and supplier credit ("I owe") with due dates, payment status, and automatic sync from credit sales.
 - **Offline Data Ownership**: Full database backup and restore with automatic pre-migration backup safeguards, plus monthly business report exports to PDF and CSV through the native share sheet.
 

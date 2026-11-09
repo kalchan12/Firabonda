@@ -105,3 +105,15 @@ Floating bottom dock with 4 destinations and a prominent 68-72dp raised circular
 ## 12. Tone of voice
 
 Short, friendly, simple English. Example: "No purchases yet. Add your first one." Avoid accounting jargon.
+
+## 13. App Icon & Launcher Branding
+
+- **Brand Colors**:
+  - Background: Deep Navy `#0D2045` (`values/colors.xml`).
+  - Brand Mark: Bright Mint/Green `#3EE08F` and Clean White `#FFFFFF`.
+- **Adaptive Icon (Android 8.0+ / API 26+)**:
+  - `mipmap-anydpi-v26/ic_launcher.xml` with solid background and 16% safe-zone inset foreground.
+  - Guarantees full legibility without logo clipping across circular, squircle, or rounded-rect system masks.
+- **Legacy Density Mipmaps**:
+  - `mipmap-mdpi` (48px), `mipmap-hdpi` (72px), `mipmap-xhdpi` (96px), `mipmap-xxhdpi` (144px), `mipmap-xxxhdpi` (192px).
+  - Anti-aliased transparent outer corners to prevent corner clipping artifacts.
