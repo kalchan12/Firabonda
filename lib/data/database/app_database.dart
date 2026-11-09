@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'seed.dart';
 import 'tables.dart';
+import '../../core/utils/uuid.dart';
 
 part 'app_database.g.dart';
 
@@ -177,7 +178,27 @@ class AppDatabase extends _$AppDatabase {
 
   /// Inserts the preset categories and colors on first launch only,
   /// guarded by the `seed.version` key in `app_meta`.
-  Future<void> ensureSeeded() => seed(this);
+  Future<void> ensureSeeded() async {
+    await seed(this);
+    final mixed =
+        await (select(colorOptions)
+              ..where((c) => c.name.equals('Mixed') | c.name.equals('mixed')))
+            .getSingleOrNull();
+    if (mixed == null) {
+      final now = DateTime.now().toUtc();
+      await into(colorOptions).insert(
+        ColorOptionsCompanion.insert(
+          id: newUuid(),
+          name: 'Mixed',
+          hex: '#8E8E93',
+          isPreset: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        mode: InsertMode.insertOrIgnore,
+      );
+    }
+  }
 }
 
 const dbFileName = 'firabonda.sqlite';

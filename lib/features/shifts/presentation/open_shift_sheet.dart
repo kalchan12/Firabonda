@@ -28,13 +28,11 @@ final class OpenShiftSheet extends ConsumerStatefulWidget {
 
 final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
   final _cashController = TextEditingController(text: '0');
-  final _cashierController = TextEditingController();
   bool _isSaving = false;
 
   @override
   void dispose() {
     _cashController.dispose();
-    _cashierController.dispose();
     super.dispose();
   }
 
@@ -53,12 +51,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(shiftRepositoryProvider);
-      final shiftId = await repo.openShift(
-        openingCashCents: cashCents,
-        openedBy: _cashierController.text.trim().isEmpty
-            ? null
-            : _cashierController.text.trim(),
-      );
+      final shiftId = await repo.openShift(openingCashCents: cashCents);
 
       await HapticFeedback.lightImpact();
 
@@ -67,7 +60,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Shift started with ${Money.etb(cashCents)} opening cash!',
+              'Shift started with ${Money.etb(cashCents)} opening cash',
             ),
           ),
         );
@@ -105,7 +98,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
+              // Drag Handle & Title
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
@@ -126,43 +119,11 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.s),
-                          decoration: BoxDecoration(
-                            color: colors.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              AppRadius.button,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.storefront_rounded,
-                            color: colors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Open New Shift',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              Text(
-                                'Track cash and daily shop transactions',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Open Shift',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -170,7 +131,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
 
               Divider(color: colors.border, height: 1),
 
-              // Form
+              // Simple Opening Cash Field
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.screenPadding),
                 child: Column(
@@ -183,6 +144,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
                     const SizedBox(height: AppSpacing.s),
                     TextField(
                       controller: _cashController,
+                      autofocus: true,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
@@ -191,7 +153,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
                       ],
                       style: const TextStyle(
                         fontFamily: 'Sora',
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w800,
                         fontFeatures: [FontFeature.tabularFigures()],
                       ),
@@ -206,23 +168,11 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-                    TextField(
-                      controller: _cashierController,
-                      decoration: InputDecoration(
-                        labelText: 'Opened by (optional)',
-                        hintText: 'e.g. Dawit',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
 
-              // Footer
+              // Action Footer
               Container(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenPadding,
@@ -235,7 +185,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
                   border: Border(top: BorderSide(color: colors.border)),
                 ),
                 child: AppButton(
-                  label: _isSaving ? 'Starting...' : 'Start Shift',
+                  label: _isSaving ? 'Opening Shift...' : 'Open Shift',
                   onPressed: _isSaving ? null : _startShift,
                 ),
               ),

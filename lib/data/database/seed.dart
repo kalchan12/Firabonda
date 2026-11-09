@@ -26,6 +26,7 @@ const seedColors = <(String, String)>[
   ('Brown', '#7A4B2A'),
   ('Beige', '#D8C3A5'),
   ('Yellow', '#F2C94C'),
+  ('Mixed', '#8E8E93'),
 ];
 
 const seedVersionValue = '1';

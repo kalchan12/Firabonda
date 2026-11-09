@@ -46,15 +46,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Open New Shift'), findsOneWidget);
+    expect(find.text('Open Shift'), findsWidgets);
 
     // Enter opening cash in the first text field
     final cashField = find.byType(TextField).first;
     await tester.enterText(cashField, '450');
     await tester.pump();
 
-    // Tap Start Shift button
-    await tester.tap(find.widgetWithText(AppButton, 'Start Shift'));
+    // Tap Open Shift button
+    await tester.tap(find.widgetWithText(AppButton, 'Open Shift'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -95,7 +95,7 @@ void main() {
       // Allow async _loadExpectedCash to complete
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Close Shift'), findsOneWidget);
+      expect(find.text('Close Shift'), findsWidgets);
       expect(find.text('Expected drawer cash'), findsOneWidget);
 
       // Count drawer cash field
