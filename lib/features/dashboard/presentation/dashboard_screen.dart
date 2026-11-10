@@ -11,7 +11,6 @@ import '../../../core/utils/business_logic.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
@@ -19,6 +18,7 @@ import '../../../data/repositories/providers.dart';
 import '../../shifts/presentation/close_shift_sheet.dart';
 import '../../shifts/presentation/open_shift_sheet.dart';
 import '../application/dashboard_controller.dart';
+import 'widgets/dashboard_skeleton.dart';
 
 final class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -187,7 +187,11 @@ final class DashboardScreen extends ConsumerWidget {
                   children: [
                     // Shift status banner (Today tab)
                     if (data.period == Period.today) ...[
-                      _TodayShiftBanner(activeShift: data.activeShift),
+                      _TodayShiftBanner(
+                        activeShift: data.activeShift,
+                        todayShiftMode: data.todayShiftMode,
+                        isShiftScoped: data.isShiftScoped,
+                      ),
                       const SizedBox(height: AppSpacing.m),
                     ],
 
@@ -275,61 +279,7 @@ final class DashboardScreen extends ConsumerWidget {
                   ],
                 );
               },
-              loading: () => Column(
-                children: [
-                  SkeletonLoader(
-                    child: Container(
-                      height: 130,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SkeletonLoader(
-                          child: Container(
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: colors.surface,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.card,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.m),
-                      Expanded(
-                        child: SkeletonLoader(
-                          child: Container(
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: colors.surface,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.card,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.m),
-                  SkeletonLoader(
-                    child: Container(
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              loading: () => const DashboardSkeletonView(),
               error: (err, stack) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.l),
@@ -605,13 +555,19 @@ final class _TargetProfitCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s),
-                Text(
-                  '${Money.etb(actualProfitForAssumedCents)} / ${Money.etb(totalAssumedProfitCents)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${Money.etb(actualProfitForAssumedCents)} / ${Money.etb(totalAssumedProfitCents)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -714,39 +670,45 @@ final class _PaidWithCreditCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.s),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    Money.etb(creditCents),
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: hasCredit ? colors.warning : colors.textPrimary,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'View debts',
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        Money.etb(creditCents),
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: colors.primary,
+                          fontFamily: 'Sora',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: hasCredit ? colors.warning : colors.textPrimary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 14,
-                        color: colors.primary,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View debts',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 14,
+                          color: colors.primary,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -867,7 +829,10 @@ final class _SalesPeriodListCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Row(
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 2,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
                                 '${sale.colorName} • x${sale.quantity}',
@@ -877,7 +842,6 @@ final class _SalesPeriodListCard extends StatelessWidget {
                                 ),
                               ),
                               if (sale.isCreditSale) ...[
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
@@ -1254,9 +1218,15 @@ final class _ProfitChartCard extends StatelessWidget {
 }
 
 final class _TodayShiftBanner extends ConsumerWidget {
-  const _TodayShiftBanner({required this.activeShift});
+  const _TodayShiftBanner({
+    required this.activeShift,
+    this.todayShiftMode = TodayShiftMode.activeShift,
+    this.isShiftScoped = false,
+  });
 
   final ShiftRow? activeShift;
+  final TodayShiftMode todayShiftMode;
+  final bool isShiftScoped;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1298,6 +1268,8 @@ final class _TodayShiftBanner extends ConsumerWidget {
                       Text(
                         'Open a shift to track sales & cash drawer',
                         style: TextStyle(fontSize: 12, color: colors.textMuted),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -1309,6 +1281,55 @@ final class _TodayShiftBanner extends ConsumerWidget {
                 ),
               ],
             ),
+            if (isShiftScoped || todayShiftMode == TodayShiftMode.allToday) ...[
+              const SizedBox(height: AppSpacing.s),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    todayShiftMode == TodayShiftMode.activeShift
+                        ? 'Shift view: Active Shift (0)'
+                        : 'Shift view: All Today',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () =>
+                        ref.read(todayShiftModeProvider.notifier).toggle(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.swap_horiz_rounded,
+                            size: 14,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            todayShiftMode == TodayShiftMode.activeShift
+                                ? 'View all today'
+                                : 'View active shift',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: AppSpacing.m),
             AppButton(
               label: 'Open shift',
@@ -1371,6 +1392,8 @@ final class _TodayShiftBanner extends ConsumerWidget {
                     Text(
                       'Opened at $timeStr • Base cash: ${Money.etb(shift.openingCash)}',
                       style: TextStyle(fontSize: 12, color: colors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -1382,6 +1405,61 @@ final class _TodayShiftBanner extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Text(
+                  todayShiftMode == TodayShiftMode.activeShift
+                      ? 'Dashboard: Active Shift'
+                      : 'Dashboard: All Today',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () =>
+                    ref.read(todayShiftModeProvider.notifier).toggle(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.swap_horiz_rounded,
+                        size: 14,
+                        color: colors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        todayShiftMode == TodayShiftMode.activeShift
+                            ? 'Switch to All Today'
+                            : 'Switch to This Shift',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           FutureBuilder<ShiftSummaryData>(
             future: ref.read(shiftRepositoryProvider).getShiftSummary(shift.id),
             builder: (context, snapshot) {
@@ -1389,8 +1467,11 @@ final class _TodayShiftBanner extends ConsumerWidget {
               final summary = snapshot.data!;
               return Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.s),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Wrap(
+                  spacing: AppSpacing.s,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       'Earned this shift: ${Money.etb(summary.totalEarnedCents)}',

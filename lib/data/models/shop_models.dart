@@ -168,6 +168,7 @@ final class SaleOverview {
     this.assumedPriceAtSaleCents,
     this.accountId = 'acc_cash',
     this.paidAmountCents,
+    this.shiftId,
   });
 
   final String id;
@@ -184,6 +185,7 @@ final class SaleOverview {
   final int? assumedPriceAtSaleCents;
   final String? accountId;
   final int? paidAmountCents;
+  final String? shiftId;
 
   int get costAtSale => costAtSaleCents ?? unitCostCents;
 

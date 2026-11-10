@@ -16,6 +16,27 @@ final selectedPeriodProvider = NotifierProvider<_PeriodNotifier, Period>(
   _PeriodNotifier.new,
 );
 
+/// Determines whether the Today tab displays the active shift only or all sales today.
+enum TodayShiftMode { activeShift, allToday }
+
+final todayShiftModeProvider =
+    NotifierProvider<_TodayShiftModeNotifier, TodayShiftMode>(
+      _TodayShiftModeNotifier.new,
+    );
+
+final class _TodayShiftModeNotifier extends Notifier<TodayShiftMode> {
+  @override
+  TodayShiftMode build() => TodayShiftMode.activeShift;
+
+  void toggle() {
+    state = state == TodayShiftMode.activeShift
+        ? TodayShiftMode.allToday
+        : TodayShiftMode.activeShift;
+  }
+
+  void setMode(TodayShiftMode mode) => state = mode;
+}
+
 final class _PeriodNotifier extends Notifier<Period> {
   @override
   Period build() => Period.today;
@@ -165,12 +186,16 @@ final class DashboardData {
     this.activeShift,
     this.creditSalesCents = 0,
     this.creditSalesCount = 0,
+    this.todayShiftMode = TodayShiftMode.activeShift,
+    this.isShiftScoped = false,
   });
 
   final PeriodRange periodRange;
   Period get period => periodRange.period;
 
   final ShiftRow? activeShift;
+  final TodayShiftMode todayShiftMode;
+  final bool isShiftScoped;
 
   final int spentCents; // Bought
   final int earnedCents; // Sold (revenue)
@@ -214,6 +239,9 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final adjustmentsAsync = ref.watch(stockAdjustmentsStreamProvider);
   final lowStockThreshold = ref.watch(lowStockThresholdProvider);
   final currentShift = ref.watch(currentShiftStreamProvider).value;
+  final shiftHistory = ref.watch(shiftHistoryStreamProvider).value ?? [];
+  final todayShiftMode = ref.watch(todayShiftModeProvider);
+  final offset = ref.watch(periodOffsetProvider);
 
   if (purchasesAsync.isLoading ||
       salesAsync.isLoading ||
@@ -246,19 +274,40 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final allExpenses = expensesAsync.value ?? [];
   final allAdjustments = adjustmentsAsync.value ?? [];
 
+  // When shifts are adopted and viewing Today (offset 0) in activeShift mode,
+  // scope the operational metrics strictly to the currently active shift.
+  final hasAnyShifts = shiftHistory.isNotEmpty || currentShift != null;
+  final isTodayZeroOffset =
+      periodRange.period == Period.today && offset == 0;
+  final isShiftScoped = isTodayZeroOffset &&
+      hasAnyShifts &&
+      todayShiftMode == TodayShiftMode.activeShift;
+
   // Map purchase IDs to unitCost for fallback if costAtSale is not yet set
   final purchaseCostMap = {for (final p in allPurchases) p.id: p.unitCostCents};
 
   // 1. Bought (spent in period: purchases dated in this period)
   var spentCents = 0;
   for (final p in allPurchases) {
-    if (periodRange.contains(p.date)) {
+    final inScope = isShiftScoped
+        ? (currentShift != null &&
+            (p.date.isAfter(currentShift.openedAt) ||
+                p.date.isAtSameMomentAs(currentShift.openedAt)))
+        : periodRange.contains(p.date);
+    if (inScope) {
       spentCents += p.totalCostCents;
     }
   }
 
   // 2. Sales in period
   final periodSales = allSales.where((s) {
+    if (isShiftScoped) {
+      if (currentShift == null) return false;
+      return s.shiftId == currentShift.id ||
+          (s.shiftId == null &&
+              (s.date.isAfter(currentShift.openedAt) ||
+                  s.date.isAtSameMomentAs(currentShift.openedAt)));
+    }
     return periodRange.contains(s.date);
   }).toList();
 
@@ -315,7 +364,14 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   // 3. Expenses in period
   var expensesCents = 0;
   for (final e in allExpenses) {
-    if (periodRange.contains(e.date)) {
+    final inScope = isShiftScoped
+        ? (currentShift != null &&
+            (e.shiftId == currentShift.id ||
+                (e.shiftId == null &&
+                    (e.date.isAfter(currentShift.openedAt) ||
+                        e.date.isAtSameMomentAs(currentShift.openedAt)))))
+        : periodRange.contains(e.date);
+    if (inScope) {
       expensesCents += e.amount;
     }
   }
@@ -323,7 +379,13 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   // 4. Losses in period (Step 8 stock adjustments: damaged, lost, personal use)
   var lossesCents = 0;
   for (final a in allAdjustments) {
-    if (a.reason.isLoss && periodRange.contains(a.date)) {
+    if (!a.reason.isLoss) continue;
+    final inScope = isShiftScoped
+        ? (currentShift != null &&
+            (a.date.isAfter(currentShift.openedAt) ||
+                a.date.isAtSameMomentAs(currentShift.openedAt)))
+        : periodRange.contains(a.date);
+    if (inScope) {
       lossesCents += a.valueAtCostCents;
     }
   }
@@ -416,6 +478,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       creditSalesCents: creditSalesCents,
       creditSalesCount: creditSalesCount,
       activeShift: currentShift,
+      todayShiftMode: todayShiftMode,
+      isShiftScoped: isShiftScoped,
     ),
   );
 });

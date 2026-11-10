@@ -18,16 +18,22 @@ import '../../features/sales/presentation/quick_sale_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shifts/presentation/shift_history_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/suppliers/presentation/suppliers_screen.dart';
 import '../widgets/app_shell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-GoRouter buildAppRouter() {
+GoRouter buildAppRouter({String initialLocation = '/splash'}) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/dashboard',
+    initialLocation: initialLocation,
     routes: [
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state, navigationShell) =>

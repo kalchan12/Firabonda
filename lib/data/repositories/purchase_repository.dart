@@ -322,6 +322,7 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               sale.assumedPriceAtSale ?? purchase.sellingPrice,
           accountId: sale.accountId,
           paidAmountCents: sale.paidAmount,
+          shiftId: sale.shiftId,
         );
       }).toList(),
     );

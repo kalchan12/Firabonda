@@ -148,3 +148,24 @@
   - Configured GitHub remote default branch to `main` via `gh repo edit --default-branch main`.
   - Updated local `remotes/origin/HEAD` tracking to `origin/main`.
 
+## 2026-11-10: Shift-Scoped Dashboard, Skeleton Loading, Form Redesign & Splash Screen
+- **Shift-Scoped Today Dashboard (`TodayShiftMode`):**
+  - Resolved issue where opening a new shift on the same calendar day displayed previous shifts' earnings on the Dashboard.
+  - When shifts are active in the store and viewing the Today tab with activeShift mode, operational metrics (sales, profit, expenses, purchases, credit sales) are strictly scoped to the active shift (`s.shiftId == currentShift.id || (s.shiftId == null && s.date >= currentShift.openedAt)`).
+  - Opening a fresh shift starts the Dashboard at ETB 0.00.
+  - Added an instant mode switch toggle between "Active Shift" and "All Today" in `_TodayShiftBanner` so the merchant can easily check full calendar day aggregates anytime without losing shift isolation.
+- **Home Screen & Dashboard Overflow Fixes:**
+  - `_TargetProfitCard`: Wrapped actual vs target profit ratio text in `Flexible` + `FittedBox` to prevent horizontal overflow on large money amounts.
+  - `_PaidWithCreditCard`: Wrapped right-hand credit money amount in `Flexible` + `FittedBox`.
+  - `_SalesPeriodListCard`: Changed color and credit badge row to `Wrap` with spacing, preventing overflow when color names and credit amounts are long.
+  - `StatTile`: Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to labels to prevent vertical multi-line overflow on narrow column widths.
+- **Close Shift Form Redesign:**
+  - Transformed flat inputs into dedicated Account Cards for Cash Drawer, Bank Account (CBE / Awash / Other), and Telebirr / Mobile Money.
+  - Added "Fill expected" and "Use earned" quick-fill action chips so the merchant can reconcile matching accounts in one tap.
+  - Integrated clear button on input fields and live difference badge with exact match indicator.
+- **Cool Dashboard Skeleton View:**
+  - Replaced basic rectangular grey placeholders with `DashboardSkeletonView`, a rich layout mirroring the banner, hero profit card, 2x2 grid, target progress card, credit card, and recent sales rows with dynamic shimmer.
+- **Branded Minor Splash Screen:**
+  - Configured native Android `launch_background.xml` and `drawable-v21/launch_background.xml` with `@color/ic_launcher_background` (`#0D2045`) and `@mipmap/ic_launcher`.
+  - Added in-app `SplashScreen` (`lib/features/splash/presentation/splash_screen.dart`) displaying the animated Firabonda brand logo, title, and tagline with smooth scale and fade transitions before routing to `/dashboard`.
+

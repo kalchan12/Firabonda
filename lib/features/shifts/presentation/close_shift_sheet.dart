@@ -406,7 +406,7 @@ final class _CloseShiftSheetState extends ConsumerState<CloseShiftSheet> {
                           const SizedBox(height: AppSpacing.m),
                         ],
 
-                        // Reconciliation header
+                        // Reconciliation section header
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -415,122 +415,310 @@ final class _CloseShiftSheetState extends ConsumerState<CloseShiftSheet> {
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
-                            Text(
-                              'All fields optional',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textMuted,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.surfaceVariant,
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
+                                border: Border.all(color: colors.border),
+                              ),
+                              child: Text(
+                                'All fields optional',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textMuted,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.s),
 
-                        // Expected drawer cash row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Expected drawer cash',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                            Text(
-                              Money.etb(_expectedCash),
-                              style: const TextStyle(
-                                fontFamily: 'Sora',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          key: const ValueKey('count_cash_field'),
-                          controller: _actualCashController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: 'ETB ',
-                            hintText: 'Leave as is or count drawer',
-                            filled: true,
-                            fillColor: colors.surfaceVariant.withValues(
-                              alpha: 0.4,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.button,
-                              ),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Difference indicator for Cash
+                        // 1. Cash Drawer Card
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.all(AppSpacing.m),
                           decoration: BoxDecoration(
-                            color: isExact || isExtra
-                                ? colors.profit.withValues(alpha: 0.12)
-                                : colors.loss.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(
-                              AppRadius.button,
-                            ),
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
                             border: Border.all(
-                              color:
-                                  (isExact || isExtra
-                                          ? colors.profit
-                                          : colors.loss)
-                                      .withValues(alpha: 0.3),
+                              color: isExact || isExtra
+                                  ? colors.profit.withValues(alpha: 0.4)
+                                  : colors.border,
                             ),
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                isExact
-                                    ? Icons.check_circle_outline_rounded
-                                    : isExtra
-                                    ? Icons.add_circle_outline_rounded
-                                    : Icons.warning_amber_rounded,
-                                color: isExact || isExtra
-                                    ? colors.profit
-                                    : colors.loss,
-                                size: 16,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: colors.profit.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(AppRadius.button),
+                                    ),
+                                    child: Icon(
+                                      Icons.point_of_sale_rounded,
+                                      color: colors.profit,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Cash Drawer',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Expected drawer cash',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: colors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    Money.etb(_expectedCash),
+                                    style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      fontFeatures: [FontFeature.tabularFigures()],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: AppSpacing.s),
-                              Expanded(
-                                child: Text(
-                                  isExact
-                                      ? 'Exact match'
-                                      : isExtra
-                                      ? '+${Money.etb(diff)} extra in drawer'
-                                      : '-${Money.etb(diff.abs())} cash short',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: isExact || isExtra
-                                        ? colors.profit
-                                        : colors.loss,
+                              const SizedBox(height: AppSpacing.s),
+                              TextField(
+                                key: const ValueKey('count_cash_field'),
+                                controller: _actualCashController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d*\.?\d{0,2}'),
+                                  ),
+                                ],
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                decoration: InputDecoration(
+                                  prefixText: 'ETB ',
+                                  hintText: 'Leave as is or count drawer',
+                                  filled: true,
+                                  fillColor: colors.surfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  suffixIcon: _actualCashController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close_rounded, size: 16),
+                                          onPressed: _actualCashController.clear,
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.button,
+                                    ),
+                                    borderSide: BorderSide(color: colors.border),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isExact || isExtra
+                                      ? colors.profit.withValues(alpha: 0.12)
+                                      : colors.loss.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.chip,
+                                  ),
+                                  border: Border.all(
+                                    color: (isExact || isExtra
+                                            ? colors.profit
+                                            : colors.loss)
+                                        .withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isExact
+                                          ? Icons.check_circle_outline_rounded
+                                          : isExtra
+                                          ? Icons.add_circle_outline_rounded
+                                          : Icons.warning_amber_rounded,
+                                      color: isExact || isExtra
+                                          ? colors.profit
+                                          : colors.loss,
+                                      size: 15,
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Expanded(
+                                      child: Text(
+                                        isExact
+                                            ? 'Exact match'
+                                            : isExtra
+                                            ? '+${Money.etb(diff)} extra in drawer'
+                                            : '-${Money.etb(diff.abs())} cash short',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: isExact || isExtra
+                                              ? colors.profit
+                                              : colors.loss,
+                                        ),
+                                      ),
+                                    ),
+                                    if (!isExact && _expectedCash > 0)
+                                      InkWell(
+                                        onTap: () {
+                                          _actualCashController.text =
+                                              _expectedCash % 100 == 0
+                                                  ? '${_expectedCash ~/ 100}'
+                                                  : Money.amount(_expectedCash);
+                                        },
+                                        child: Text(
+                                          'Reset',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.m),
+
+                        // 2. Bank Account Card (Optional)
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.m),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: colors.primary.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(AppRadius.button),
+                                    ),
+                                    child: Icon(
+                                      Icons.account_balance_rounded,
+                                      color: colors.primary,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Bank Account (Optional)',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'CBE, Awash, or Other Bank',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: colors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: colors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                                    ),
+                                    child: Text(
+                                      'Earned: ${Money.etb(summary.bankSalesCents)}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.s),
+                              TextField(
+                                controller: _actualBankController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d*\.?\d{0,2}'),
+                                  ),
+                                ],
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                decoration: InputDecoration(
+                                  prefixText: 'ETB ',
+                                  hintText: 'Insert bank money (optional)',
+                                  filled: true,
+                                  fillColor: colors.surfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  suffixIcon: summary.bankSalesCents > 0 &&
+                                          _actualBankController.text.isEmpty
+                                      ? TextButton(
+                                          onPressed: () {
+                                            _actualBankController.text =
+                                                summary.bankSalesCents % 100 == 0
+                                                    ? '${summary.bankSalesCents ~/ 100}'
+                                                    : Money.amount(summary.bankSalesCents);
+                                          },
+                                          child: const Text('Use earned', style: TextStyle(fontSize: 11)),
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.button,
+                                    ),
+                                    borderSide: BorderSide(color: colors.border),
                                   ),
                                 ),
                               ),
@@ -539,84 +727,115 @@ final class _CloseShiftSheetState extends ConsumerState<CloseShiftSheet> {
                         ),
                         const SizedBox(height: AppSpacing.m),
 
-                        // Bank input (Optional)
-                        Text(
-                          'Bank account (Optional - Earned: ${Money.etb(summary.bankSalesCents)})',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textPrimary,
+                        // 3. Telebirr / Mobile Money Card (Optional)
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.m),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                            border: Border.all(color: colors.border),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _actualBankController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: 'ETB ',
-                            hintText: 'Insert bank money (optional)',
-                            filled: true,
-                            fillColor: colors.surfaceVariant.withValues(
-                              alpha: 0.4,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.button,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: colors.warning.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(AppRadius.button),
+                                    ),
+                                    child: Icon(
+                                      Icons.phone_android_rounded,
+                                      color: colors.warning,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Debit / Telebirr (Optional)',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Mobile money & debit cards',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: colors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: colors.warning.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                                    ),
+                                    child: Text(
+                                      'Earned: ${Money.etb(summary.debitSalesCents)}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.warning,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.m),
-
-                        // Debit / Telebirr input (Optional)
-                        Text(
-                          'Debit / Telebirr (Optional - Earned: ${Money.etb(summary.debitSalesCents)})',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _actualDebitController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: 'ETB ',
-                            hintText: 'Insert debit / mobile money (optional)',
-                            filled: true,
-                            fillColor: colors.surfaceVariant.withValues(
-                              alpha: 0.4,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.button,
+                              const SizedBox(height: AppSpacing.s),
+                              TextField(
+                                controller: _actualDebitController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d*\.?\d{0,2}'),
+                                  ),
+                                ],
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                decoration: InputDecoration(
+                                  prefixText: 'ETB ',
+                                  hintText: 'Insert mobile money / debit (optional)',
+                                  filled: true,
+                                  fillColor: colors.surfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  suffixIcon: summary.debitSalesCents > 0 &&
+                                          _actualDebitController.text.isEmpty
+                                      ? TextButton(
+                                          onPressed: () {
+                                            _actualDebitController.text =
+                                                summary.debitSalesCents % 100 == 0
+                                                    ? '${summary.debitSalesCents ~/ 100}'
+                                                    : Money.amount(summary.debitSalesCents);
+                                          },
+                                          child: const Text('Use earned', style: TextStyle(fontSize: 11)),
+                                        )
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.button,
+                                    ),
+                                    borderSide: BorderSide(color: colors.border),
+                                  ),
+                                ),
                               ),
-                              borderSide: BorderSide(color: colors.border),
-                            ),
+                            ],
                           ),
                         ),
                       ],
