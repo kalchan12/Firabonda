@@ -209,6 +209,9 @@ final class SalesScreen extends ConsumerWidget {
                                           fontWeight: FontWeight.w600,
                                           color: colors.textMuted,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(height: 4),
                                       FittedBox(
@@ -241,6 +244,9 @@ final class SalesScreen extends ConsumerWidget {
                                           fontWeight: FontWeight.w600,
                                           color: colors.textMuted,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(height: 4),
                                       FittedBox(
@@ -277,6 +283,9 @@ final class SalesScreen extends ConsumerWidget {
                                           fontWeight: FontWeight.w600,
                                           color: colors.textMuted,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
                                       ),
                                       const SizedBox(height: 4),
                                       FittedBox(
@@ -300,33 +309,37 @@ final class SalesScreen extends ConsumerWidget {
                               const SizedBox(height: AppSpacing.s),
                               Divider(color: colors.border, height: 1),
                               const SizedBox(height: AppSpacing.s),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.credit_card_off_outlined,
-                                    size: 14,
-                                    color: colors.warning,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Credit owed from sales: ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.textMuted,
-                                    ),
-                                  ),
-                                  Text(
-                                    Money.etb(creditSalesAmount),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: 'Sora',
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.credit_card_off_outlined,
+                                      size: 14,
                                       color: colors.warning,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Credit owed from sales: ',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.textMuted,
+                                      ),
+                                    ),
+                                    Text(
+                                      Money.etb(creditSalesAmount),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'Sora',
+                                        color: colors.warning,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ],
@@ -447,10 +460,10 @@ final class _SaleItemCard extends ConsumerWidget {
       ProfitStatus.notAssumed => ('No target', colors.textMuted),
     };
 
-    final paymentBadgeLabel = switch (sale.accountId) {
-      'acc_bank' => 'Bank',
-      'acc_telebirr' => 'Telebirr',
-      _ => 'Cash',
+    final (paymentBadgeLabel, paymentBadgeIcon) = switch (sale.accountId) {
+      'acc_bank' => ('Bank', Icons.account_balance_outlined),
+      'acc_telebirr' => ('Telebirr', Icons.phone_android_outlined),
+      _ => ('Cash', Icons.payments_outlined),
     };
 
     return Padding(
@@ -459,20 +472,22 @@ final class _SaleItemCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top Tier: Status icon, Category & Color, Subtitle, and Delete action
             Row(
               children: [
+                // Visual trend/loss indicator badge
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: isLoss
-                        ? colors.loss.withValues(alpha: 0.15)
+                        ? colors.loss.withValues(alpha: 0.12)
                         : (isOver || isOnTarget
-                              ? colors.profit.withValues(alpha: 0.15)
-                              : (isUnder
-                                    ? colors.warning.withValues(alpha: 0.15)
-                                    : colors.surfaceVariant)),
-                    borderRadius: BorderRadius.circular(12),
+                            ? colors.profit.withValues(alpha: 0.12)
+                            : (isUnder
+                                ? colors.warning.withValues(alpha: 0.12)
+                                : colors.surfaceVariant)),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     isLoss
@@ -481,116 +496,57 @@ final class _SaleItemCard extends ConsumerWidget {
                     color: isLoss
                         ? colors.loss
                         : (isOver || isOnTarget
-                              ? colors.profit
-                              : (isUnder ? colors.warning : colors.textMuted)),
-                    size: 22,
+                            ? colors.profit
+                            : (isUnder ? colors.warning : colors.textMuted)),
+                    size: 20,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.m),
+
+                // Category name, color & time/quantity
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '${sale.categoryName} (${sale.colorName})',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.surfaceVariant,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              paymentBadgeLabel,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
                       Text(
-                        '${sale.quantity} pcs @ ${Money.etb(sale.unitPriceCents)} • Total ${Money.etb(sale.quantity * sale.unitPriceCents)}',
+                        '${sale.categoryName} (${sale.colorName})',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${DateFormat.jm().format(sale.date)} • ${sale.quantity} pcs @ ${Money.etb(sale.unitPriceCents)}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: colors.textMuted,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (sale.isCreditSale) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.warning.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: colors.warning.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Text(
-                                sale.isFullyUnpaid
-                                    ? 'Credit (unpaid)'
-                                    : 'Credit • owes ${Money.etb(sale.creditAmountCents)}',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.warning,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.s),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      isLoss
-                          ? '-${Money.etb(sale.profitCents.abs())}'
-                          : '+${Money.etb(sale.profitCents)}',
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: isLoss ? colors.loss : colors.profit,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    Text(
-                      DateFormat.jm().format(sale.date),
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
-                    ),
-                  ],
-                ),
+                const SizedBox(width: AppSpacing.xs),
+
+                // Delete Action Button
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 18),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: colors.textMuted.withValues(alpha: 0.65),
+                  ),
                   tooltip: 'Delete sale',
                   onPressed: () {
                     showDialog<void>(
@@ -639,22 +595,152 @@ final class _SaleItemCard extends ConsumerWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: AppSpacing.s),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: chipColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(color: chipColor.withValues(alpha: 0.3)),
-              ),
-              child: Text(
-                chipLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: chipColor,
+            Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+            const SizedBox(height: AppSpacing.s),
+
+            // Middle Tier: Key Financial Numbers (Total Sale Amount & Profit Made)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    'Total ${Money.etb(sale.quantity * sale.unitPriceCents)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
+                const SizedBox(width: AppSpacing.s),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      isLoss
+                          ? '-${Money.etb(sale.profitCents.abs())}'
+                          : '+${Money.etb(sale.profitCents)}',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isLoss ? colors.loss : colors.profit,
+                        fontFeatures: const [
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.s),
+
+            // Bottom Tier: Responsive Wrap with Payment Method, Profit Target Badge, and Credit Debt Badge
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                // Payment Method Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppRadius.chip),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(paymentBadgeIcon, size: 12, color: colors.textMuted),
+                      const SizedBox(width: 4),
+                      Text(
+                        paymentBadgeLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Profit Target Result Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: chipColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                      color: chipColor.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Text(
+                    chipLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: chipColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Credit debt badge if credit sale
+                if (sale.isCreditSale)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      border: Border.all(
+                        color: colors.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.credit_card_off_outlined,
+                          size: 12,
+                          color: colors.warning,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            sale.isFullyUnpaid
+                                ? 'Credit (unpaid)'
+                                : 'Credit • owes ${Money.etb(sale.creditAmountCents)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.warning,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -700,6 +786,7 @@ final class _ModernSalesDropdown<T> extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
+          isDense: true,
           icon: Padding(
             padding: const EdgeInsets.only(left: 4),
             child: Icon(

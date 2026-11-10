@@ -113,6 +113,7 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Close Shift Form Redesign**: Modern Account Reconciliation cards with "Fill expected" / "Use earned" action chips, clear buttons, and live difference badges.
 - [x] **Dashboard Skeleton Loading**: Implemented `DashboardSkeletonView` mirroring the full dashboard hierarchy with rich shimmer cards.
 - [x] **Minor Splash Screen**: Native Android launch background with brand logo on navy background, plus animated in-app `SplashScreen`.
+- [x] **Sales Screen Layout Architecture & Overflow Elimination**: Modern 3-tier card layout (`_SaleItemCard`) with header (icon, item title/details, compact delete action), middle financial tier (total sale amount, scaled profit figure), and bottom responsive `Wrap` badges (payment method, profit target, credit debt), eliminating all flex overflows on small screens and large fonts.
 - [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
 
 ## Later (not in this build)

@@ -169,3 +169,18 @@
   - Configured native Android `launch_background.xml` and `drawable-v21/launch_background.xml` with `@color/ic_launcher_background` (`#0D2045`) and `@mipmap/ic_launcher`.
   - Added in-app `SplashScreen` (`lib/features/splash/presentation/splash_screen.dart`) displaying the animated Firabonda brand logo, title, and tagline with smooth scale and fade transitions before routing to `/dashboard`.
 
+## 2026-11-10: Sales Screen Layout Architecture & Overflow Elimination
+- **Three-Tier Responsive Card Layout in `_SaleItemCard`:**
+  - Redesigned sale item cards from a cramped single row into three dedicated, balanced tiers:
+    1. *Top Header Tier*: Visual trend/status badge (38x38), category name & color (bold 15, single-line ellipsis), timestamp & unit breakdown (`{time} • {qty} pcs @ {price}`), and compact delete icon button.
+    2. *Middle Financial Tier*: Total sale amount (`Total ETB X`) on left, profit made (`+ETB Y` or `-ETB Y` in bold Sora font with `Flexible` + `FittedBox(fit: BoxFit.scaleDown)`) on right.
+    3. *Bottom Badges Tier*: Responsive `Wrap` widget containing payment method badge (`Cash`, `Bank`, `Telebirr`), target profit status badge (`Over profit`, `On target`, etc.), and credit debt badge (`Credit • owes ETB Z` with `Flexible` truncation).
+  - Eliminates all horizontal and vertical flex overflows even on narrow viewports (320px) and large accessibility font scales (1.6x).
+- **Summary Banner Responsive Fitting:**
+  - Added `maxLines: 1`, `overflow: TextOverflow.ellipsis`, and `textAlign: TextAlign.center` to metric column headers.
+  - Wrapped bottom "Credit owed from sales" row in `FittedBox(fit: BoxFit.scaleDown)` to prevent overflow on large debt balances.
+- **Sell Bottom Sheet & Quick Sale Hardening:**
+  - Wrapped debt summary amount in `SellBottomSheet` in `Flexible` + `FittedBox` to prevent overflow when customer unpaid balance is large.
+  - Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to `_QuickSaleItemCard` text lines.
+
+

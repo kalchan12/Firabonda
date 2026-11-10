@@ -320,5 +320,57 @@ void main() {
 
       await cleanUpWidget(tester);
     });
+
+    testWidgets('SalesScreen does not overflow with narrow screen and credit sales', (
+      tester,
+    ) async {
+      // Narrow viewport like an older or small screen (320px wide)
+      tester.view.physicalSize = const Size(320 * 2.0, 700 * 2.0);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final categories = await db.select(db.categories).get();
+      final colors = await db.select(db.colorOptions).get();
+      final purchaseRepo = LocalPurchaseRepository(db);
+
+      final pId = await purchaseRepo.add(
+        PurchaseInput(
+          categoryId: categories.first.id,
+          colorId: colors.first.id,
+          quantity: 50,
+          unitCostCents: 150000, // ETB 1,500.00
+          date: DateTime.now(),
+        ),
+      );
+
+      // Record a credit sale with large values
+      await purchaseRepo.recordSale(
+        SaleInput(
+          purchaseId: pId,
+          quantity: 10,
+          unitPriceCents: 250000, // ETB 2,500.00
+          date: DateTime.now(),
+          paidAmountCents: 500000, // paid 5,000, owes 20,000
+          customerName: 'Abebe Bikila Long Customer Name',
+          accountId: 'acc_telebirr',
+        ),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(child: const SalesScreen(), db: db),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Total revenue'), findsOneWidget);
+      expect(find.text('Total profit'), findsOneWidget);
+      expect(find.text('Telebirr'), findsWidgets);
+      expect(find.textContaining('Credit'), findsWidgets);
+      // No overflows should throw exception
+      expect(tester.takeException(), isNull);
+
+      await cleanUpWidget(tester);
+    });
   });
 }

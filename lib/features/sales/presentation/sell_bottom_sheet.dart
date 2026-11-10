@@ -696,26 +696,35 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      paidAmount == 0
-                                          ? 'Total logged to Debts:'
-                                          : 'Customer owes (Debts):',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.warning,
+                                    Flexible(
+                                      child: Text(
+                                        paidAmount == 0
+                                            ? 'Total logged to Debts:'
+                                            : 'Customer owes (Debts):',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: colors.warning,
+                                        ),
                                       ),
                                     ),
-                                    Text(
-                                      Money.etb(unpaidBalance),
-                                      style: TextStyle(
-                                        fontFamily: 'Sora',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: colors.warning,
-                                        fontFeatures: const [
-                                          FontFeature.tabularFigures(),
-                                        ],
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          Money.etb(unpaidBalance),
+                                          style: TextStyle(
+                                            fontFamily: 'Sora',
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: colors.warning,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
