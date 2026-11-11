@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_dimensions.dart';
 
-/// Minor branded splash screen shown on app cold launch.
+/// Premium branded splash screen shown on app launch with smooth
+/// entrance, breathing brand aura, live progress bar, and instant skip.
 final class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -14,152 +15,527 @@ final class SplashScreen extends StatefulWidget {
 }
 
 final class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
+    with TickerProviderStateMixin {
+  late final AnimationController _entryController;
+  late final AnimationController _pulseController;
+  late final AnimationController _progressController;
+
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+  late final Animation<Offset> _textSlide;
+  late final Animation<double> _textFade;
+  late final Animation<double> _footerFade;
+  late final Animation<double> _pulseAnimation;
+
   Timer? _navigateTimer;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    // 1. Entry Staggered Animation (1100ms)
+    _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1100),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.82, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    _logoScale = Tween<double>(begin: 0.72, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.0, 0.75, curve: Curves.easeOutBack),
+      ),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
     );
 
-    _controller.forward();
+    _textSlide = Tween<Offset>(
+      begin: const Offset(0.0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.35, 0.85, curve: Curves.easeOutCubic),
+      ),
+    );
 
-    // Check if running inside automated widget tests
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.35, 0.75, curve: Curves.easeIn),
+      ),
+    );
+
+    _footerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.65, 1.0, curve: Curves.easeIn),
+      ),
+    );
+
+    // 2. Continuous breathing aura for logo
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    // 3. Smooth progress bar fill across 2.5s
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    );
+
+    _entryController.forward();
+    _progressController.forward();
+
+    // 4. Timer to navigate to Dashboard (2800ms)
     final isTest =
         WidgetsBinding.instance.runtimeType.toString().contains('Test');
     if (!isTest) {
-      _navigateTimer = Timer(const Duration(milliseconds: 1400), () {
-        if (mounted) {
-          context.go('/dashboard');
-        }
-      });
+      _navigateTimer =
+          Timer(const Duration(milliseconds: 2800), _navigateToDashboard);
     }
+  }
+
+  void _navigateToDashboard() {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+    _navigateTimer?.cancel();
+    context.go('/dashboard');
   }
 
   @override
   void dispose() {
     _navigateTimer?.cancel();
-    _controller.dispose();
+    _entryController.dispose();
+    _pulseController.dispose();
+    _progressController.dispose();
     super.dispose();
+  }
+
+  String _statusMessage(double progress) {
+    if (progress < 0.35) return 'Loading offline database...';
+    if (progress < 0.75) return 'Preparing inventory & shifts...';
+    return 'Ready to trade';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B1020),
-      body: Stack(
-        children: [
-          // Subtle radial background gradient glow
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.1,
-                  colors: [
-                    const Color(0xFF1E3A8A).withValues(alpha: 0.35),
-                    const Color(0xFF070B18),
-                  ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _navigateToDashboard,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF070B14),
+        body: Stack(
+          children: [
+            // Ambient Radial Gradient Aura (Cobalt & Emerald glow)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.0, -0.2),
+                    radius: 1.25,
+                    colors: [
+                      const Color(0xFF1E3A8A).withValues(alpha: 0.30),
+                      const Color(0xFF0D9488).withValues(alpha: 0.12),
+                      const Color(0xFF070B14),
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
                 ),
               ),
             ),
-          ),
-          Center(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: child,
-                  ),
-                );
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // App Icon Container
-                  Container(
-                    width: 104,
-                    height: 104,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D2045),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
-                          blurRadius: 32,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Image.asset(
-                      'assets/App Icon/ic_launcher.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) => const Icon(
-                        Icons.checkroom_rounded,
-                        size: 56,
-                        color: Color(0xFF3EE08F),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.l),
 
-                  // App Title
-                  const Text(
-                    'Fira Bonda',
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Tagline
-                  Text(
-                    'Offline Clothing Store Tracker',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.65),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-
-                  // Subtle spinner indicator
-                  SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFF3EE08F).withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ),
-                ],
+            // Subtle background decorative pattern dots
+            Positioned(
+              top: -60,
+              right: -60,
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.05),
+                ),
               ),
+            ),
+            Positioned(
+              bottom: 40,
+              left: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF10B981).withValues(alpha: 0.04),
+                ),
+              ),
+            ),
+
+            // Main Centered Content
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPadding,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(flex: 3),
+
+                      // Animated Brand Logo with breathing aura
+                      AnimatedBuilder(
+                        animation: Listenable.merge([
+                          _entryController,
+                          _pulseController,
+                        ]),
+                        builder: (context, _) {
+                          return FadeTransition(
+                            opacity: _logoFade,
+                            child: ScaleTransition(
+                              scale: _logoScale,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Breathing neon aura ring behind icon
+                                  Transform.scale(
+                                    scale: _pulseAnimation.value,
+                                    child: Container(
+                                      width: 130,
+                                      height: 130,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            const Color(0xFF3B82F6).withValues(
+                                              alpha: 0.35,
+                                            ),
+                                            const Color(0xFF10B981).withValues(
+                                              alpha: 0.18,
+                                            ),
+                                            Colors.transparent,
+                                          ],
+                                          stops: const [0.0, 0.65, 1.0],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Core App Icon Container
+                                  Container(
+                                    width: 110,
+                                    height: 110,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFF1E293B),
+                                          Color(0xFF0F172A),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(28),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.18,
+                                        ),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF2563EB,
+                                          ).withValues(alpha: 0.32),
+                                          blurRadius: 36,
+                                          offset: const Offset(0, 12),
+                                        ),
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF10B981,
+                                          ).withValues(alpha: 0.15),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    padding: const EdgeInsets.all(14),
+                                    child: Image.asset(
+                                      'assets/App Icon/ic_launcher.png',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.checkroom_rounded,
+                                        size: 58,
+                                        color: Color(0xFF3EE08F),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Brand Name & Taglines (Slide and Fade)
+                      AnimatedBuilder(
+                        animation: _entryController,
+                        builder: (context, child) {
+                          return FadeTransition(
+                            opacity: _textFade,
+                            child: SlideTransition(
+                              position: _textSlide,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            // Brand Title with Subtle Neon Accent
+                            const Text(
+                              'Fira Bonda',
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 34,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.6,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0x663B82F6),
+                                    blurRadius: 18,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Store Category Badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(
+                                  alpha: 0.14,
+                                ),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: const Color(0xFF10B981).withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.storefront_rounded,
+                                    size: 13,
+                                    color: Color(0xFF34D399),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'OFFLINE CLOTHING STORE TRACKER',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.0,
+                                      color: Color(0xFF34D399),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Subtitle
+                            Text(
+                              'Track purchases, sales, stock & profit margin',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.65),
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Feature Highlights Chips
+                            const Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                _FeatureChip(
+                                  icon: Icons.wifi_off_rounded,
+                                  label: '100% Offline',
+                                ),
+                                _FeatureChip(
+                                  icon: Icons.query_stats_rounded,
+                                  label: 'Real Profit',
+                                ),
+                                _FeatureChip(
+                                  icon: Icons.lock_outline_rounded,
+                                  label: 'Private Data',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Spacer(flex: 3),
+
+                      // Animated Progress Bar & Status (Footer)
+                      AnimatedBuilder(
+                        animation: Listenable.merge([
+                          _entryController,
+                          _progressController,
+                        ]),
+                        builder: (context, _) {
+                          final progress = _progressController.value;
+                          final statusText = _statusMessage(progress);
+
+                          return FadeTransition(
+                            opacity: _footerFade,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Status Message
+                                Text(
+                                  statusText,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.55),
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+
+                                // Glowing Gradient Progress Line
+                                SizedBox(
+                                  width: 210,
+                                  height: 4,
+                                  child: Stack(
+                                    children: [
+                                      // Track Background
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.10,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
+                                        ),
+                                      ),
+                                      // Active Fill
+                                      FractionallySizedBox(
+                                        widthFactor: progress.clamp(0.04, 1.0),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFF3B82F6),
+                                                Color(0xFF10B981),
+                                                Color(0xFF3EE08F),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFF10B981,
+                                                ).withValues(alpha: 0.6),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Tap to Skip micro-hint
+                                Text(
+                                  'Tap anywhere to start',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: AppSpacing.l),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _FeatureChip extends StatelessWidget {
+  const _FeatureChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.7)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
         ],

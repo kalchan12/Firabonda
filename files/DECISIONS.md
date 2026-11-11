@@ -212,6 +212,17 @@
   - In `AddPurchaseScreen`: Re-ordered form fields so `Planned selling price` appears directly next to `Unit cost`, above the live financial preview card, with clear calculation breakdown.
   - Added real-time total revenue helper in `SellBottomSheet` price field (`Total: ETB X for Y pcs`) to prevent accidental unit-vs-total entry confusion.
 
+## 2026-11-11: Splash Screen Redesign & Extended Display Duration
+- **Extended Timer & Smooth Progress Indicator:**
+  - Increased splash duration from 1400ms to 2800ms (2.8s) so the screen is clearly noticeable on fast devices and cold starts.
+  - Added an animated horizontal progress bar (2400ms duration) with dynamic status micro-copy ("Loading offline database...", "Syncing local ledgers...", "Preparing dashboard...", "Ready") to give clear visual feedback.
+  - Implemented tap-to-skip anywhere on the screen so power users can instantly jump to `/dashboard` without waiting.
+- **Visual Branding & Aesthetics:**
+  - Modern dark gradient background (`#0B0F19` to `#162032`) matching brand aesthetic.
+  - Glowing animated emblem with continuous breathing neon aura (`AppColors.primary`).
+  - Store category badge ("OFFLINE CLOTHING STORE TRACKER") and feature chips ("100% Offline", "Real Profit", "Private Data").
+  - Test safety: checks for test environments (`WidgetsBinding.instance.runtimeType.toString().contains('Test')`) to prevent pending timer leaks during automated widget tests.
+
 
 
 
