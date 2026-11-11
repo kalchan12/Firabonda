@@ -952,15 +952,19 @@ final class _SalesPeriodListCard extends StatelessWidget {
 
 /// 5. Expandable "More details" accordion:
 /// Unsold stock value, low stock alerts, best sellers, profit curve chart
-final class _MoreDetailsAccordion extends StatelessWidget {
-  const _MoreDetailsAccordion({required this.data, required this.periodName});
+final class _MoreDetailsAccordion extends ConsumerWidget {
+  const _MoreDetailsAccordion({
+    required this.data,
+    required this.periodName,
+  });
 
   final DashboardData data;
   final String periodName;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final selectedPeriod = ref.watch(selectedPeriodProvider);
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -990,6 +994,65 @@ final class _MoreDetailsAccordion extends StatelessWidget {
           ),
           children: [
             const Divider(height: 1),
+            const SizedBox(height: AppSpacing.m),
+
+            // Modern Period Dropdown Filter for More analytics & stock
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: AppSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                color: colors.surfaceVariant.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 18,
+                    color: colors.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Text(
+                    'Timeframe:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                  const Spacer(),
+                  _ModernPeriodDropdown(
+                    selectedPeriod: selectedPeriod,
+                    onChanged: (chosen) async {
+                      if (chosen == null) return;
+                      if (chosen == Period.custom) {
+                        final picked = await showDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          ref
+                              .read(customDateRangeProvider.notifier)
+                              .setRange(picked.start, picked.end);
+                          ref
+                              .read(selectedPeriodProvider.notifier)
+                              .setPeriod(Period.custom);
+                        }
+                      } else {
+                        ref
+                            .read(selectedPeriodProvider.notifier)
+                            .setPeriod(chosen);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.m),
 
             // Stock value
@@ -1556,6 +1619,120 @@ final class _TodayShiftBanner extends ConsumerWidget {
             onPressed: () => showCloseShiftSheet(context, shift),
           ),
         ],
+      ),
+    );
+  }
+}
+
+final class _ModernPeriodDropdown extends StatelessWidget {
+  const _ModernPeriodDropdown({
+    required this.selectedPeriod,
+    required this.onChanged,
+  });
+
+  final Period selectedPeriod;
+  final ValueChanged<Period?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+        border: Border.all(color: colors.border),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<Period>(
+          value: selectedPeriod,
+          icon: Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
+          ),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: colors.textPrimary,
+          ),
+          dropdownColor: colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          items: const [
+            DropdownMenuItem(
+              value: Period.today,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.today_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('Today'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: Period.yesterday,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('Yesterday'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: Period.week,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.date_range_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('Week'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: Period.all,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.all_inclusive_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('All'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: Period.month,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_month_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('Month'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: Period.custom,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_calendar_rounded, size: 16),
+                  SizedBox(width: 8),
+                  Text('Custom'),
+                ],
+              ),
+            ),
+          ],
+          onChanged: onChanged,
+        ),
       ),
     );
   }

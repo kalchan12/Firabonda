@@ -59,6 +59,7 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
     final colors = context.appColors;
     final purchasesAsync = ref.watch(filteredPurchasesProvider);
     final filters = ref.watch(purchaseFiltersProvider);
+    final viewMode = ref.watch(purchaseViewModeProvider);
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final suppliersAsync = ref.watch(suppliersStreamProvider);
     final hasActiveFilter =
@@ -84,6 +85,49 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                 title: const Text('Purchases'),
                 backgroundColor: colors.background,
                 actions: [
+                  PopupMenuButton<PurchaseViewMode>(
+                    icon: Icon(switch (viewMode) {
+                      PurchaseViewMode.list => Icons.view_agenda_outlined,
+                      PurchaseViewMode.grid => Icons.grid_view_rounded,
+                      PurchaseViewMode.row => Icons.table_rows_outlined,
+                    }),
+                    tooltip: 'Change view layout',
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: PurchaseViewMode.list,
+                        child: Row(
+                          children: [
+                            Icon(Icons.view_agenda_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Cards'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: PurchaseViewMode.grid,
+                        child: Row(
+                          children: [
+                            Icon(Icons.grid_view_rounded, size: 18),
+                            SizedBox(width: 8),
+                            Text('Grid'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: PurchaseViewMode.row,
+                        child: Row(
+                          children: [
+                            Icon(Icons.table_rows_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Rows'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (mode) => ref
+                        .read(purchaseViewModeProvider.notifier)
+                        .setViewMode(mode),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh purchases',
@@ -248,6 +292,13 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                               },
                             ),
                           ],
+                          const SizedBox(width: AppSpacing.s),
+                          _ViewModeToggle(
+                            currentMode: viewMode,
+                            onChanged: (mode) => ref
+                                .read(purchaseViewModeProvider.notifier)
+                                .setViewMode(mode),
+                          ),
                         ],
                       ),
                     ),
@@ -317,16 +368,54 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                               ),
                             ),
                           ),
-                          for (final purchase in items)
-                            _PurchaseItemCard(
-                              purchase: purchase,
-                              onTap: () => context.push(
-                                '/add-purchase',
-                                extra: purchase,
+                          if (viewMode == PurchaseViewMode.list) ...[
+                            for (final purchase in items)
+                              _PurchaseItemCard(
+                                purchase: purchase,
+                                onTap: () => context.push(
+                                  '/add-purchase',
+                                  extra: purchase,
+                                ),
+                                onSell: () =>
+                                    showSellBottomSheet(context, purchase),
                               ),
-                              onSell: () =>
-                                  showSellBottomSheet(context, purchase),
+                          ] else if (viewMode == PurchaseViewMode.grid) ...[
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.70,
+                              ),
+                              itemCount: items.length,
+                              itemBuilder: (context, i) {
+                                final purchase = items[i];
+                                return _PurchaseGridCard(
+                                  purchase: purchase,
+                                  onTap: () => context.push(
+                                    '/add-purchase',
+                                    extra: purchase,
+                                  ),
+                                  onSell: () =>
+                                      showSellBottomSheet(context, purchase),
+                                );
+                              },
                             ),
+                          ] else if (viewMode == PurchaseViewMode.row) ...[
+                            for (final purchase in items)
+                              _PurchaseRowCard(
+                                purchase: purchase,
+                                onTap: () => context.push(
+                                  '/add-purchase',
+                                  extra: purchase,
+                                ),
+                                onSell: () =>
+                                    showSellBottomSheet(context, purchase),
+                              ),
+                          ],
                         ],
                       ),
                     );
@@ -814,6 +903,395 @@ final class _ModernFilterDropdown<T> extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
           items: items,
           onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
+final class _PurchaseGridCard extends StatelessWidget {
+  const _PurchaseGridCard({
+    required this.purchase,
+    required this.onTap,
+    required this.onSell,
+  });
+
+  final PurchaseOverview purchase;
+  final VoidCallback onTap;
+  final VoidCallback onSell;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final colorVal = purchase.colorHex;
+    final isLowStock = purchase.stockLeft > 0 && purchase.stockLeft <= 3;
+    final isSoldOut = purchase.stockLeft == 0;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.s),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Visual thumbnail with stock pill
+          Stack(
+            children: [
+              Container(
+                height: 84,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.card - 4),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: (purchase.firstPhotoPath != null &&
+                        File(purchase.firstPhotoPath!).existsSync())
+                    ? Image.file(
+                        File(purchase.firstPhotoPath!),
+                        fit: BoxFit.cover,
+                      )
+                    : Center(
+                        child: Text(
+                          purchase.categoryName.isNotEmpty
+                              ? purchase.categoryName[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSoldOut
+                        ? colors.surfaceVariant.withValues(alpha: 0.95)
+                        : (isLowStock
+                            ? colors.warning.withValues(alpha: 0.95)
+                            : colors.profit.withValues(alpha: 0.95)),
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    isSoldOut ? 'Sold out' : '${purchase.stockLeft} left',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: isSoldOut ? colors.textMuted : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+
+          // Title & color
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  purchase.categoryName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Color(colorVal),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.border),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+
+          Text(
+            '${purchase.colorName}${purchase.size != null ? ' • ${purchase.size}' : ''}',
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+
+          Text(
+            'Cost: ${Money.etb(purchase.unitCostCents)}',
+            style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+          ),
+          if (purchase.sellingPriceCents != null) ...[
+            Text(
+              'Target: ${Money.etb(purchase.sellingPriceCents!)}',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: colors.primary,
+              ),
+            ),
+          ],
+          const Spacer(),
+
+          SizedBox(
+            width: double.infinity,
+            height: 30,
+            child: ElevatedButton.icon(
+              onPressed: isSoldOut ? null : onSell,
+              icon: const Icon(Icons.sell_outlined, size: 14),
+              label: const Text('Sell', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
+                disabledBackgroundColor: colors.surfaceVariant,
+                padding: EdgeInsets.zero,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _PurchaseRowCard extends StatelessWidget {
+  const _PurchaseRowCard({
+    required this.purchase,
+    required this.onTap,
+    required this.onSell,
+  });
+
+  final PurchaseOverview purchase;
+  final VoidCallback onTap;
+  final VoidCallback onSell;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final colorVal = purchase.colorHex;
+    final isLowStock = purchase.stockLeft > 0 && purchase.stockLeft <= 3;
+    final isSoldOut = purchase.stockLeft == 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        onTap: onTap,
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: colors.surfaceVariant,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: (purchase.firstPhotoPath != null &&
+                      File(purchase.firstPhotoPath!).existsSync())
+                  ? Image.file(
+                      File(purchase.firstPhotoPath!),
+                      width: 38,
+                      height: 38,
+                      fit: BoxFit.cover,
+                    )
+                  : Center(
+                      child: Text(
+                        purchase.categoryName.isNotEmpty
+                            ? purchase.categoryName[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          purchase.categoryName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Color(colorVal),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.border),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        purchase.colorName,
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      ),
+                      if (purchase.size != null) ...[
+                        Text(
+                          ' • ${purchase.size}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Cost: ${Money.etb(purchase.unitCostCents)} • Qty: ${purchase.quantity}${purchase.sellingPriceCents != null ? ' • Target: ${Money.etb(purchase.sellingPriceCents!)}' : ''}',
+                    style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isSoldOut
+                    ? colors.surfaceVariant
+                    : (isLowStock
+                        ? colors.warning.withValues(alpha: 0.15)
+                        : colors.profit.withValues(alpha: 0.15)),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                isSoldOut ? 'Sold out' : '${purchase.stockLeft} left',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: isSoldOut
+                      ? colors.textMuted
+                      : (isLowStock ? colors.warning : colors.profit),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: isSoldOut ? null : onSell,
+              icon: const Icon(Icons.sell_outlined, size: 18),
+              tooltip: 'Sell',
+              visualDensity: VisualDensity.compact,
+              color: colors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _ViewModeToggle extends StatelessWidget {
+  const _ViewModeToggle({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final PurchaseViewMode currentMode;
+  final ValueChanged<PurchaseViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildItem(
+            icon: Icons.view_agenda_rounded,
+            tooltip: 'Card view',
+            mode: PurchaseViewMode.list,
+            colors: colors,
+          ),
+          _buildItem(
+            icon: Icons.grid_view_rounded,
+            tooltip: 'Grid view',
+            mode: PurchaseViewMode.grid,
+            colors: colors,
+          ),
+          _buildItem(
+            icon: Icons.table_rows_rounded,
+            tooltip: 'Row view',
+            mode: PurchaseViewMode.row,
+            colors: colors,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem({
+    required IconData icon,
+    required String tooltip,
+    required PurchaseViewMode mode,
+    required AppColorsExtension colors,
+  }) {
+    final isSelected = currentMode == mode;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () => onChanged(mode),
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colors.primary.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: isSelected ? colors.primary : colors.textMuted,
+          ),
         ),
       ),
     );

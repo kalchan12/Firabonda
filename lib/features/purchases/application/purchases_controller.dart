@@ -1,10 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
 
 enum PurchaseStockFilter { all, inStock, lowStock, soldOut }
+
+enum PurchaseViewMode { list, grid, row }
+
+final purchaseViewModeProvider =
+    NotifierProvider<_PurchaseViewModeNotifier, PurchaseViewMode>(
+      _PurchaseViewModeNotifier.new,
+    );
+
+final class _PurchaseViewModeNotifier extends Notifier<PurchaseViewMode> {
+  static const _prefKey = 'purchase_view_mode';
+
+  @override
+  PurchaseViewMode build() {
+    _loadFromPrefs();
+    return PurchaseViewMode.list;
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_prefKey);
+      if (saved != null) {
+        state = PurchaseViewMode.values.firstWhere(
+          (m) => m.name == saved,
+          orElse: () => PurchaseViewMode.list,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> setViewMode(PurchaseViewMode mode) async {
+    state = mode;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKey, mode.name);
+    } catch (_) {}
+  }
+}
 
 final class PurchaseFilters {
   const PurchaseFilters({

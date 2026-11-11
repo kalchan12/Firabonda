@@ -223,6 +223,19 @@
   - Store category badge ("OFFLINE CLOTHING STORE TRACKER") and feature chips ("100% Offline", "Real Profit", "Private Data").
   - Test safety: checks for test environments (`WidgetsBinding.instance.runtimeType.toString().contains('Test')`) to prevent pending timer leaks during automated widget tests.
 
+## 2026-11-11: More Analytics & Stock Dropdown Filter & Purchases Multi-View (Grid, Row, Card)
+- **More Analytics & Stock Modern Dropdown Filter:**
+  - Integrated `_ModernPeriodDropdown` into the expanded `_MoreDetailsAccordion` ("More analytics & stock").
+  - Provides quick filtering across `Today` (default), `Yesterday`, `Week`, `All`, `Month`, and `Custom`.
+  - Automatically updates `selectedPeriodProvider`, instantly updating Best Sellers and Profit trend charts while keeping the dashboard metrics synchronized.
+- **Purchases Screen Layout View Switcher (Grid, Row, Card):**
+  - Added `PurchaseViewMode` (`list`, `grid`, `row`) supported by `purchaseViewModeProvider` with local preference persistence (`shared_preferences`).
+  - Added visual layout toggle in the `SliverAppBar` actions menu and an interactive segmented view mode toggle bar (`_ViewModeToggle`) in the filter bar.
+  - **Grid View (`_PurchaseGridCard`)**: 2-column visual grid with product thumbnail/avatar, stock status pill overlay (`5 left`, `Sold out`), category & color badge, cost and target price, and quick "Sell" button.
+  - **Row View (`_PurchaseRowCard`)**: Dense horizontal scanning layout with thumbnail, color dot, category, cost, quantity, stock badge, and action button.
+  - **Card View (`_PurchaseItemCard`)**: Preserved full-detail card view with date groupings, lot target vs remaining target calculation, and unit cost.
+
+
 
 
 
