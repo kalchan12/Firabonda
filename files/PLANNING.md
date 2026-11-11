@@ -114,6 +114,10 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Dashboard Skeleton Loading**: Implemented `DashboardSkeletonView` mirroring the full dashboard hierarchy with rich shimmer cards.
 - [x] **Minor Splash Screen**: Native Android launch background with brand logo on navy background, plus animated in-app `SplashScreen`.
 - [x] **Sales Screen Layout Architecture & Overflow Elimination**: Modern 3-tier card layout (`_SaleItemCard`) with header (icon, item title/details, compact delete action), middle financial tier (total sale amount, scaled profit figure), and bottom responsive `Wrap` badges (payment method, profit target, credit debt), eliminating all flex overflows on small screens and large fonts.
+- [x] **Night Shift Auto-Close (11:30 PM Cutoff)**: Auto-closes unclosed shifts at 11:30 PM local time with zero cash discrepancy and clean cutoff for new shifts.
+- [x] **Immediate Stock Consistency Across Purchases**: Notifies purchase stream on sales and stock adjustments so purchase list immediately shows accurate remaining quantity.
+- [x] **Toggle-Based Dark/Light Theme**: Clean toggle switch in More and Settings sections, eliminating the unnecessary System option.
+- [x] **Screen Refresh Capabilities**: Pull-to-refresh (`RefreshIndicator`) and AppBar refresh action buttons on Purchases, Sales, and Dashboard screens.
 - [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
 
 ## Later (not in this build)

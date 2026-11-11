@@ -41,26 +41,30 @@ final class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          children: [
-            // Top App Bar with Light/Dark mode toggle
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Fira Bonda',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(dashboardDataProvider);
+            ref.invalidate(currentShiftStreamProvider);
+            ref.invalidate(purchaseOverviewsStreamProvider);
+            ref.invalidate(saleOverviewsStreamProvider);
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppSpacing.screenPadding),
+            children: [
+              // Top App Bar with Light/Dark mode toggle and Refresh button
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Fira Bonda',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                Semantics(
-                  button: true,
-                  label: Theme.of(context).brightness == Brightness.dark
-                      ? 'Switch to Light mode'
-                      : 'Switch to Dark mode',
-                  child: Container(
+                  Container(
                     decoration: BoxDecoration(
                       color: colors.surfaceVariant,
                       borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -68,27 +72,60 @@ final class DashboardScreen extends ConsumerWidget {
                     ),
                     child: IconButton(
                       icon: Icon(
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Icons.light_mode_rounded
-                            : Icons.dark_mode_rounded,
+                        Icons.refresh_rounded,
                         color: colors.textPrimary,
                         size: 20,
                       ),
-                      tooltip: Theme.of(context).brightness == Brightness.dark
-                          ? 'Switch to Light mode'
-                          : 'Switch to Dark mode',
+                      tooltip: 'Refresh dashboard',
                       onPressed: () {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        ref
-                            .read(themeControllerProvider.notifier)
-                            .setMode(isDark ? ThemeMode.light : ThemeMode.dark);
+                        ref.invalidate(dashboardDataProvider);
+                        ref.invalidate(currentShiftStreamProvider);
+                        ref.invalidate(purchaseOverviewsStreamProvider);
+                        ref.invalidate(saleOverviewsStreamProvider);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Dashboard refreshed'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
                       },
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: AppSpacing.s),
+                  Semantics(
+                    button: true,
+                    label: Theme.of(context).brightness == Brightness.dark
+                        ? 'Switch to Light mode'
+                        : 'Switch to Dark mode',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Icons.light_mode_rounded
+                              : Icons.dark_mode_rounded,
+                          color: colors.textPrimary,
+                          size: 20,
+                        ),
+                        tooltip: Theme.of(context).brightness == Brightness.dark
+                            ? 'Switch to Light mode'
+                            : 'Switch to Dark mode',
+                        onPressed: () {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          ref
+                              .read(themeControllerProvider.notifier)
+                              .setMode(isDark ? ThemeMode.light : ThemeMode.dark);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: AppSpacing.l),
 
             // Period Selector
@@ -293,7 +330,8 @@ final class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

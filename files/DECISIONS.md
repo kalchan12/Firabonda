@@ -183,4 +183,21 @@
   - Wrapped debt summary amount in `SellBottomSheet` in `Flexible` + `FittedBox` to prevent overflow when customer unpaid balance is large.
   - Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to `_QuickSaleItemCard` text lines.
 
+## 2026-11-11: Night Shift Auto-Close, Inventory Sync, Toggle Theme & Screen Refresh
+- **Night Shift Auto-Close (11:30 PM Cutoff):**
+  - Implemented automatic expiration and auto-closing for unclosed shifts past 11:30 PM (23:30) local time.
+  - Shifts opened before 23:30 have an exact cutoff of 23:30 of that day; shifts opened at or after 23:30 cutoff at 23:30 the following day.
+  - Unclosed shifts past the cutoff are auto-closed with zero cash difference, reconciled cash records, and clear "Auto-closed at 11:30 PM" notes.
+  - Automatic check integrated into `getCurrentShift()`, `watchCurrentShift()`, and `openShift()`.
+- **Purchase Stock Remaining Consistency:**
+  - Fixed issue where the purchase inventory view still showed the pre-sale quantity after sales were made.
+  - Integrated `_db.notifyUpdates` across `recordSale`, `softDeleteSale`, `restoreSale`, and `adjustStock`.
+  - Added dependency watching on `saleOverviewsStreamProvider` and `stockAdjustmentsStreamProvider` in `purchaseOverviewsStreamProvider` to guarantee instant re-computation.
+- **Toggle-Based Dark/Light Theme:**
+  - Replaced 3-button segmented selector (`Dark`, `Light`, `System`) in `MoreScreen` with a clean `Switch` toggle between Dark and Light mode.
+  - Symmetrically updated `SettingsScreen` with the modern toggle switch.
+- **Screen Refresh Feature:**
+  - Added `RefreshIndicator` pull-to-refresh and explicit AppBar refresh action buttons on `PurchasesScreen`, `SalesScreen`, and `DashboardScreen`.
+
+
 

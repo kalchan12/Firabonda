@@ -69,20 +69,41 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              title: const Text('Purchases'),
-              backgroundColor: colors.background,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Batch purchase',
-                  onPressed: () => context.push('/batch-purchase'),
-                ),
-              ],
-            ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(purchaseOverviewsStreamProvider);
+            ref.invalidate(saleOverviewsStreamProvider);
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                title: const Text('Purchases'),
+                backgroundColor: colors.background,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Refresh purchases',
+                    onPressed: () {
+                      ref.invalidate(purchaseOverviewsStreamProvider);
+                      ref.invalidate(saleOverviewsStreamProvider);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Purchases refreshed'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    tooltip: 'Batch purchase',
+                    onPressed: () => context.push('/batch-purchase'),
+                  ),
+                ],
+              ),
 
             // Search bar & Modern dropdown filters
             SliverToBoxAdapter(
@@ -354,7 +375,8 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

@@ -44,13 +44,36 @@ final class SalesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              title: const Text('Sales'),
-              backgroundColor: colors.background,
-            ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(filteredSalesProvider);
+            ref.invalidate(saleOverviewsStreamProvider);
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                title: const Text('Sales'),
+                backgroundColor: colors.background,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    tooltip: 'Refresh sales',
+                    onPressed: () {
+                      ref.invalidate(filteredSalesProvider);
+                      ref.invalidate(saleOverviewsStreamProvider);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Sales refreshed'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
 
             // Modern Dropdown Filter Bar
             SliverToBoxAdapter(
@@ -422,7 +445,8 @@ final class SalesScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
