@@ -235,6 +235,19 @@
   - **Row View (`_PurchaseRowCard`)**: Dense horizontal scanning layout with thumbnail, color dot, category, cost, quantity, stock badge, and action button.
   - **Card View (`_PurchaseItemCard`)**: Preserved full-detail card view with date groupings, lot target vs remaining target calculation, and unit cost.
 
+## 2026-11-11: Dashboard Usability Improvements & Sales Screen Multi-View Layout (Cards, Grid, Rows)
+- **Dashboard Usability & Visual Separation:**
+  - **Shift Card Toggle:** Replaced the static, bulky shift banner with an interactive toggle card (`_TodayShiftBanner`). In its collapsed state, it presents an ultra-clean row with status indicator, opening time, base drawer cash, and quick history button. Tapping the card expands the full active shift screen/controls (Active Shift vs All Today toggle, earned summary, credit items badge, and open/close shift action buttons).
+  - **Removed Redundant Stepper Filter:** Eliminated the redundant chevron forward/backward navigation stepper bar located below the period selector.
+  - **Unified Main Dashboard Container Backdrop:** Enclosed the dashboard content inside an elevated container canvas featuring a soft gradient backdrop (`surface` to `surfaceVariant`), 20dp rounded corners, and subtle borders matching the top header container for clean visual separation.
+  - **Unified Target Achievement & Payments Card:** Combined the target profit achievement gauge and payment methods into a single unified card (`_UnifiedTargetAndPaymentsCard`). Shows a compact progress bar and target comparison alongside three mini-cards for Cash, Bank, and Credit sales with direct navigation to Debts when credit sales exist.
+- **Sales Screen Multi-View Layout (Cards, Grid, Rows):**
+  - Added `SalesViewMode` (`list`, `grid`, `row`) supported by `salesViewModeProvider` with persistent preference storage via `shared_preferences`.
+  - Added layout view switchers in both the `SliverAppBar` actions menu (`PopupMenuButton<SalesViewMode>`) and directly in the horizontal filter bar (`_SalesViewModeToggle`).
+  - **Card View (`_SaleItemCard`)**: Full detailed card with date headers, profit status badges, payment chips, and delete action.
+  - **Grid View (`_SaleGridCard`)**: 2-column card layout displaying category, color dot, sale time, quantity, total price, profit pill, payment channel chip, and delete button.
+  - **Row View (`_SaleRowCard`)**: Dense horizontal row layout showing category, color, quantity, total price, tabular profit figure, time, and delete action.
+
 
 
 

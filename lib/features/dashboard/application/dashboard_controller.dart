@@ -186,6 +186,8 @@ final class DashboardData {
     this.activeShift,
     this.creditSalesCents = 0,
     this.creditSalesCount = 0,
+    this.cashSalesCents = 0,
+    this.bankSalesCents = 0,
     this.todayShiftMode = TodayShiftMode.activeShift,
     this.isShiftScoped = false,
   });
@@ -202,6 +204,8 @@ final class DashboardData {
   final int costOfSoldCents; // Cost of sold items
   final int creditSalesCents; // Sales paid with credit (unpaid portion)
   final int creditSalesCount; // Count of credit sales
+  final int cashSalesCents; // Sales paid with cash
+  final int bankSalesCents; // Sales paid with bank
   final int salesProfitCents; // Sold - Cost of sold items
   final double profitPercent; // Legacy profit % markup on cost
   final int expensesCents; // Expenses
@@ -316,6 +320,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   var assumedSalesCount = 0;
   var creditSalesCents = 0;
   var creditSalesCount = 0;
+  var cashSalesCents = 0;
+  var bankSalesCents = 0;
 
   for (final s in periodSales) {
     final revenue = s.unitPriceCents * s.quantity;
@@ -325,6 +331,14 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
     earnedCents += revenue;
     costOfSoldCents += totalCost;
     salesProfitCents += s.profitCents;
+
+    // Track payment breakdown
+    final paid = s.actualPaidAmountCents;
+    if (s.accountId == 'acc_bank') {
+      bankSalesCents += paid;
+    } else {
+      cashSalesCents += paid;
+    }
 
     if (s.isCreditSale) {
       creditSalesCents += s.creditAmountCents;
@@ -475,6 +489,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       targetDiffCents: targetDiffCents,
       creditSalesCents: creditSalesCents,
       creditSalesCount: creditSalesCount,
+      cashSalesCents: cashSalesCents,
+      bankSalesCents: bankSalesCents,
       activeShift: currentShift,
       todayShiftMode: todayShiftMode,
       isShiftScoped: isShiftScoped,

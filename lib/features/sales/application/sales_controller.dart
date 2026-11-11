@@ -1,7 +1,46 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
+
+enum SalesViewMode { list, grid, row }
+
+final salesViewModeProvider =
+    NotifierProvider<_SalesViewModeNotifier, SalesViewMode>(
+      _SalesViewModeNotifier.new,
+    );
+
+final class _SalesViewModeNotifier extends Notifier<SalesViewMode> {
+  static const _prefKey = 'sales_view_mode';
+
+  @override
+  SalesViewMode build() {
+    _loadFromPrefs();
+    return SalesViewMode.list;
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_prefKey);
+      if (saved != null) {
+        state = SalesViewMode.values.firstWhere(
+          (m) => m.name == saved,
+          orElse: () => SalesViewMode.list,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> setViewMode(SalesViewMode mode) async {
+    state = mode;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKey, mode.name);
+    } catch (_) {}
+  }
+}
 
 enum SalesDateFilter {
   allTime('All time'),

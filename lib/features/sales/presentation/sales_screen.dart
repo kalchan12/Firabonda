@@ -41,6 +41,7 @@ final class SalesScreen extends ConsumerWidget {
     final salesAsync = ref.watch(filteredSalesProvider);
     final filters = ref.watch(salesFiltersProvider);
     final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final viewMode = ref.watch(salesViewModeProvider);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -59,6 +60,49 @@ final class SalesScreen extends ConsumerWidget {
                 title: const Text('Sales'),
                 backgroundColor: colors.background,
                 actions: [
+                  PopupMenuButton<SalesViewMode>(
+                    icon: Icon(switch (viewMode) {
+                      SalesViewMode.list => Icons.view_agenda_outlined,
+                      SalesViewMode.grid => Icons.grid_view_rounded,
+                      SalesViewMode.row => Icons.table_rows_outlined,
+                    }),
+                    tooltip: 'Change layout view',
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: SalesViewMode.list,
+                        child: Row(
+                          children: [
+                            Icon(Icons.view_agenda_rounded, size: 18),
+                            SizedBox(width: 8),
+                            Text('Cards'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: SalesViewMode.grid,
+                        child: Row(
+                          children: [
+                            Icon(Icons.grid_view_rounded, size: 18),
+                            SizedBox(width: 8),
+                            Text('Grid'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: SalesViewMode.row,
+                        child: Row(
+                          children: [
+                            Icon(Icons.table_rows_rounded, size: 18),
+                            SizedBox(width: 8),
+                            Text('Rows'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (mode) => ref
+                        .read(salesViewModeProvider.notifier)
+                        .setViewMode(mode),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded),
                     tooltip: 'Refresh sales',
@@ -147,6 +191,15 @@ final class SalesScreen extends ConsumerWidget {
                                 .setPaymentFilter(val);
                           }
                         },
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+
+                      // View Mode Toggle (Cards, Grid, Rows)
+                      _SalesViewModeToggle(
+                        currentMode: viewMode,
+                        onChanged: (mode) => ref
+                            .read(salesViewModeProvider.notifier)
+                            .setViewMode(mode),
                       ),
 
                       // Clear filter chip if any active
@@ -396,8 +449,28 @@ final class SalesScreen extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            for (final sale in entry.value)
-                              _SaleItemCard(sale: sale),
+                            if (viewMode == SalesViewMode.list) ...[
+                              for (final sale in entry.value)
+                                _SaleItemCard(sale: sale),
+                            ] else if (viewMode == SalesViewMode.grid) ...[
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 0.85,
+                                ),
+                                itemCount: entry.value.length,
+                                itemBuilder: (context, i) =>
+                                    _SaleGridCard(sale: entry.value[i]),
+                              ),
+                            ] else if (viewMode == SalesViewMode.row) ...[
+                              for (final sale in entry.value)
+                                _SaleRowCard(sale: sale),
+                            ],
                           ],
                         ),
                       ),
@@ -576,50 +649,7 @@ final class _SaleItemCard extends ConsumerWidget {
                     color: colors.textMuted.withValues(alpha: 0.65),
                   ),
                   tooltip: 'Delete sale',
-                  onPressed: () {
-                    showDialog<void>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Delete Sale?'),
-                        content: Text(
-                          'Delete sale of ${sale.quantity}x ${sale.categoryName}? The ${sale.quantity} items will be restored to inventory stock.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              final messenger = ScaffoldMessenger.of(context);
-                              final nav = Navigator.of(ctx);
-                              final repo = ref.read(purchaseRepositoryProvider);
-                              await repo.softDeleteSale(sale.id);
-                              nav.pop();
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
-                                  ),
-                                  action: SnackBarAction(
-                                    label: 'UNDO',
-                                    onPressed: () async {
-                                      await repo.restoreSale(sale.id);
-                                    },
-                                  ),
-                                  duration: const Duration(seconds: 4),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  onPressed: () => _showDeleteSaleDialog(context, ref, sale),
                 ),
               ],
             ),
@@ -832,6 +862,444 @@ final class _ModernSalesDropdown<T> extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
           items: items,
           onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showDeleteSaleDialog(
+  BuildContext context,
+  WidgetRef ref,
+  SaleOverview sale,
+) async {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Delete Sale?'),
+      content: Text(
+        'Delete sale of ${sale.quantity}x ${sale.categoryName}? The ${sale.quantity} items will be restored to inventory stock.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final nav = Navigator.of(ctx);
+            final repo = ref.read(purchaseRepositoryProvider);
+            await repo.softDeleteSale(sale.id);
+            nav.pop();
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Sale removed. Restored ${sale.quantity}x ${sale.categoryName} to stock.',
+                ),
+                action: SnackBarAction(
+                  label: 'UNDO',
+                  onPressed: () async {
+                    await repo.restoreSale(sale.id);
+                  },
+                ),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          },
+          child: const Text(
+            'Delete',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+final class _SaleGridCard extends ConsumerWidget {
+  const _SaleGridCard({required this.sale});
+
+  final SaleOverview sale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final res = sale.profitResult;
+    final isLoss = res.status == ProfitStatus.loss;
+    final isOver = res.status == ProfitStatus.overProfit;
+    final isOnTarget = res.status == ProfitStatus.onTarget;
+    final isUnder = res.status == ProfitStatus.underTarget;
+
+    final (paymentBadgeLabel, paymentBadgeIcon) = switch (sale.accountId) {
+      'acc_bank' => ('Bank', Icons.account_balance_outlined),
+      'acc_telebirr' => ('Telebirr', Icons.phone_android_outlined),
+      _ => ('Cash', Icons.payments_outlined),
+    };
+
+    final profitColor = isLoss
+        ? colors.loss
+        : (isOver || isOnTarget
+            ? colors.profit
+            : (isUnder ? colors.warning : colors.textPrimary));
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.s + 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top Row: Trend icon, Category, and Delete
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isLoss
+                      ? colors.loss.withValues(alpha: 0.12)
+                      : (isOver || isOnTarget
+                          ? colors.profit.withValues(alpha: 0.12)
+                          : colors.surfaceVariant),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isLoss
+                      ? Icons.trending_down_rounded
+                      : Icons.trending_up_rounded,
+                  color: profitColor,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  sale.categoryName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: 16,
+                  color: colors.textMuted.withValues(alpha: 0.65),
+                ),
+                tooltip: 'Delete sale',
+                onPressed: () => _showDeleteSaleDialog(context, ref, sale),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+
+          // Color & time
+          Text(
+            '${sale.colorName} • ${DateFormat.jm().format(sale.date)}',
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+
+          // Quantity & unit price
+          Text(
+            '${sale.quantity} pcs @ ${Money.etb(sale.unitPriceCents)}',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const Spacer(),
+
+          // Total & Profit
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total:',
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
+              Text(
+                Money.etb(sale.totalRevenueCents),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Sora',
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Profit:',
+                style: TextStyle(fontSize: 11, color: colors.textMuted),
+              ),
+              Text(
+                isLoss
+                    ? '-${Money.etb(sale.profitCents.abs())}'
+                    : '+${Money.etb(sale.profitCents)}',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Sora',
+                  color: profitColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Badges: Payment & Credit (if credit)
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(paymentBadgeIcon, size: 10, color: colors.textMuted),
+                    const SizedBox(width: 3),
+                    Text(
+                      paymentBadgeLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (sale.isCreditSale)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: colors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppRadius.chip),
+                  ),
+                  child: Text(
+                    'Credit',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: colors.warning,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _SaleRowCard extends ConsumerWidget {
+  const _SaleRowCard({required this.sale});
+
+  final SaleOverview sale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+    final res = sale.profitResult;
+    final isLoss = res.status == ProfitStatus.loss;
+    final profitColor = isLoss ? colors.loss : colors.profit;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: isLoss
+                    ? colors.loss.withValues(alpha: 0.12)
+                    : colors.profit.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isLoss
+                    ? Icons.trending_down_rounded
+                    : Icons.trending_up_rounded,
+                color: profitColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          sale.categoryName,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${sale.colorName})',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${sale.quantity} pcs @ ${Money.etb(sale.unitPriceCents)} • Total: ${Money.etb(sale.totalRevenueCents)}',
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  isLoss
+                      ? '-${Money.etb(sale.profitCents.abs())}'
+                      : '+${Money.etb(sale.profitCents)}',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: profitColor,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  DateFormat.jm().format(sale.date),
+                  style: TextStyle(fontSize: 10, color: colors.textMuted),
+                ),
+              ],
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              icon: Icon(
+                Icons.delete_outline,
+                size: 16,
+                color: colors.textMuted.withValues(alpha: 0.65),
+              ),
+              tooltip: 'Delete sale',
+              onPressed: () => _showDeleteSaleDialog(context, ref, sale),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SalesViewModeToggle extends StatelessWidget {
+  const _SalesViewModeToggle({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final SalesViewMode currentMode;
+  final ValueChanged<SalesViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      height: 38,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildItem(
+            icon: Icons.view_agenda_rounded,
+            tooltip: 'Card view',
+            mode: SalesViewMode.list,
+            colors: colors,
+          ),
+          _buildItem(
+            icon: Icons.grid_view_rounded,
+            tooltip: 'Grid view',
+            mode: SalesViewMode.grid,
+            colors: colors,
+          ),
+          _buildItem(
+            icon: Icons.table_rows_rounded,
+            tooltip: 'Row view',
+            mode: SalesViewMode.row,
+            colors: colors,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem({
+    required IconData icon,
+    required String tooltip,
+    required SalesViewMode mode,
+    required AppColorsExtension colors,
+  }) {
+    final isSelected = currentMode == mode;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () => onChanged(mode),
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colors.primary.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: isSelected ? colors.primary : colors.textMuted,
+          ),
         ),
       ),
     );

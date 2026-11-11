@@ -53,166 +53,163 @@ final class DashboardScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(AppSpacing.screenPadding),
             children: [
-              // Top App Bar with Light/Dark mode toggle and Refresh button
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Fira Bonda',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+              // Top Dashboard Header & Period Container
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.m),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.6),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(color: colors.border),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colors.surface,
+                      colors.surfaceVariant.withValues(alpha: 0.35),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.refresh_rounded,
-                        color: colors.textPrimary,
-                        size: 20,
-                      ),
-                      tooltip: 'Refresh dashboard',
-                      onPressed: () {
-                        ref.invalidate(dashboardDataProvider);
-                        ref.invalidate(currentShiftStreamProvider);
-                        ref.invalidate(purchaseOverviewsStreamProvider);
-                        ref.invalidate(saleOverviewsStreamProvider);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Dashboard refreshed'),
-                            duration: Duration(seconds: 1),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Fira Bonda',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  Semantics(
-                    button: true,
-                    label: Theme.of(context).brightness == Brightness.dark
-                        ? 'Switch to Light mode'
-                        : 'Switch to Dark mode',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                        border: Border.all(color: colors.border),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Icons.light_mode_rounded
-                              : Icons.dark_mode_rounded,
-                          color: colors.textPrimary,
-                          size: 20,
                         ),
-                        tooltip: Theme.of(context).brightness == Brightness.dark
-                            ? 'Switch to Light mode'
-                            : 'Switch to Dark mode',
-                        onPressed: () {
-                          final isDark =
-                              Theme.of(context).brightness == Brightness.dark;
-                          ref
-                              .read(themeControllerProvider.notifier)
-                              .setMode(isDark ? ThemeMode.light : ThemeMode.dark);
+                        Container(
+                          decoration: BoxDecoration(
+                            color: colors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.refresh_rounded,
+                              color: colors.textPrimary,
+                              size: 20,
+                            ),
+                            tooltip: 'Refresh dashboard',
+                            onPressed: () {
+                              ref.invalidate(dashboardDataProvider);
+                              ref.invalidate(currentShiftStreamProvider);
+                              ref.invalidate(purchaseOverviewsStreamProvider);
+                              ref.invalidate(saleOverviewsStreamProvider);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Dashboard refreshed'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.s),
+                        Semantics(
+                          button: true,
+                          label: Theme.of(context).brightness == Brightness.dark
+                              ? 'Switch to Light mode'
+                              : 'Switch to Dark mode',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: colors.surfaceVariant,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.pill),
+                              border: Border.all(color: colors.border),
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Icons.light_mode_rounded
+                                    : Icons.dark_mode_rounded,
+                                color: colors.textPrimary,
+                                size: 20,
+                              ),
+                              tooltip:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? 'Switch to Light mode'
+                                      : 'Switch to Dark mode',
+                              onPressed: () {
+                                final isDark =
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark;
+                                ref
+                                    .read(themeControllerProvider.notifier)
+                                    .setMode(
+                                      isDark
+                                          ? ThemeMode.light
+                                          : ThemeMode.dark,
+                                    );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    // Period Selector
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SegmentedButton<Period>(
+                        showSelectedIcon: false,
+                        style: const ButtonStyle(
+                          visualDensity: VisualDensity.comfortable,
+                        ),
+                        segments: [
+                          for (final p in Period.values)
+                            ButtonSegment(
+                              value: p,
+                              label: Text(_periodLabel(p)),
+                            ),
+                        ],
+                        selected: {selectedPeriod},
+                        onSelectionChanged: (selection) async {
+                          final chosen = selection.first;
+                          if (chosen == Period.custom) {
+                            final picked = await showDateRangePicker(
+                              context: context,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
+                            );
+                            if (picked != null) {
+                              ref
+                                  .read(customDateRangeProvider.notifier)
+                                  .setRange(picked.start, picked.end);
+                              ref
+                                  .read(selectedPeriodProvider.notifier)
+                                  .setPeriod(Period.custom);
+                            }
+                          } else {
+                            ref
+                                .read(selectedPeriodProvider.notifier)
+                                .setPeriod(chosen);
+                          }
                         },
                       ),
                     ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: AppSpacing.l),
-
-            // Period Selector
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<Period>(
-                showSelectedIcon: false,
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.comfortable,
+                  ],
                 ),
-                segments: [
-                  for (final p in Period.values)
-                    ButtonSegment(value: p, label: Text(_periodLabel(p))),
-                ],
-                selected: {selectedPeriod},
-                onSelectionChanged: (selection) async {
-                  final chosen = selection.first;
-                  if (chosen == Period.custom) {
-                    final picked = await showDateRangePicker(
-                      context: context,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) {
-                      ref
-                          .read(customDateRangeProvider.notifier)
-                          .setRange(picked.start, picked.end);
-                      ref
-                          .read(selectedPeriodProvider.notifier)
-                          .setPeriod(Period.custom);
-                    }
-                  } else {
-                    ref.read(selectedPeriodProvider.notifier).setPeriod(chosen);
-                  }
-                },
               ),
-            ),
-            const SizedBox(height: AppSpacing.s),
-
-            // Stepper bar (prev / label / next)
-            if (selectedPeriod != Period.all &&
-                selectedPeriod != Period.custom) ...[
-              Consumer(
-                builder: (context, ref, _) {
-                  final range = ref.watch(currentPeriodRangeProvider);
-                  final offset = ref.watch(periodOffsetProvider);
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left),
-                        tooltip: 'Previous',
-                        onPressed: () => ref
-                            .read(periodOffsetProvider.notifier)
-                            .stepPrevious(),
-                      ),
-                      Text(
-                        range.label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.chevron_right),
-                        tooltip: 'Next',
-                        onPressed: () =>
-                            ref.read(periodOffsetProvider.notifier).stepNext(),
-                      ),
-                      if (offset != 0)
-                        TextButton(
-                          onPressed: () =>
-                              ref.read(periodOffsetProvider.notifier).reset(),
-                          child: const Text(
-                            'Reset',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.s),
-            ] else ...[
-              const SizedBox(height: AppSpacing.s),
-            ],
+              const SizedBox(height: AppSpacing.m),
 
             if (dashboardAsync.hasValue) ...[
               () {
@@ -223,98 +220,119 @@ final class DashboardScreen extends ConsumerWidget {
                     : _periodLabel(data.period);
 
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Shift status banner (Today tab)
-                    if (data.period == Period.today) ...[
-                      _TodayShiftBanner(
-                        activeShift: data.activeShift,
-                        todayShiftMode: data.todayShiftMode,
-                        isShiftScoped: data.isShiftScoped,
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.m),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.6),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colors.surface,
+                            colors.surfaceVariant.withValues(alpha: 0.35),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: AppSpacing.m),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Shift status banner (Today tab)
+                          if (data.period == Period.today) ...[
+                            _TodayShiftBanner(
+                              activeShift: data.activeShift,
+                              todayShiftMode: data.todayShiftMode,
+                              isShiftScoped: data.isShiftScoped,
+                            ),
+                            const SizedBox(height: AppSpacing.m),
+                          ],
 
-                    // 1. Net Profit Hero Tile with status badge
-                    _NetProfitHeroTile(
-                      periodName: periodName,
-                      netProfitCents: data.realProfitCents,
-                      salesProfitCents: data.salesProfitCents,
-                      expensesCents: data.expensesCents,
-                      lossesCents: data.lossesCents,
-                      isPositive: isProfitPositive,
-                      targetDiffCents: data.targetDiffCents,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // 2. 2x2 Grid: Sold, Cost of sold, Bought, Expenses
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatTile(
-                            label: 'Sold / Earned ($periodName)',
-                            value: Money.etb(data.earnedCents),
-                            tone: StatTone.primary,
+                          // 1. Net Profit Hero Tile with status badge
+                          _NetProfitHeroTile(
+                            periodName: periodName,
+                            netProfitCents: data.realProfitCents,
+                            salesProfitCents: data.salesProfitCents,
+                            expensesCents: data.expensesCents,
+                            lossesCents: data.lossesCents,
+                            isPositive: isProfitPositive,
+                            targetDiffCents: data.targetDiffCents,
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        Expanded(
-                          child: StatTile(
-                            label: 'Cost of sold ($periodName)',
-                            value: Money.etb(data.costOfSoldCents),
-                            tone: StatTone.loss,
+                          const SizedBox(height: AppSpacing.m),
+
+                          // 2. 2x2 Grid: Sold, Cost of sold, Bought, Expenses
+                          Row(
+                            children: [
+                              Expanded(
+                                child: StatTile(
+                                  label: 'Sold / Earned ($periodName)',
+                                  value: Money.etb(data.earnedCents),
+                                  tone: StatTone.primary,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.m),
+                              Expanded(
+                                child: StatTile(
+                                  label: 'Cost of sold ($periodName)',
+                                  value: Money.etb(data.costOfSoldCents),
+                                  tone: StatTone.loss,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatTile(
-                            label: 'Bought / Spent ($periodName)',
-                            value: Money.etb(data.spentCents),
-                            tone: StatTone.loss,
+                          const SizedBox(height: AppSpacing.m),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: StatTile(
+                                  label: 'Bought / Spent ($periodName)',
+                                  value: Money.etb(data.spentCents),
+                                  tone: StatTone.loss,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.m),
+                              Expanded(
+                                child: StatTile(
+                                  label: 'Expenses ($periodName)',
+                                  value: Money.etb(data.expensesCents),
+                                  tone: StatTone.loss,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        Expanded(
-                          child: StatTile(
-                            label: 'Expenses ($periodName)',
-                            value: Money.etb(data.expensesCents),
-                            tone: StatTone.loss,
+                          const SizedBox(height: AppSpacing.m),
+
+                          // 3. Unified Target & Payments Card (Cash, Bank, Credit)
+                          _UnifiedTargetAndPaymentsCard(
+                            data: data,
+                            periodName: periodName,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.m),
+                          const SizedBox(height: AppSpacing.m),
 
-                    // 3. Target profit gauge/bar
-                    _TargetProfitCard(
-                      percentOfTarget: data.percentOfTarget,
-                      totalAssumedProfitCents: data.totalAssumedProfitCents,
-                      actualProfitForAssumedCents:
-                          data.actualProfitForAssumedCents,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
+                          // 5. Sales in period (recent sales)
+                          _SalesPeriodListCard(
+                            periodName: periodName,
+                            sales: data.periodSales,
+                          ),
+                          const SizedBox(height: AppSpacing.m),
 
-                    // 4. Paid with credit card
-                    _PaidWithCreditCard(
-                      periodName: periodName,
-                      creditCents: data.creditSalesCents,
-                      creditCount: data.creditSalesCount,
+                          // 6. Expandable "More details" accordion
+                          _MoreDetailsAccordion(
+                            data: data,
+                            periodName: periodName,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // 5. Sales in period (recent sales)
-                    _SalesPeriodListCard(
-                      periodName: periodName,
-                      sales: data.periodSales,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // 6. Expandable "More details" accordion
-                    _MoreDetailsAccordion(data: data, periodName: periodName),
                     const SizedBox(height: 100), // bottom nav clearance
                   ],
                 );
@@ -498,31 +516,33 @@ final class _NetProfitHeroTile extends StatelessWidget {
   }
 }
 
-/// 3. Target profit gauge/bar
-final class _TargetProfitCard extends StatelessWidget {
-  const _TargetProfitCard({
-    required this.percentOfTarget,
-    required this.totalAssumedProfitCents,
-    required this.actualProfitForAssumedCents,
+/// 3. Unified Target Achievement & Payments Card (Cash, Bank, Credit)
+final class _UnifiedTargetAndPaymentsCard extends StatelessWidget {
+  const _UnifiedTargetAndPaymentsCard({
+    required this.data,
+    required this.periodName,
   });
 
-  final int? percentOfTarget;
-  final int totalAssumedProfitCents;
-  final int actualProfitForAssumedCents;
+  final DashboardData data;
+  final String periodName;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final hasTarget = percentOfTarget != null && totalAssumedProfitCents > 0;
-    final isAhead = (percentOfTarget ?? 0) >= 100;
+    final percent = data.percentOfTarget;
+    final hasTarget = percent != null && data.totalAssumedProfitCents > 0;
+    final isAhead = (percent ?? 0) >= 100;
     final progress = hasTarget
-        ? ((percentOfTarget! / 100).clamp(0.0, 1.5))
+        ? ((percent / 100).clamp(0.0, 1.5))
         : 0.0;
+
+    final hasCredit = data.creditSalesCents > 0;
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Target Achievement Section (Compact)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -539,8 +559,8 @@ final class _TargetProfitCard extends StatelessWidget {
                       child: Text(
                         'Target Achievement',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                              fontWeight: FontWeight.w700,
+                            ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -551,194 +571,121 @@ final class _TargetProfitCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: hasTarget
-                      ? (isAhead
-                            ? colors.profit.withValues(alpha: 0.15)
-                            : colors.warning.withValues(alpha: 0.15))
-                      : colors.surfaceVariant,
+                  color: !hasTarget
+                      ? colors.surfaceVariant
+                      : (isAhead
+                          ? colors.profit.withValues(alpha: 0.15)
+                          : colors.warning.withValues(alpha: 0.15)),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   border: Border.all(
-                    color: hasTarget
-                        ? (isAhead
-                              ? colors.profit.withValues(alpha: 0.3)
-                              : colors.warning.withValues(alpha: 0.3))
-                        : colors.border,
+                    color: !hasTarget
+                        ? colors.border
+                        : (isAhead ? colors.profit : colors.warning),
                   ),
                 ),
                 child: Text(
-                  hasTarget ? '$percentOfTarget% of target' : 'Not set',
+                  !hasTarget
+                      ? 'No target set'
+                      : (isAhead
+                          ? '+$percent% vs target'
+                          : '$percent% of target'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: hasTarget
-                        ? (isAhead ? colors.profit : colors.warning)
-                        : colors.textMuted,
+                    color: !hasTarget
+                        ? colors.textMuted
+                        : (isAhead ? colors.profit : colors.warning),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.m),
           if (hasTarget) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Flexible(
-                  child: Text(
-                    '$percentOfTarget%',
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '${Money.etb(actualProfitForAssumedCents)} / ${Money.etb(totalAssumedProfitCents)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textMuted,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(height: AppSpacing.s),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.pill),
               child: LinearProgressIndicator(
-                value: (progress / 1.5).clamp(0.0, 1.0),
+                value: progress > 1.0 ? 1.0 : progress,
                 minHeight: 8,
                 backgroundColor: colors.surfaceVariant,
-                valueColor: AlwaysStoppedAnimation(
-                  isAhead ? colors.profit : colors.warning,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isAhead ? colors.profit : colors.primary,
                 ),
               ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Target: ${Money.etb(data.totalAssumedProfitCents)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Achieved: ${Money.etb(data.actualProfitForAssumedCents)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isAhead ? colors.profit : colors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ] else ...[
+            const SizedBox(height: AppSpacing.xs),
             Text(
-              'Target: not assumed',
+              'Set target selling prices on purchases to track progress here.',
               style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontSize: 11,
                 color: colors.textMuted,
+                fontStyle: FontStyle.italic,
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Set planned selling prices on batch purchases to track target achievement.',
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
 
-/// 4. Paid with credit card
-final class _PaidWithCreditCard extends StatelessWidget {
-  const _PaidWithCreditCard({
-    required this.periodName,
-    required this.creditCents,
-    required this.creditCount,
-  });
+          const SizedBox(height: AppSpacing.m),
+          Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+          const SizedBox(height: AppSpacing.m),
 
-  final String periodName;
-  final int creditCents;
-  final int creditCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final hasCredit = creditCents > 0;
-
-    return AppCard(
-      onTap: () => context.push('/debts'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          // 2. Unified Payments Section (Cash, Bank, Credit)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: hasCredit
-                      ? colors.warning.withValues(alpha: 0.15)
-                      : colors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: Icon(
-                  Icons.assignment_late_outlined,
-                  color: hasCredit ? colors.warning : colors.textMuted,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Paid with credit ($periodName)',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      hasCredit
-                          ? '$creditCount sale${creditCount > 1 ? 's' : ''} on credit (logged in Debts)'
-                          : 'No credit sales this period',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: hasCredit ? colors.warning : colors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        Money.etb(creditCents),
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: hasCredit ? colors.warning : colors.textPrimary,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+              Row(
+                children: [
+                  Icon(
+                    Icons.payments_outlined,
+                    size: 18,
+                    color: colors.textPrimary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Payments ($periodName)',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                    ),
-                    Row(
+                  ),
+                ],
+              ),
+              if (hasCredit)
+                InkWell(
+                  onTap: () => context.push('/debts'),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'View debts',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: colors.primary,
                           ),
                         ),
@@ -750,21 +697,149 @@ final class _PaidWithCreditCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+
+          // 3 Compact Mini-Cards for Cash, Bank, Credit
+          Row(
+            children: [
+              Expanded(
+                child: _PaymentChannelTile(
+                  icon: Icons.payments_rounded,
+                  label: 'Cash',
+                  amountCents: data.cashSalesCents,
+                  accentColor: colors.profit,
+                  colors: colors,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: _PaymentChannelTile(
+                  icon: Icons.account_balance_rounded,
+                  label: 'Bank',
+                  amountCents: data.bankSalesCents,
+                  accentColor: colors.primary,
+                  colors: colors,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: _PaymentChannelTile(
+                  icon: Icons.assignment_late_outlined,
+                  label: 'Credit',
+                  amountCents: data.creditSalesCents,
+                  accentColor: colors.warning,
+                  colors: colors,
+                  badge: hasCredit ? '${data.creditSalesCount} sale' : null,
+                  onTap: () => context.push('/debts'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Included in profit and sold items',
-            style: TextStyle(
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
-              color: colors.textMuted,
+        ],
+      ),
+    );
+  }
+}
+
+final class _PaymentChannelTile extends StatelessWidget {
+  const _PaymentChannelTile({
+    required this.icon,
+    required this.label,
+    required this.amountCents,
+    required this.accentColor,
+    required this.colors,
+    this.badge,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final int amountCents;
+  final Color accentColor;
+  final AppColorsExtension colors;
+  final String? badge;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: colors.surfaceVariant.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: amountCents > 0
+                  ? accentColor.withValues(alpha: 0.25)
+                  : colors.border.withValues(alpha: 0.5),
             ),
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 14, color: accentColor),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  Money.etb(amountCents),
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color:
+                        amountCents > 0 ? colors.textPrimary : colors.textMuted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1323,7 +1398,7 @@ final class _ProfitChartCard extends StatelessWidget {
   }
 }
 
-final class _TodayShiftBanner extends ConsumerWidget {
+final class _TodayShiftBanner extends ConsumerStatefulWidget {
   const _TodayShiftBanner({
     required this.activeShift,
     this.todayShiftMode = TodayShiftMode.activeShift,
@@ -1335,289 +1410,321 @@ final class _TodayShiftBanner extends ConsumerWidget {
   final bool isShiftScoped;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.appColors;
+  ConsumerState<_TodayShiftBanner> createState() => _TodayShiftBannerState();
+}
 
-    if (activeShift == null) {
-      return AppCard(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.warning.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                  ),
-                  child: Icon(
-                    Icons.access_time_filled_rounded,
-                    color: colors.warning,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'No Active Shift',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        'Open a shift to track sales & cash drawer',
-                        style: TextStyle(fontSize: 12, color: colors.textMuted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.history_rounded),
-                  tooltip: 'Shift history',
-                  onPressed: () => context.push('/shift-history'),
-                ),
-              ],
-            ),
-            if (isShiftScoped || todayShiftMode == TodayShiftMode.allToday) ...[
-              const SizedBox(height: AppSpacing.s),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final shift = widget.activeShift;
+    final hasActiveShift = shift != null;
+    final timeStr =
+        hasActiveShift ? DateFormat('h:mm a').format(shift.openedAt) : null;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Collapsed / Header Bar - Tapping toggles full shift view
+          InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.m,
+                vertical: AppSpacing.s + 2,
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    todayShiftMode == TodayShiftMode.activeShift
-                        ? 'Shift view: Active Shift (0)'
-                        : 'Shift view: All Today',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textMuted,
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: hasActiveShift
+                          ? colors.profit.withValues(alpha: 0.15)
+                          : colors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                    ),
+                    child: Icon(
+                      hasActiveShift
+                          ? Icons.timelapse_rounded
+                          : Icons.access_time_filled_rounded,
+                      color: hasActiveShift ? colors.profit : colors.warning,
+                      size: 18,
                     ),
                   ),
-                  InkWell(
-                    onTap: () =>
-                        ref.read(todayShiftModeProvider.notifier).toggle(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.swap_horiz_rounded,
-                            size: 14,
-                            color: colors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            todayShiftMode == TodayShiftMode.activeShift
-                                ? 'View all today'
-                                : 'View active shift',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: colors.primary,
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              hasActiveShift ? 'Active Shift' : 'No Active Shift',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
                             ),
+                            if (hasActiveShift) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: colors.profit,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          hasActiveShift
+                              ? 'Opened at $timeStr • Base: ${Money.etb(shift.openingCash)}'
+                              : 'Tap to open shift or view shift details',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.textMuted,
                           ),
-                        ],
-                      ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.history_rounded, size: 18),
+                    tooltip: 'Shift history',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => context.push('/shift-history'),
+                  ),
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Icon(
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: colors.textPrimary,
                     ),
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: AppSpacing.m),
-            AppButton(
-              label: 'Open shift',
-              icon: Icons.play_arrow_rounded,
-              onPressed: () => showOpenShiftSheet(context),
             ),
-          ],
-        ),
-      );
-    }
+          ),
 
-    final shift = activeShift!;
-    final timeStr = DateFormat('h:mm a').format(shift.openedAt);
-
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.l),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.profit.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                child: Icon(
-                  Icons.timelapse_rounded,
-                  color: colors.profit,
-                  size: 20,
-                ),
+          // Expanded Content Display
+          if (_isExpanded) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.m,
+                0,
+                AppSpacing.m,
+                AppSpacing.m,
               ),
-              const SizedBox(width: AppSpacing.s),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(
+                    color: colors.border.withValues(alpha: 0.6),
+                    height: 1,
+                  ),
+                  const SizedBox(height: AppSpacing.m),
+                  if (hasActiveShift) ...[
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Active Shift',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                            border: Border.all(color: colors.border),
+                          ),
+                          child: Text(
+                            widget.todayShiftMode == TodayShiftMode.activeShift
+                                ? 'Dashboard: Active Shift'
+                                : 'Dashboard: All Today',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textMuted,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: colors.profit,
-                            shape: BoxShape.circle,
+                        InkWell(
+                          onTap: () => ref
+                              .read(todayShiftModeProvider.notifier)
+                              .toggle(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.swap_horiz_rounded,
+                                  size: 14,
+                                  color: colors.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  widget.todayShiftMode ==
+                                          TodayShiftMode.activeShift
+                                      ? 'Switch to All Today'
+                                      : 'Switch to This Shift',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    Text(
-                      'Opened at $timeStr • Base cash: ${Money.etb(shift.openingCash)}',
-                      style: TextStyle(fontSize: 12, color: colors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.history_rounded),
-                tooltip: 'Shift history',
-                onPressed: () => context.push('/shift-history'),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Text(
-                  todayShiftMode == TodayShiftMode.activeShift
-                      ? 'Dashboard: Active Shift'
-                      : 'Dashboard: All Today',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () =>
-                    ref.read(todayShiftModeProvider.notifier).toggle(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        size: 14,
-                        color: colors.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        todayShiftMode == TodayShiftMode.activeShift
-                            ? 'Switch to All Today'
-                            : 'Switch to This Shift',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: colors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          FutureBuilder<ShiftSummaryData>(
-            future: ref.read(shiftRepositoryProvider).getShiftSummary(shift.id),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              final summary = snapshot.data!;
-              return Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.s),
-                child: Wrap(
-                  spacing: AppSpacing.s,
-                  runSpacing: 4,
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      'Earned this shift: ${Money.etb(summary.totalEarnedCents)}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: colors.primary,
-                      ),
-                    ),
-                    if (summary.hasCreditItems)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.warning.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                        ),
-                        child: Text(
-                          '${summary.creditItems.length} credit items today',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: colors.warning,
+                    FutureBuilder<ShiftSummaryData>(
+                      future: ref
+                          .read(shiftRepositoryProvider)
+                          .getShiftSummary(shift.id),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const SizedBox.shrink();
+                        final summary = snapshot.data!;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.s),
+                          child: Wrap(
+                            spacing: AppSpacing.s,
+                            runSpacing: 4,
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Earned this shift: ${Money.etb(summary.totalEarnedCents)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.primary,
+                                ),
+                              ),
+                              if (summary.hasCreditItems)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        colors.warning.withValues(alpha: 0.15),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.pill),
+                                  ),
+                                  child: Text(
+                                    '${summary.creditItems.length} credit items today',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.warning,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                        ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+                    AppButton(
+                      label: 'Close shift & reconcile',
+                      icon: Icons.check_circle_outline_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => showCloseShiftSheet(context, shift),
+                    ),
+                  ] else ...[
+                    if (widget.isShiftScoped ||
+                        widget.todayShiftMode == TodayShiftMode.allToday) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.todayShiftMode == TodayShiftMode.activeShift
+                                ? 'Shift view: Active Shift (0)'
+                                : 'Shift view: All Today',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => ref
+                                .read(todayShiftModeProvider.notifier)
+                                .toggle(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.swap_horiz_rounded,
+                                    size: 14,
+                                    color: colors.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    widget.todayShiftMode ==
+                                            TodayShiftMode.activeShift
+                                        ? 'View all today'
+                                        : 'View active shift',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: AppSpacing.s),
+                    ],
+                    AppButton(
+                      label: 'Open shift',
+                      icon: Icons.play_arrow_rounded,
+                      onPressed: () => showOpenShiftSheet(context),
+                    ),
                   ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.m),
-          AppButton(
-            label: 'Close shift & reconcile',
-            icon: Icons.check_circle_outline_rounded,
-            variant: AppButtonVariant.secondary,
-            onPressed: () => showCloseShiftSheet(context, shift),
-          ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
