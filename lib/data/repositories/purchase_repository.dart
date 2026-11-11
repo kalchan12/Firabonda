@@ -262,23 +262,26 @@ final class LocalPurchaseRepository implements PurchaseRepository {
               ),
             );
       }
+      _db.notifyUpdates({TableUpdate.onTable(_db.purchases, kind: UpdateKind.update)});
       return saleId;
     });
   }
 
   @override
-  Future<void> softDeleteSale(String saleId) {
+  Future<void> softDeleteSale(String saleId) async {
     final now = Value(DateTime.now().toUtc());
-    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
+    await (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
       SalesCompanion(deletedAt: now),
     );
+    _db.notifyUpdates({TableUpdate.onTable(_db.purchases, kind: UpdateKind.update)});
   }
 
   @override
-  Future<void> restoreSale(String saleId) {
-    return (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
+  Future<void> restoreSale(String saleId) async {
+    await (_db.update(_db.sales)..where((row) => row.id.equals(saleId))).write(
       const SalesCompanion(deletedAt: Value(null)),
     );
+    _db.notifyUpdates({TableUpdate.onTable(_db.purchases, kind: UpdateKind.update)});
   }
 
   @override

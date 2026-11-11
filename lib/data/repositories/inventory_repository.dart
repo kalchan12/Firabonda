@@ -45,6 +45,8 @@ final class LocalInventoryRepository implements InventoryRepository {
           ),
         );
 
+    _db.notifyUpdates({TableUpdate.onTable(_db.purchases, kind: UpdateKind.update)});
+
     return id;
   }
 

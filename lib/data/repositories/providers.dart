@@ -56,6 +56,9 @@ final suppliersStreamProvider = StreamProvider<List<SupplierRow>>((ref) {
 final purchaseOverviewsStreamProvider = StreamProvider<List<PurchaseOverview>>((
   ref,
 ) {
+  // Trigger immediate re-computation whenever sales or stock adjustments change
+  ref.watch(saleOverviewsStreamProvider);
+  ref.watch(stockAdjustmentsStreamProvider);
   return ref.watch(purchaseRepositoryProvider).watchOverviews();
 });
 
