@@ -33,50 +33,62 @@ final class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.s),
           AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Theme mode',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.m),
                 Row(
                   children: [
-                    Expanded(
-                      child: SegmentedButton<ThemeMode>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(
-                            value: ThemeMode.dark,
-                            icon: Icon(Icons.dark_mode_outlined, size: 18),
-                            label: Text('Dark'),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.light,
-                            icon: Icon(Icons.light_mode_outlined, size: 18),
-                            label: Text('Light'),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.system,
-                            icon: Icon(
-                              Icons.brightness_auto_outlined,
-                              size: 18,
-                            ),
-                            label: Text('System'),
-                          ),
-                        ],
-                        selected: {themeMode},
-                        onSelectionChanged: (selection) => ref
-                            .read(themeControllerProvider.notifier)
-                            .setMode(selection.first),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: themeMode == ThemeMode.dark
+                            ? colors.primary.withValues(alpha: 0.15)
+                            : colors.warning.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        themeMode == ThemeMode.dark
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                        color: themeMode == ThemeMode.dark
+                            ? colors.primary
+                            : colors.warning,
+                        size: 20,
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.m),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Theme mode',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          themeMode == ThemeMode.dark
+                              ? 'Dark theme active'
+                              : 'Light theme active',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
+                ),
+                Switch(
+                  value: themeMode == ThemeMode.dark,
+                  activeThumbColor: colors.primary,
+                  onChanged: (isDark) => ref
+                      .read(themeControllerProvider.notifier)
+                      .setMode(isDark ? ThemeMode.dark : ThemeMode.light),
                 ),
               ],
             ),

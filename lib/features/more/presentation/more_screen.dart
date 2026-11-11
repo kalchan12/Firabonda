@@ -26,9 +26,10 @@ final class MoreScreen extends ConsumerWidget {
             Text('More', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: AppSpacing.l),
             _ThemeSection(
-              selected: themeMode,
-              onSelect: (mode) =>
-                  ref.read(themeControllerProvider.notifier).setMode(mode),
+              isDark: themeMode == ThemeMode.dark,
+              onToggle: (enableDark) => ref
+                  .read(themeControllerProvider.notifier)
+                  .setMode(enableDark ? ThemeMode.dark : ThemeMode.light),
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
@@ -109,46 +110,64 @@ final class MoreScreen extends ConsumerWidget {
 }
 
 final class _ThemeSection extends StatelessWidget {
-  const _ThemeSection({required this.selected, required this.onSelect});
+  const _ThemeSection({required this.isDark, required this.onToggle});
 
-  final ThemeMode selected;
-  final ValueChanged<ThemeMode> onSelect;
+  final bool isDark;
+  final ValueChanged<bool> onToggle;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Theme', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.m),
           Row(
             children: [
-              Expanded(
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      icon: Icon(Icons.dark_mode_outlined, size: 18),
-                      label: Text('Dark'),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      icon: Icon(Icons.light_mode_outlined, size: 18),
-                      label: Text('Light'),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      icon: Icon(Icons.brightness_auto_outlined, size: 18),
-                      label: Text('System'),
-                    ),
-                  ],
-                  selected: {selected},
-                  onSelectionChanged: (selection) => onSelect(selection.first),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? colors.primary.withValues(alpha: 0.15)
+                      : colors.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  color: isDark ? colors.primary : colors.warning,
+                  size: 20,
                 ),
               ),
+              const SizedBox(width: AppSpacing.m),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dark mode',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isDark ? 'Dark theme active' : 'Light theme active',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
             ],
+          ),
+          Switch(
+            value: isDark,
+            activeThumbColor: colors.primary,
+            onChanged: onToggle,
           ),
         ],
       ),
