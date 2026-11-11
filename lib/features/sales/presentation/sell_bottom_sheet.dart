@@ -441,6 +441,9 @@ final class _SellBottomSheetState extends ConsumerState<SellBottomSheet> {
                           ),
                           suffixText: '/ pc',
                           hintText: '0.00',
+                          helperText: _quantity > 1
+                              ? 'Total: ${hasPrice ? Money.etb(revenue) : "ETB 0.00"} for $_quantity pcs'
+                              : null,
                           filled: true,
                           fillColor: colors.surfaceVariant.withValues(
                             alpha: 0.5,

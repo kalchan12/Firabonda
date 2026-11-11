@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Skeleton shimmer placeholder for loading states,
-/// per `files/DESIGN.md` section 10.
+/// per `files/DESIGN.md` section 10. Softly blends with background color.
 final class SkeletonLoader extends StatefulWidget {
-  const SkeletonLoader({super.key, required this.child});
+  const SkeletonLoader({super.key, required this.child, this.borderRadius});
 
   final Widget child;
+  final BorderRadius? borderRadius;
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -49,15 +50,13 @@ final class _SkeletonLoaderState extends State<SkeletonLoader>
       animation: _animation,
       builder: (context, child) {
         final t = _animation.value;
-        final color = Color.lerp(
-          colors.surfaceVariant,
-          colors.surfaceVariant.withValues(alpha: t),
-          t,
-        )!;
+        final baseColor = colors.surfaceVariant.withValues(alpha: 0.35);
+        final highlightColor = colors.surfaceVariant.withValues(alpha: 0.75);
+        final color = Color.lerp(baseColor, highlightColor, t)!;
         return DecoratedBox(
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: widget.borderRadius ?? BorderRadius.circular(10),
           ),
           child: child,
         );

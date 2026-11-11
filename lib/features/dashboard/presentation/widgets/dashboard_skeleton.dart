@@ -309,7 +309,7 @@ final class _SkeletonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: child,
     );
@@ -320,7 +320,7 @@ final class _SkeletonBox extends StatelessWidget {
   const _SkeletonBox({
     required this.width,
     required this.height,
-    this.radius = 4,
+    this.radius = 6,
   });
 
   final double width;
@@ -330,13 +330,10 @@ final class _SkeletonBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SkeletonLoader(
-      child: Container(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(
         width: width,
         height: height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(radius),
-        ),
       ),
     );
   }

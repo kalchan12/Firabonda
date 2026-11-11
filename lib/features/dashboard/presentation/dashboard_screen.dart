@@ -214,10 +214,13 @@ final class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.s),
             ],
 
-            dashboardAsync.when(
-              data: (data) {
+            if (dashboardAsync.hasValue) ...[
+              () {
+                final data = dashboardAsync.value!;
                 final isProfitPositive = data.realProfitCents >= 0;
-                final periodName = _periodLabel(data.period);
+                final periodName = data.isShiftScoped
+                    ? 'Active shift'
+                    : _periodLabel(data.period);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,18 +318,20 @@ final class DashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 100), // bottom nav clearance
                   ],
                 );
-              },
-              loading: () => const DashboardSkeletonView(),
-              error: (err, stack) => Center(
+              }(),
+            ] else if (dashboardAsync.isLoading) ...[
+              const DashboardSkeletonView(),
+            ] else if (dashboardAsync.hasError) ...[
+              Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.l),
                   child: Text(
-                    'Error loading dashboard: $err',
+                    'Error loading dashboard: ${dashboardAsync.error}',
                     style: TextStyle(color: colors.loss),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

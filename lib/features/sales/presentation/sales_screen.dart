@@ -18,11 +18,12 @@ final class SalesScreen extends ConsumerWidget {
   String _formatDateGroup(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final itemDate = DateTime(date.year, date.month, date.day);
+    final local = date.toLocal();
+    final itemDate = DateTime(local.year, local.month, local.day);
 
     if (itemDate == today) return 'Today';
     if (itemDate == today.subtract(const Duration(days: 1))) return 'Yesterday';
-    return DateFormat.yMMMd().format(date);
+    return DateFormat.yMMMd().format(local);
   }
 
   Map<String, List<SaleOverview>> _groupByDate(List<SaleOverview> list) {
@@ -164,8 +165,9 @@ final class SalesScreen extends ConsumerWidget {
               ),
             ),
 
-            salesAsync.when(
-              data: (sales) {
+            if (salesAsync.hasValue) ...[
+              () {
+                final sales = salesAsync.value!;
                 if (sales.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -403,8 +405,9 @@ final class SalesScreen extends ConsumerWidget {
                     const SizedBox(height: 100), // padding for floating nav
                   ]),
                 );
-              },
-              loading: () => SliverToBoxAdapter(
+              }(),
+            ] else if (salesAsync.isLoading) ...[
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.screenPadding),
                   child: Column(
@@ -432,16 +435,17 @@ final class SalesScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              error: (err, stack) => SliverFillRemaining(
+            ] else if (salesAsync.hasError) ...[
+              SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
                   child: Text(
-                    'Error loading sales: $err',
+                    'Error loading sales: ${salesAsync.error}',
                     style: TextStyle(color: colors.loss),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

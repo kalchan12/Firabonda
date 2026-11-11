@@ -199,5 +199,19 @@
 - **Screen Refresh Feature:**
   - Added `RefreshIndicator` pull-to-refresh and explicit AppBar refresh action buttons on `PurchasesScreen`, `SalesScreen`, and `DashboardScreen`.
 
+## 2026-11-11: Skeleton Styling & Cache Persistence, Math Consistency & Purchase Target Layout
+- **Skeleton Redesign & Unnecessary Reload Elimination:**
+  - Replaced jarring opaque white boxes (`Colors.white`) in `_SkeletonBox` with soft `colors.surfaceVariant.withValues(alpha: 0.35)` to `0.75` shimmer.
+  - Softened borders and card backgrounds to blend seamlessly into `colors.background` in both dark and light modes.
+  - Changed `DashboardScreen`, `PurchasesScreen`, and `SalesScreen` to preserve existing cached data (`if (async.hasValue)`) during reloads/refreshes, eliminating jarring skeleton screen flashes when refreshing or updating data. Skeletons only render on initial blank loads.
+- **Math & Calculation Verification:**
+  - Verified and locked the profit formulas: `targetProfit = (assumedSellingPrice - unitCost) * quantity` and `actualProfit = (actualSellingPrice - unitCost) * quantity`.
+  - In `dashboard_controller.dart`: Changed cost lookup in sales loop to strictly use `s.costAtSale` (frozen cost at sale) instead of fallible memory map lookups, ensuring mathematical integrity across `earnedCents`, `costOfSoldCents`, and `salesProfitCents`.
+  - Fixed StatTile labels to explicitly state `(Active shift)` vs `(Today)` so the merchant knows exactly which shift/period sales are being aggregated.
+  - Added dynamic lot target vs remaining target display on `PurchasesScreen`: when items have been sold (`purchase.stockLeft < purchase.quantity`), it displays both the remaining stock target (`Target (remaining X): ...`) and the total lot target (`Lot total target: ...`), eliminating ambiguity between original purchase batch target and remaining inventory target.
+  - In `AddPurchaseScreen`: Re-ordered form fields so `Planned selling price` appears directly next to `Unit cost`, above the live financial preview card, with clear calculation breakdown.
+  - Added real-time total revenue helper in `SellBottomSheet` price field (`Total: ETB X for Y pcs`) to prevent accidental unit-vs-total entry confusion.
+
+
 
 

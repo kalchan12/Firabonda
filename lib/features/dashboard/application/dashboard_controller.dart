@@ -283,9 +283,6 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       hasAnyShifts &&
       todayShiftMode == TodayShiftMode.activeShift;
 
-  // Map purchase IDs to unitCost for fallback if costAtSale is not yet set
-  final purchaseCostMap = {for (final p in allPurchases) p.id: p.unitCostCents};
-
   // 1. Bought (spent in period: purchases dated in this period)
   var spentCents = 0;
   for (final p in allPurchases) {
@@ -322,7 +319,7 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
 
   for (final s in periodSales) {
     final revenue = s.unitPriceCents * s.quantity;
-    final costPerPiece = purchaseCostMap[s.purchaseId] ?? 0;
+    final costPerPiece = s.costAtSale;
     final totalCost = costPerPiece * s.quantity;
 
     earnedCents += revenue;
@@ -334,13 +331,14 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       creditSalesCount++;
     }
 
-    if (s.assumedPriceAtSaleCents != null &&
-        s.assumedPriceAtSaleCents! > s.costAtSale) {
-      assumedSalesCount++;
+    if (s.assumedPriceAtSaleCents != null) {
       final assumedProfit =
           (s.assumedPriceAtSaleCents! - s.costAtSale) * s.quantity;
-      totalAssumedProfitCents += assumedProfit;
-      actualProfitForAssumedCents += s.profitCents;
+      if (assumedProfit > 0) {
+        assumedSalesCount++;
+        totalAssumedProfitCents += assumedProfit;
+        actualProfitForAssumedCents += s.profitCents;
+      }
     }
   }
 

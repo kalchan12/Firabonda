@@ -523,6 +523,15 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
               ),
             const SizedBox(height: AppSpacing.m),
 
+            // Optional planned selling price
+            MoneyField(
+              label: 'Planned selling price (optional)',
+              controller: _sellingPrice,
+              quantity: _quantity,
+              helperText: 'Prefills price when marking items as sold',
+            ),
+            const SizedBox(height: AppSpacing.m),
+
             // Computed total cost preview
             AppCard(
               child: Column(
@@ -629,15 +638,6 @@ final class _AddPurchaseScreenState extends ConsumerState<AddPurchaseScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.l),
-
-            // Optional planned selling price
-            MoneyField(
-              label: 'Planned selling price (optional)',
-              controller: _sellingPrice,
-              quantity: _quantity,
-              helperText: 'Prefills price when marking items as sold',
-            ),
-            const SizedBox(height: AppSpacing.m),
 
             // Optional Supplier
             Text('Supplier', style: Theme.of(context).textTheme.titleMedium),

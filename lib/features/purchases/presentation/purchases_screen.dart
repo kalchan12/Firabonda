@@ -35,11 +35,12 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
   String _formatDateGroup(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final itemDate = DateTime(date.year, date.month, date.day);
+    final local = date.toLocal();
+    final itemDate = DateTime(local.year, local.month, local.day);
 
     if (itemDate == today) return 'Today';
     if (itemDate == today.subtract(const Duration(days: 1))) return 'Yesterday';
-    return DateFormat.yMMMd().format(date);
+    return DateFormat.yMMMd().format(local);
   }
 
   Map<String, List<PurchaseOverview>> _groupByDate(
@@ -256,8 +257,9 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
             ),
 
             // Content: loading, empty or grouped list
-            purchasesAsync.when(
-              data: (purchases) {
+            if (purchasesAsync.hasValue) ...[
+              () {
+                final purchases = purchasesAsync.value!;
                 if (purchases.isEmpty) {
                   final isFiltering =
                       filters.searchQuery.isNotEmpty ||
@@ -330,8 +332,9 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                     );
                   }, childCount: grouped.length),
                 );
-              },
-              loading: () => SliverToBoxAdapter(
+              }(),
+            ] else if (purchasesAsync.isLoading) ...[
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.screenPadding),
                   child: Column(
@@ -359,16 +362,17 @@ final class _PurchasesScreenState extends ConsumerState<PurchasesScreen> {
                   ),
                 ),
               ),
-              error: (err, stack) => SliverFillRemaining(
+            ] else if (purchasesAsync.hasError) ...[
+              SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
                   child: Text(
-                    'Error loading purchases: $err',
+                    'Error loading purchases: ${purchasesAsync.error}',
                     style: TextStyle(color: colors.loss),
                   ),
                 ),
               ),
-            ),
+            ],
             const SliverToBoxAdapter(
               child: SizedBox(height: 100), // padding for floating nav
             ),
@@ -654,38 +658,76 @@ final class _PurchaseItemCard extends StatelessWidget {
                       ),
                       if (purchase.sellingPriceCents != null) ...[
                         const SizedBox(height: 2),
-                        Text(
-                          purchase.quantity > 1
-                              ? 'Target: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${Money.etb(purchase.sellingPriceCents!)} each)'
-                              : 'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: colors.primary,
+                        if (purchase.stockLeft < purchase.quantity &&
+                            purchase.stockLeft > 0) ...[
+                          Text(
+                            'Target (${purchase.stockLeft} left): ${Money.etb(purchase.sellingPriceCents! * purchase.stockLeft)} (${Money.etb(purchase.sellingPriceCents!)} each)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colors.primary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
+                          const SizedBox(height: 2),
+                          () {
+                            final remainingProfit =
+                                (purchase.sellingPriceCents! -
+                                        purchase.unitCostCents) *
+                                    purchase.stockLeft;
+                            final isProfit = remainingProfit >= 0;
+                            return Text(
+                              isProfit
+                                  ? 'Exp. profit (${purchase.stockLeft} left): +${Money.etb(remainingProfit)}'
+                                  : 'Exp. loss (${purchase.stockLeft} left): -${Money.etb(remainingProfit.abs())}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isProfit ? colors.profit : colors.loss,
+                              ),
+                            );
+                          }(),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Lot total target: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${purchase.quantity} pcs)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            purchase.quantity > 1
+                                ? 'Target: ${Money.etb(purchase.sellingPriceCents! * purchase.quantity)} (${Money.etb(purchase.sellingPriceCents!)} each)'
+                                : 'Target sell: ${Money.etb(purchase.sellingPriceCents!)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
                           () {
                             final totalTargetProfit =
                                 (purchase.sellingPriceCents! -
-                                    purchase.unitCostCents) *
-                                purchase.quantity;
+                                        purchase.unitCostCents) *
+                                    purchase.quantity;
                             final isProfit = totalTargetProfit >= 0;
-                            return isProfit
-                                ? 'Exp. profit: +${Money.etb(totalTargetProfit)}${purchase.quantity > 1 ? ' (+${Money.etb(purchase.sellingPriceCents! - purchase.unitCostCents)} each)' : ''}'
-                                : 'Exp. loss: -${Money.etb(totalTargetProfit.abs())}';
+                            return Text(
+                              isProfit
+                                  ? 'Exp. profit: +${Money.etb(totalTargetProfit)}${purchase.quantity > 1 ? ' (+${Money.etb(purchase.sellingPriceCents! - purchase.unitCostCents)} each)' : ''}'
+                                  : 'Exp. loss: -${Money.etb(totalTargetProfit.abs())}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color:
+                                    (purchase.sellingPriceCents! >=
+                                            purchase.unitCostCents)
+                                        ? colors.profit
+                                        : colors.loss,
+                              ),
+                            );
                           }(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                (purchase.sellingPriceCents! >=
-                                    purchase.unitCostCents)
-                                ? colors.profit
-                                : colors.loss,
-                          ),
-                        ),
+                        ],
                       ],
                     ],
                   ),
