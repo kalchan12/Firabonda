@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:firabonda/data/database/app_database.dart';
 import 'package:firabonda/data/models/shop_models.dart';
@@ -141,5 +142,59 @@ void main() {
         expect(recons.first.difference, -2000);
       },
     );
+
+    test('autoCloseShift closes expired shift at 11:30 PM cutoff with zero diff', () async {
+      // 1. Shift opened at 9:00 AM
+      final openedAt = DateTime(2026, 11, 10, 9, 0).toUtc();
+      final id = 'shift_auto_test_1';
+      await db.into(db.shifts).insert(
+        ShiftsCompanion.insert(
+          id: id,
+          openedAt: openedAt,
+          openingCash: const Value(30000), // 300 ETB
+          createdAt: openedAt,
+          updatedAt: openedAt,
+        ),
+      );
+
+      // Verify cutoff is 11:30 PM (23:30) of same day
+      final cutoff = shiftRepo.computeShiftCutoff(openedAt);
+      expect(cutoff.hour, 23);
+      expect(cutoff.minute, 30);
+      expect(cutoff.day, openedAt.toLocal().day);
+
+      // Before 11:30 PM (e.g. 10:00 PM), shift should NOT auto-close
+      final checkBefore = DateTime(2026, 11, 10, 22, 0);
+      await shiftRepo.checkAndAutoCloseExpiredShifts(checkBefore);
+      final stillOpen = await db.select(db.shifts).get();
+      expect(stillOpen.first.closedAt, isNull);
+
+      // After 11:30 PM (e.g. 11:35 PM), shift should be auto-closed!
+      final checkAfter = DateTime(2026, 11, 10, 23, 35);
+      await shiftRepo.checkAndAutoCloseExpiredShifts(checkAfter);
+
+      final closed = await db.select(db.shifts).get();
+      expect(closed.first.closedAt, isNotNull);
+      expect(closed.first.closedBy, 'System (Auto-close)');
+      expect(closed.first.cashDifference, 0);
+      expect(closed.first.notes, contains('11:30 PM'));
+
+      // Check reconciliation created
+      final recons = await db.select(db.reconciliations).get();
+      expect(recons.length, 1);
+      expect(recons.first.difference, 0);
+      expect(recons.first.expected, 30000);
+    });
+
+    test('shift opened after 11:30 PM has cutoff on the next day 11:30 PM', () async {
+      // Opened at 11:45 PM (23:45)
+      final openedAt = DateTime(2026, 11, 10, 23, 45).toUtc();
+      final cutoff = shiftRepo.computeShiftCutoff(openedAt);
+
+      expect(cutoff.hour, 23);
+      expect(cutoff.minute, 30);
+      // Next day!
+      expect(cutoff.day, openedAt.toLocal().day + 1);
+    });
   });
 }

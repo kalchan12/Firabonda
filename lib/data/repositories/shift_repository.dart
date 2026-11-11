@@ -18,6 +18,13 @@ abstract interface class ShiftRepository {
     String? notes,
     String? closedBy,
   });
+  Future<void> autoCloseShift(
+    String shiftId, {
+    required DateTime cutoff,
+    String reason = 'Auto-closed at 11:30 PM (missed close)',
+  });
+  Future<void> checkAndAutoCloseExpiredShifts([DateTime? now]);
+  DateTime computeShiftCutoff(DateTime openedAtUtc);
   Stream<List<ShiftOverview>> watchShiftHistory();
 }
 
@@ -32,11 +39,22 @@ final class LocalShiftRepository implements ShiftRepository {
           ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
           ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
           ..limit(1))
-        .watchSingleOrNull();
+        .watchSingleOrNull()
+        .asyncMap((shift) async {
+          if (shift != null) {
+            final cutoff = computeShiftCutoff(shift.openedAt);
+            if (DateTime.now().isAfter(cutoff)) {
+              await autoCloseShift(shift.id, cutoff: cutoff);
+              return null;
+            }
+          }
+          return shift;
+        });
   }
 
   @override
-  Future<ShiftRow?> getCurrentShift() {
+  Future<ShiftRow?> getCurrentShift() async {
+    await checkAndAutoCloseExpiredShifts();
     return (_db.select(_db.shifts)
           ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
           ..orderBy([(s) => OrderingTerm.desc(s.openedAt)])
@@ -55,6 +73,7 @@ final class LocalShiftRepository implements ShiftRepository {
 
   @override
   Future<String> openShift({int openingCashCents = 0, String? openedBy}) async {
+    await checkAndAutoCloseExpiredShifts();
     final existing = await getCurrentShift();
     if (existing != null) {
       return existing.id;
@@ -343,6 +362,90 @@ final class LocalShiftRepository implements ShiftRepository {
             );
       }
     });
+  }
+
+  @override
+  DateTime computeShiftCutoff(DateTime openedAtUtc) {
+    final openedLocal = openedAtUtc.toLocal();
+    DateTime cutoff;
+    if (openedLocal.hour < 23 ||
+        (openedLocal.hour == 23 && openedLocal.minute < 30)) {
+      cutoff = DateTime(
+        openedLocal.year,
+        openedLocal.month,
+        openedLocal.day,
+        23,
+        30,
+      );
+    } else {
+      final nextDay = openedLocal.add(const Duration(days: 1));
+      cutoff = DateTime(
+        nextDay.year,
+        nextDay.month,
+        nextDay.day,
+        23,
+        30,
+      );
+    }
+    return cutoff;
+  }
+
+  @override
+  Future<void> autoCloseShift(
+    String shiftId, {
+    required DateTime cutoff,
+    String reason = 'Auto-closed at 11:30 PM (missed close)',
+  }) async {
+    return _db.transaction(() async {
+      final summary = await getShiftSummary(shiftId);
+      final cutoffUtc = cutoff.toUtc();
+
+      await (_db.update(_db.shifts)..where((s) => s.id.equals(shiftId))).write(
+        ShiftsCompanion(
+          closedAt: Value(cutoffUtc),
+          expectedCash: Value(summary.expectedCashCents),
+          actualCash: Value(summary.expectedCashCents),
+          cashDifference: const Value(0),
+          notes: Value(reason),
+          closedBy: const Value('System (Auto-close)'),
+          updatedAt: Value(cutoffUtc),
+        ),
+      );
+
+      final reconId = newUuid();
+      await _db
+          .into(_db.reconciliations)
+          .insert(
+            ReconciliationsCompanion.insert(
+              id: reconId,
+              type: 'cash_account',
+              accountId: const Value('acc_cash'),
+              expected: summary.expectedCashCents,
+              counted: summary.expectedCashCents,
+              difference: 0,
+              date: cutoffUtc,
+              note: Value(reason),
+              createdAt: cutoffUtc,
+              updatedAt: cutoffUtc,
+            ),
+          );
+    });
+  }
+
+  @override
+  Future<void> checkAndAutoCloseExpiredShifts([DateTime? now]) async {
+    final unclosed = await (_db.select(_db.shifts)
+          ..where((s) => s.closedAt.isNull() & s.deletedAt.isNull())
+          ..orderBy([(s) => OrderingTerm.asc(s.openedAt)]))
+        .get();
+
+    final checkTime = now ?? DateTime.now();
+    for (final shift in unclosed) {
+      final cutoff = computeShiftCutoff(shift.openedAt);
+      if (checkTime.isAfter(cutoff)) {
+        await autoCloseShift(shift.id, cutoff: cutoff);
+      }
+    }
   }
 
   @override
