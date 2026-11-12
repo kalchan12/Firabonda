@@ -258,6 +258,29 @@
   - Migrated router creation to a persistent Riverpod `appRouterProvider` (`Provider<GoRouter>`).
   - `App.build()` now watches `appRouterProvider`, maintaining the exact same router instance across theme changes so switching between light and dark mode is instantaneous with no navigation reset or splash screen re-trigger.
 
+## 2026-11-12: Shift Banner Overflow Prevention & Closed Shift Data Visibility
+- **Shift Banner Overflow Prevention (`_TodayShiftBanner`):**
+  - Replaced rigid horizontal `Row` arrangements inside the active and closed shift states with responsive `Wrap` layouts (`WrapAlignment.spaceBetween`, `crossAxisAlignment: WrapCrossAlignment.center`, `spacing: AppSpacing.s`, `runSpacing: 6`).
+  - Wrapped title and status indicators in `Flexible` and added `borderRadius: BorderRadius.circular(AppRadius.pill)` to the tap targets, completely eliminating horizontal flex overflow on narrow viewports (320-360dp) and accessibility text scaling (1.4-1.6x).
+- **Preserve Dashboard Data Visibility Upon Closing Shift:**
+  - When closing a shift in `_CloseShiftSheetState`, automatically transitioned `todayShiftModeProvider` to `TodayShiftMode.allToday`. Previously, closing a shift caused `isShiftScoped` to evaluate with `currentShift == null`, blanking out the merchant's view of sales made during that closed shift until they manually toggled the mode.
+  - Symmetrically, opening a shift in `_OpenShiftSheetState` automatically sets `TodayShiftMode.activeShift` to focus operational metrics on the new shift.
+
+## 2026-11-12: Splash Screen Modernization & Screen Luminosity Fix
+- **Elimination of Screen Dimness:**
+  - Wrapped the root splash view in `AnnotatedRegion<SystemUiOverlayStyle>` configuring `statusBarColor: Colors.transparent`, `systemNavigationBarColor: Colors.transparent`, and `Brightness.light` for system icons. This eliminates Android system navigation bar/status bar scrim darkening.
+  - Upgraded base background token from murky pitch-dark (`#070B14`) to the design system's midnight navy (`#0B1020`).
+  - Replaced low-opacity dark blue/teal wash with a vibrant, high-luminosity radial gradient (`#3D6BFF` at 0.35 alpha and `#1E3A8A` at 0.18 alpha).
+  - Raised typographic contrast: subtitle opacity increased from 0.65 to 0.85, status message set to crisp `#CBD5E1`, and "Tap anywhere to start" hint set to 0.55 opacity.
+- **Complete Removal of Murky Green Tint & Gradients:**
+  - Removed all green and emerald accents (`#0D9488`, `#10B981`, `#3EE08F`, `#34D399`) from the splash screen in favor of the app's electric-blue, azure, and cyan identity.
+  - Replaced green background decorative orb with a soft indigo orb (`#6366F1` at 0.07 alpha).
+  - Swapped breathing pulse halo behind the logo to electric-blue and azure (`#3D6BFF` and `#60A5FA`).
+  - Redesigned store category badge into a sleek electric-blue translucent pill with `#93C5FD` text and icon.
+  - Replaced green gradient and green glow on the progress bar with a luminous electric-blue to sky-cyan gradient (`#2563EB` → `#3D6BFF` → `#38BDF8`) with blue bloom.
+  - Enhanced emblem container into a glassmorphic dark squircle with crisp 22% white border and electric-blue drop shadows.
+
+
 
 
 

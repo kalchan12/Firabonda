@@ -118,6 +118,17 @@ Update the checkboxes and "Status" at the end of every phase. Work on **one phas
 - [x] **Immediate Stock Consistency Across Purchases**: Notifies purchase stream on sales and stock adjustments so purchase list immediately shows accurate remaining quantity.
 - [x] **Toggle-Based Dark/Light Theme**: Clean toggle switch in More and Settings sections, eliminating the unnecessary System option.
 - [x] **Screen Refresh Capabilities**: Pull-to-refresh (`RefreshIndicator`) and AppBar refresh action buttons on Purchases, Sales, and Dashboard screens.
+- [x] **Skeleton Shimmer & Cache Persistence**: Softened skeleton shimmer and eliminated jarring screen reloads when data is already cached in memory.
+- [x] **Calculation Consistency & Lot vs Remaining Targets**: Enforced `s.costAtSale` frozen cost lookup in dashboard aggregates, and separated remaining stock target from total lot target in purchase cards.
+- [x] **Extended Animated Splash Screen**: 2.8s extended display duration, live progress indicator with dynamic offline status copy, and instant tap-to-skip.
+- [x] **Purchases Screen Multi-View Layout**: Switch between Card, Grid, and Row views with persistent local preference storage.
+- [x] **Sales Screen Multi-View Layout**: Switch between Card, Grid, and Row views with persistent local preference storage.
+- [x] **Analytics Accordion Period Filter**: Added modern period dropdown directly in More Analytics & Stock accordion, synced with active period.
+- [x] **Dashboard Usability Overhaul**: Collapsible shift toggle card (`_TodayShiftBanner`), removed redundant stepper, unified backdrop container canvas, and unified target & payment card.
+- [x] **Open Shift Keyboard Handling**: Absorbed keyboard insets in scrollable view with zero RenderFlex overflow on small viewports and large text scales.
+- [x] **Theme Switch Router Fix**: Wrapped router in Riverpod `appRouterProvider` to eliminate unwanted splash re-triggers when toggling dark/light theme.
+- [x] **Shift Banner Wrap & Mode Transitions**: Wrapped banner elements in responsive Wrap and auto-switched to `allToday` mode upon shift closing.
+- [x] **Splash Screen Modernization**: Edge-to-edge transparent system bars, elimination of screen dimness, removal of all green gradients, and luminous electric-blue & cyan aesthetic.
 - [x] **Documentation Synchronization**: Comprehensive sync of `DECISIONS.md`, `PRD.md`, `DESIGN.md`, `DATABASE.md`, `PLANNING.md`, and `README.md`.
 
 ## Later (not in this build)
