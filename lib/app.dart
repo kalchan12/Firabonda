@@ -12,6 +12,8 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeControllerProvider);
+    final router = ref.watch(appRouterProvider);
+
     return MaterialApp.router(
       title: 'Fira Bonda',
       debugShowCheckedModeBanner: false,
@@ -24,7 +26,7 @@ class App extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en')],
-      routerConfig: buildAppRouter(),
+      routerConfig: router,
     );
   }
 }

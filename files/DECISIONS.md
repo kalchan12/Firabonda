@@ -248,6 +248,17 @@
   - **Grid View (`_SaleGridCard`)**: 2-column card layout displaying category, color dot, sale time, quantity, total price, profit pill, payment channel chip, and delete button.
   - **Row View (`_SaleRowCard`)**: Dense horizontal row layout showing category, color, quantity, total price, tabular profit figure, time, and delete action.
 
+## 2026-11-12: Fix Open Shift Sheet Overflow & Light/Dark Mode Splash Screen Re-trigger
+- **Open Shift Bottom Sheet Overflow Fix:**
+  - Wrapped `OpenShiftSheet` middle content in `Flexible(child: SingleChildScrollView(...))` with `maxHeight: screenHeight * 0.85`.
+  - Absorbs keyboard `viewInsets.bottom` when the software keyboard opens, keeping the drag handle and title pinned at top, and the "Open Shift" action button visible above the keyboard with zero RenderFlex overflow across all screen sizes and text scale factors.
+  - Added horizontal overflow prevention with `Flexible` and `FittedBox` on `_UnifiedTargetAndPaymentsCard` target and payment headers.
+- **Theme Mode Toggle (Light/Dark) Splash Screen Fix:**
+  - Diagnosed that `App.build()` previously invoked `buildAppRouter()` directly on every rebuild. When toggling light/dark theme, `App.build()` created a brand new `GoRouter` instance with `initialLocation: '/splash'`, causing the entire splash sequence to replay.
+  - Migrated router creation to a persistent Riverpod `appRouterProvider` (`Provider<GoRouter>`).
+  - `App.build()` now watches `appRouterProvider`, maintaining the exact same router instance across theme changes so switching between light and dark mode is instantaneous with no navigation reset or splash screen re-trigger.
+
+
 
 
 

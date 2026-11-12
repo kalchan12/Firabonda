@@ -1,5 +1,8 @@
 import 'package:drift/native.dart';
+import 'package:firabonda/app.dart';
+import 'package:firabonda/core/router/app_router.dart';
 import 'package:firabonda/core/theme/app_theme.dart';
+import 'package:firabonda/core/theme/theme_controller.dart';
 import 'package:firabonda/core/widgets/app_button.dart';
 import 'package:firabonda/data/database/app_database.dart';
 import 'package:firabonda/data/repositories/shift_repository.dart';
@@ -9,6 +12,7 @@ import 'package:firabonda/features/shifts/presentation/shift_history_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   late AppDatabase db;
@@ -155,6 +159,97 @@ void main() {
 
     expect(find.text('Shift History'), findsOneWidget);
     expect(find.textContaining('Closed'), findsWidgets);
+
+    await cleanUp(tester);
+  });
+
+  testWidgets(
+      'OpenShiftSheet does not overflow with small screen, keyboard viewInsets, and high text scale',
+      (tester) async {
+    const keyboardInset = 280.0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: MaterialApp(
+          theme: AppTheme.build(Brightness.dark),
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(360, 640),
+              viewInsets: EdgeInsets.only(bottom: keyboardInset),
+              textScaler: TextScaler.linear(1.4),
+            ),
+            child: const Scaffold(
+              body: OpenShiftSheet(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Open Shift'), findsWidgets);
+    expect(find.text('Opening cash in drawer'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await cleanUp(tester);
+  });
+
+  testWidgets(
+      'Toggling theme mode does not reset navigation or show splash screen',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockRouter = GoRouter(
+      initialLocation: '/dashboard',
+      routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Splash Screen Mock')),
+        ),
+        GoRoute(
+          path: '/dashboard',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Dashboard Active')),
+        ),
+      ],
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        appRouterProvider.overrideWithValue(mockRouter),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const App(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard Active'), findsOneWidget);
+    expect(find.text('Splash Screen Mock'), findsNothing);
+
+    // Toggle theme to dark
+    container.read(themeControllerProvider.notifier).setMode(ThemeMode.dark);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard Active'), findsOneWidget);
+    expect(find.text('Splash Screen Mock'), findsNothing);
+
+    // Toggle theme to light
+    container.read(themeControllerProvider.notifier).setMode(ThemeMode.light);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard Active'), findsOneWidget);
+    expect(find.text('Splash Screen Mock'), findsNothing);
 
     await cleanUp(tester);
   });

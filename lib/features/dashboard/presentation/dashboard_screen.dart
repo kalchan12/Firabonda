@@ -617,20 +617,33 @@ final class _UnifiedTargetAndPaymentsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Target: ${Money.etb(data.totalAssumedProfitCents)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.textMuted,
-                    fontWeight: FontWeight.w500,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Target: ${Money.etb(data.totalAssumedProfitCents)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
-                Text(
-                  'Achieved: ${Money.etb(data.actualProfitForAssumedCents)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isAhead ? colors.profit : colors.textPrimary,
+                const SizedBox(width: AppSpacing.s),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Achieved: ${Money.etb(data.actualProfitForAssumedCents)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isAhead ? colors.profit : colors.textPrimary,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -655,21 +668,27 @@ final class _UnifiedTargetAndPaymentsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.payments_outlined,
-                    size: 18,
-                    color: colors.textPrimary,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Payments ($periodName)',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.payments_outlined,
+                      size: 18,
+                      color: colors.textPrimary,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        'Payments ($periodName)',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (hasCredit)
                 InkWell(

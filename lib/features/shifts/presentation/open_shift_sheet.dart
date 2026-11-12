@@ -79,6 +79,7 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -87,6 +88,9 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
       child: SafeArea(
         top: false,
         child: Container(
+          constraints: BoxConstraints(
+            maxHeight: screenHeight * 0.85,
+          ),
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: const BorderRadius.vertical(
@@ -131,44 +135,48 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
 
               Divider(color: colors.border, height: 1),
 
-              // Simple Opening Cash Field
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Opening cash in drawer',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.s),
-                    TextField(
-                      controller: _cashController,
-                      autofocus: true,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d{0,2}'),
-                        ),
-                      ],
-                      style: const TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        fontFeatures: [FontFeature.tabularFigures()],
+              // Scrollable Middle Form (Flexible prevents keyboard overflow)
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Opening cash in drawer',
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
-                      decoration: InputDecoration(
-                        prefixText: 'ETB ',
-                        hintText: '0',
-                        filled: true,
-                        fillColor: colors.surfaceVariant.withValues(alpha: 0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                          borderSide: BorderSide(color: colors.border),
+                      const SizedBox(height: AppSpacing.s),
+                      TextField(
+                        controller: _cashController,
+                        autofocus: true,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
+                          ),
+                        ],
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                        decoration: InputDecoration(
+                          prefixText: 'ETB ',
+                          hintText: '0',
+                          filled: true,
+                          fillColor:
+                              colors.surfaceVariant.withValues(alpha: 0.5),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.button),
+                            borderSide: BorderSide(color: colors.border),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 

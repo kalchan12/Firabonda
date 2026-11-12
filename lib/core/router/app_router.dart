@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/shop_models.dart';
@@ -23,6 +24,10 @@ import '../../features/suppliers/presentation/suppliers_screen.dart';
 import '../widgets/app_shell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  return buildAppRouter();
+});
 
 GoRouter buildAppRouter({String initialLocation = '/splash'}) {
   return GoRouter(
