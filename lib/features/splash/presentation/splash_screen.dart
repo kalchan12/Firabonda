@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-/// Simple modern splash screen for Fira Bonda.
-///
-/// Features a clean, centered brand identity using the app icon from
-/// `assets/App Icon/Firabondicon.png`, elegant typography, subtle loading,
-/// and smooth auto-navigation to `/dashboard`.
+/// Clean, high-contrast modern splash screen for Fira Bonda.
 final class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -20,9 +16,6 @@ final class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _progressAnimation;
-
   Timer? _navigateTimer;
   bool _hasNavigated = false;
 
@@ -32,33 +25,15 @@ final class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
-      ),
-    );
-
-    _progressAnimation = Tween<double>(begin: 0.08, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.95, curve: Curves.easeInOutCubic),
-      ),
+    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
 
     _controller.forward();
 
-    // Auto-navigate to dashboard after splash
     final isTest =
         WidgetsBinding.instance.runtimeType.toString().contains('Test');
     if (!isTest) {
@@ -96,78 +71,80 @@ final class _SplashScreenState extends State<SplashScreen>
         behavior: HitTestBehavior.opaque,
         onTap: _navigateToDashboard,
         child: Scaffold(
-          backgroundColor: const Color(0xFF080D1A),
+          backgroundColor: const Color(0xFF0D1527),
           body: Stack(
             children: [
-              // Subtle ambient glow centered behind the branding
+              // Radial luminous glow for high contrast
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
-                      center: const Alignment(0.0, -0.15),
-                      radius: 0.9,
+                      center: const Alignment(0.0, -0.2),
+                      radius: 1.1,
                       colors: [
-                        const Color(0xFF1E3A8A).withValues(alpha: 0.28),
-                        const Color(0xFF080D1A).withValues(alpha: 0.95),
-                        const Color(0xFF080D1A),
+                        const Color(0xFF2563EB).withValues(alpha: 0.35),
+                        const Color(0xFF0F1E3D).withValues(alpha: 0.8),
+                        const Color(0xFF0A0F1D),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.5, 1.0],
                     ),
                   ),
                 ),
               ),
 
-              // Main centered content
               SafeArea(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: child,
-                    );
-                  },
-                  child: Center(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Spacer(flex: 3),
 
-                        // App Icon with modern squircle & subtle glow
+                        // Logo Container with visible contrast ring and soft glow
                         ScaleTransition(
                           scale: _scaleAnimation,
                           child: Container(
-                            width: 104,
-                            height: 104,
+                            width: 116,
+                            height: 116,
+                            padding: const EdgeInsets.all(3),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                width: 1.2,
+                              borderRadius: BorderRadius.circular(28),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF38BDF8),
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1D4ED8),
+                                ],
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF3D6BFF).withValues(
-                                    alpha: 0.28,
+                                  color: const Color(0xFF2563EB).withValues(
+                                    alpha: 0.45,
                                   ),
-                                  blurRadius: 32,
-                                  offset: const Offset(0, 10),
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
+                                  blurRadius: 36,
+                                  offset: const Offset(0, 12),
                                 ),
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(22.8),
-                              child: Image.asset(
-                                'assets/App Icon/Firabondicon.png',
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Image.asset(
+                              borderRadius: BorderRadius.circular(25),
+                              child: Container(
+                                color: const Color(0xFF0D2146),
+                                child: Image.asset(
                                   'assets/App Icon/ic_launcher.png',
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => Image.asset(
+                                    'assets/App Icon/Firabondicon.png',
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) => const Icon(
+                                      Icons.storefront_rounded,
+                                      size: 56,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -176,103 +153,92 @@ final class _SplashScreenState extends State<SplashScreen>
 
                         const SizedBox(height: 24),
 
-                        // Brand Name
+                        // Brand Title
                         const Text(
                           'Fira Bonda',
                           style: TextStyle(
                             fontFamily: 'Sora',
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -0.5,
                           ),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
 
-                        // Tagline Pill
+                        // Subtitle Badge
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
+                            horizontal: 14,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
+                            color: const Color(0xFF2563EB).withValues(
+                              alpha: 0.18,
+                            ),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              width: 1.0,
+                              color: const Color(0xFF60A5FA).withValues(
+                                alpha: 0.35,
+                              ),
                             ),
                           ),
                           child: const Text(
                             'OFFLINE CLOTHING STORE TRACKER',
                             style: TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
-                              color: Color(0xFF94A3B8),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.1,
+                              color: Color(0xFF93C5FD),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 18),
 
-                        // Key Highlights Minimal Pills
+                        // Highlights Row
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _FeatureBadge(label: '100% Offline'),
+                            _Badge(label: '100% Offline'),
                             SizedBox(width: 8),
-                            _FeatureBadge(label: 'Real Profit'),
+                            _Badge(label: 'Real Profit'),
                             SizedBox(width: 8),
-                            _FeatureBadge(label: 'Private Data'),
+                            _Badge(label: 'Private Data'),
                           ],
                         ),
 
                         const Spacer(flex: 3),
 
-                        // Minimalist Progress Bar & Skip Hint
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 160,
-                              height: 3,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(999),
-                                child: AnimatedBuilder(
-                                  animation: _progressAnimation,
-                                  builder: (context, _) {
-                                    return LinearProgressIndicator(
-                                      value: _progressAnimation.value,
-                                      backgroundColor: Colors.white.withValues(
-                                        alpha: 0.08,
-                                      ),
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF3D6BFF),
-                                      ),
-                                    );
-                                  },
-                                ),
+                        // Loading Indicator & Skip Action
+                        SizedBox(
+                          width: 140,
+                          height: 3,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: const LinearProgressIndicator(
+                              backgroundColor: Color(0x33FFFFFF),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF38BDF8),
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'Tap anywhere to start',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white.withValues(alpha: 0.45),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Tap anywhere to start',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0x99FFFFFF),
+                            letterSpacing: 0.2,
+                          ),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 36),
                       ],
                     ),
                   ),
@@ -286,31 +252,27 @@ final class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-final class _FeatureBadge extends StatelessWidget {
-  const _FeatureBadge({required this.label});
+final class _Badge extends StatelessWidget {
+  const _Badge({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.07),
-          width: 0.8,
-        ),
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontFamily: 'Inter',
-          fontSize: 10.5,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFFCBD5E1),
-          letterSpacing: 0.2,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFFE2E8F0),
         ),
       ),
     );
