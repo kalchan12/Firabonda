@@ -9,6 +9,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/models/shop_models.dart';
 import '../../../data/repositories/providers.dart';
+import '../../dashboard/application/dashboard_controller.dart';
 
 Future<bool?> showCloseShiftSheet(BuildContext context, ShiftRow shift) {
   return showModalBottomSheet<bool>(
@@ -118,6 +119,11 @@ final class _CloseShiftSheetState extends ConsumerState<CloseShiftSheet> {
         actualBankCents: actualBank,
         actualDebitCents: actualDebit,
       );
+
+      // Transition dashboard to show all today's activity now that shift is closed
+      ref
+          .read(todayShiftModeProvider.notifier)
+          .setMode(TodayShiftMode.allToday);
 
       await HapticFeedback.lightImpact();
 

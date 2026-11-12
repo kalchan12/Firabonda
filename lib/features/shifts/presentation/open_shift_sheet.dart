@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../data/repositories/providers.dart';
+import '../../dashboard/application/dashboard_controller.dart';
 
 Future<String?> showOpenShiftSheet(BuildContext context) {
   return showModalBottomSheet<String>(
@@ -52,6 +53,11 @@ final class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
     try {
       final repo = ref.read(shiftRepositoryProvider);
       final shiftId = await repo.openShift(openingCashCents: cashCents);
+
+      // Focus dashboard on the new active shift
+      ref
+          .read(todayShiftModeProvider.notifier)
+          .setMode(TodayShiftMode.activeShift);
 
       await HapticFeedback.lightImpact();
 

@@ -285,15 +285,15 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
       periodRange.period == Period.today && offset == 0;
   final isShiftScoped = isTodayZeroOffset &&
       hasAnyShifts &&
+      currentShift != null &&
       todayShiftMode == TodayShiftMode.activeShift;
 
   // 1. Bought (spent in period: purchases dated in this period)
   var spentCents = 0;
   for (final p in allPurchases) {
     final inScope = isShiftScoped
-        ? (currentShift != null &&
-            (p.date.isAfter(currentShift.openedAt) ||
-                p.date.isAtSameMomentAs(currentShift.openedAt)))
+        ? (p.date.isAfter(currentShift.openedAt) ||
+            p.date.isAtSameMomentAs(currentShift.openedAt))
         : periodRange.contains(p.date);
     if (inScope) {
       spentCents += p.totalCostCents;
@@ -303,7 +303,6 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   // 2. Sales in period
   final periodSales = allSales.where((s) {
     if (isShiftScoped) {
-      if (currentShift == null) return false;
       return s.shiftId == currentShift.id ||
           (s.shiftId == null &&
               (s.date.isAfter(currentShift.openedAt) ||
@@ -377,11 +376,10 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   var expensesCents = 0;
   for (final e in allExpenses) {
     final inScope = isShiftScoped
-        ? (currentShift != null &&
-            (e.shiftId == currentShift.id ||
-                (e.shiftId == null &&
-                    (e.date.isAfter(currentShift.openedAt) ||
-                        e.date.isAtSameMomentAs(currentShift.openedAt)))))
+        ? (e.shiftId == currentShift.id ||
+            (e.shiftId == null &&
+                (e.date.isAfter(currentShift.openedAt) ||
+                    e.date.isAtSameMomentAs(currentShift.openedAt))))
         : periodRange.contains(e.date);
     if (inScope) {
       expensesCents += e.amount;
@@ -393,9 +391,8 @@ final dashboardDataProvider = Provider<AsyncValue<DashboardData>>((ref) {
   for (final a in allAdjustments) {
     if (!a.reason.isLoss) continue;
     final inScope = isShiftScoped
-        ? (currentShift != null &&
-            (a.date.isAfter(currentShift.openedAt) ||
-                a.date.isAtSameMomentAs(currentShift.openedAt)))
+        ? (a.date.isAfter(currentShift.openedAt) ||
+            a.date.isAtSameMomentAs(currentShift.openedAt))
         : periodRange.contains(a.date);
     if (inScope) {
       lossesCents += a.valueAtCostCents;

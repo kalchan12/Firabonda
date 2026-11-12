@@ -1566,13 +1566,16 @@ final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
                   ),
                   const SizedBox(height: AppSpacing.m),
                   if (hasActiveShift) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.s,
+                      runSpacing: 6,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 2,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: colors.surfaceVariant,
@@ -1594,10 +1597,11 @@ final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
                           onTap: () => ref
                               .read(todayShiftModeProvider.notifier)
                               .toggle(),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
+                              horizontal: 6,
+                              vertical: 3,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1636,7 +1640,7 @@ final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
                           padding: const EdgeInsets.only(top: AppSpacing.s),
                           child: Wrap(
                             spacing: AppSpacing.s,
-                            runSpacing: 4,
+                            runSpacing: 6,
                             alignment: WrapAlignment.spaceBetween,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
@@ -1684,8 +1688,11 @@ final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
                   ] else ...[
                     if (widget.isShiftScoped ||
                         widget.todayShiftMode == TodayShiftMode.allToday) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: AppSpacing.s,
+                        runSpacing: 6,
                         children: [
                           Text(
                             widget.todayShiftMode == TodayShiftMode.activeShift
@@ -1701,10 +1708,11 @@ final class _TodayShiftBannerState extends ConsumerState<_TodayShiftBanner> {
                             onTap: () => ref
                                 .read(todayShiftModeProvider.notifier)
                                 .toggle(),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 2,
+                                horizontal: 6,
+                                vertical: 3,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,

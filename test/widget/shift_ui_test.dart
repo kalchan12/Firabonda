@@ -172,13 +172,13 @@ void main() {
         overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp(
           theme: AppTheme.build(Brightness.dark),
-          home: MediaQuery(
-            data: const MediaQueryData(
+          home: const MediaQuery(
+            data: MediaQueryData(
               size: Size(360, 640),
               viewInsets: EdgeInsets.only(bottom: keyboardInset),
               textScaler: TextScaler.linear(1.4),
             ),
-            child: const Scaffold(
+            child: Scaffold(
               body: OpenShiftSheet(),
             ),
           ),
