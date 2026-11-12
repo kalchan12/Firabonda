@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_dimensions.dart';
-
-/// Premium branded splash screen shown on app launch with smooth
-/// entrance, breathing brand aura, live progress bar, and instant skip.
+/// Simple modern splash screen for Fira Bonda.
+///
+/// Features a clean, centered brand identity using the app icon from
+/// `assets/App Icon/Firabondicon.png`, elegant typography, subtle loading,
+/// and smooth auto-navigation to `/dashboard`.
 final class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -16,17 +17,11 @@ final class SplashScreen extends StatefulWidget {
 }
 
 final class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _entryController;
-  late final AnimationController _pulseController;
-  late final AnimationController _progressController;
-
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoFade;
-  late final Animation<Offset> _textSlide;
-  late final Animation<double> _textFade;
-  late final Animation<double> _footerFade;
-  late final Animation<double> _pulseAnimation;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _progressAnimation;
 
   Timer? _navigateTimer;
   bool _hasNavigated = false;
@@ -35,75 +30,42 @@ final class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // 1. Entry Staggered Animation (1100ms)
-    _entryController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 2000),
     );
 
-    _logoScale = Tween<double>(begin: 0.72, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.0, 0.75, curve: Curves.easeOutBack),
+        parent: _controller,
+        curve: const Interval(0.0, 0.45, curve: Curves.easeOutCubic),
       ),
     );
 
-    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+        parent: _controller,
+        curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
       ),
     );
 
-    _textSlide = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
-      end: Offset.zero,
-    ).animate(
+    _progressAnimation = Tween<double>(begin: 0.08, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.35, 0.85, curve: Curves.easeOutCubic),
+        parent: _controller,
+        curve: const Interval(0.2, 0.95, curve: Curves.easeInOutCubic),
       ),
     );
 
-    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.35, 0.75, curve: Curves.easeIn),
-      ),
-    );
+    _controller.forward();
 
-    _footerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: const Interval(0.65, 1.0, curve: Curves.easeIn),
-      ),
-    );
-
-    // 2. Continuous breathing aura for logo
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.06).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    // 3. Smooth progress bar fill across 2.5s
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    );
-
-    _entryController.forward();
-    _progressController.forward();
-
-    // 4. Timer to navigate to Dashboard (2800ms)
+    // Auto-navigate to dashboard after splash
     final isTest =
         WidgetsBinding.instance.runtimeType.toString().contains('Test');
     if (!isTest) {
-      _navigateTimer =
-          Timer(const Duration(milliseconds: 2800), _navigateToDashboard);
+      _navigateTimer = Timer(
+        const Duration(milliseconds: 2200),
+        _navigateToDashboard,
+      );
     }
   }
 
@@ -117,16 +79,8 @@ final class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _navigateTimer?.cancel();
-    _entryController.dispose();
-    _pulseController.dispose();
-    _progressController.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  String _statusMessage(double progress) {
-    if (progress < 0.35) return 'Loading offline database...';
-    if (progress < 0.75) return 'Preparing inventory & shifts...';
-    return 'Ready to trade';
   }
 
   @override
@@ -142,369 +96,183 @@ final class _SplashScreenState extends State<SplashScreen>
         behavior: HitTestBehavior.opaque,
         onTap: _navigateToDashboard,
         child: Scaffold(
-          backgroundColor: const Color(0xFF0B1020),
+          backgroundColor: const Color(0xFF080D1A),
           body: Stack(
             children: [
-              // Ambient Radial Gradient Aura (Luminous Electric Blue & Cobalt Glow)
+              // Subtle ambient glow centered behind the branding
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
-                      center: const Alignment(0.0, -0.22),
-                      radius: 1.2,
+                      center: const Alignment(0.0, -0.15),
+                      radius: 0.9,
                       colors: [
-                        const Color(0xFF3D6BFF).withValues(alpha: 0.35),
-                        const Color(0xFF1E3A8A).withValues(alpha: 0.18),
-                        const Color(0xFF0B1020),
+                        const Color(0xFF1E3A8A).withValues(alpha: 0.28),
+                        const Color(0xFF080D1A).withValues(alpha: 0.95),
+                        const Color(0xFF080D1A),
                       ],
-                      stops: const [0.0, 0.48, 1.0],
+                      stops: const [0.0, 0.55, 1.0],
                     ),
                   ),
                 ),
               ),
 
-              // Subtle modern background decorative ambient orbs
-              Positioned(
-                top: -60,
-                right: -60,
-                child: Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF3D6BFF).withValues(alpha: 0.08),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 40,
-                left: -40,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.07),
-                  ),
-                ),
-              ),
-
-              // Main Centered Content
+              // Main centered content
               SafeArea(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenPadding,
-                    ),
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: child,
+                    );
+                  },
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Spacer(flex: 3),
 
-                        // Animated Brand Logo with breathing aura
-                        AnimatedBuilder(
-                          animation: Listenable.merge([
-                            _entryController,
-                            _pulseController,
-                          ]),
-                          builder: (context, _) {
-                            return FadeTransition(
-                              opacity: _logoFade,
-                              child: ScaleTransition(
-                                scale: _logoScale,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Breathing radiant aura ring behind icon
-                                    Transform.scale(
-                                      scale: _pulseAnimation.value,
-                                      child: Container(
-                                        width: 130,
-                                        height: 130,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: RadialGradient(
-                                            colors: [
-                                              const Color(0xFF3D6BFF)
-                                                  .withValues(alpha: 0.42),
-                                              const Color(0xFF60A5FA)
-                                                  .withValues(alpha: 0.18),
-                                              Colors.transparent,
-                                            ],
-                                            stops: const [0.0, 0.60, 1.0],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    // Core App Icon Container (Modern Glassmorphic Squircle)
-                                    Container(
-                                      width: 110,
-                                      height: 110,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Color(0xFF1E2846),
-                                            Color(0xFF11172A),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(28),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.22,
-                                          ),
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(
-                                              0xFF3D6BFF,
-                                            ).withValues(alpha: 0.38),
-                                            blurRadius: 36,
-                                            offset: const Offset(0, 12),
-                                          ),
-                                          BoxShadow(
-                                            color: const Color(
-                                              0xFF60A5FA,
-                                            ).withValues(alpha: 0.18),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      padding: const EdgeInsets.all(14),
-                                      child: Image.asset(
-                                        'assets/App Icon/ic_launcher.png',
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (_, _, _) => const Icon(
-                                          Icons.checkroom_rounded,
-                                          size: 58,
-                                          color: Color(0xFF60A5FA),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                        // App Icon with modern squircle & subtle glow
+                        ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Container(
+                            width: 104,
+                            height: 104,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF3D6BFF).withValues(
+                                    alpha: 0.28,
+                                  ),
+                                  blurRadius: 32,
+                                  offset: const Offset(0, 10),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22.8),
+                              child: Image.asset(
+                                'assets/App Icon/Firabondicon.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Image.asset(
+                                  'assets/App Icon/ic_launcher.png',
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
 
-                        const SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: 24),
 
-                        // Brand Name & Taglines (Slide and Fade)
-                        AnimatedBuilder(
-                          animation: _entryController,
-                          builder: (context, child) {
-                            return FadeTransition(
-                              opacity: _textFade,
-                              child: SlideTransition(
-                                position: _textSlide,
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Column(
-                            children: [
-                              // Brand Title with Radiant Modern Accent
-                              const Text(
-                                'Fira Bonda',
-                                style: TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.6,
-                                  shadows: [
-                                    Shadow(
-                                      color: Color(0x663D6BFF),
-                                      blurRadius: 20,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Store Category Badge (Sleek Electric Blue Pill)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF3D6BFF).withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                    color: const Color(0xFF60A5FA).withValues(
-                                      alpha: 0.35,
-                                    ),
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.storefront_rounded,
-                                      size: 13,
-                                      color: Color(0xFF93C5FD),
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'OFFLINE CLOTHING STORE TRACKER',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.0,
-                                        color: Color(0xFF93C5FD),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-
-                              // Subtitle with High Contrast & Readability
-                              Text(
-                                'Track purchases, sales, stock & profit margin',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  letterSpacing: 0.1,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-
-                              // Feature Highlights Chips
-                              const Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 8,
-                                runSpacing: 6,
-                                children: [
-                                  _FeatureChip(
-                                    icon: Icons.wifi_off_rounded,
-                                    label: '100% Offline',
-                                  ),
-                                  _FeatureChip(
-                                    icon: Icons.query_stats_rounded,
-                                    label: 'Real Profit',
-                                  ),
-                                  _FeatureChip(
-                                    icon: Icons.lock_outline_rounded,
-                                    label: 'Private Data',
-                                  ),
-                                ],
-                              ),
-                            ],
+                        // Brand Name
+                        const Text(
+                          'Fira Bonda',
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
                           ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Tagline Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: const Text(
+                            'OFFLINE CLOTHING STORE TRACKER',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Key Highlights Minimal Pills
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _FeatureBadge(label: '100% Offline'),
+                            SizedBox(width: 8),
+                            _FeatureBadge(label: 'Real Profit'),
+                            SizedBox(width: 8),
+                            _FeatureBadge(label: 'Private Data'),
+                          ],
                         ),
 
                         const Spacer(flex: 3),
 
-                        // Animated Progress Bar & Status (Footer)
-                        AnimatedBuilder(
-                          animation: Listenable.merge([
-                            _entryController,
-                            _progressController,
-                          ]),
-                          builder: (context, _) {
-                            final progress = _progressController.value;
-                            final statusText = _statusMessage(progress);
-
-                            return FadeTransition(
-                              opacity: _footerFade,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Status Message
-                                  Text(
-                                    statusText,
-                                    style: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFFCBD5E1),
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-
-                                  // Glowing Gradient Progress Line (Electric Blue -> Azure -> Sky)
-                                  SizedBox(
-                                    width: 210,
-                                    height: 4,
-                                    child: Stack(
-                                      children: [
-                                        // Track Background
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              999,
-                                            ),
-                                          ),
-                                        ),
-                                        // Active Fill
-                                        FractionallySizedBox(
-                                          widthFactor: progress.clamp(0.04, 1.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [
-                                                  Color(0xFF2563EB),
-                                                  Color(0xFF3D6BFF),
-                                                  Color(0xFF38BDF8),
-                                                ],
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(999),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(
-                                                    0xFF3D6BFF,
-                                                  ).withValues(alpha: 0.65),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 1),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Tap to Skip micro-hint
-                                  Text(
-                                    'Tap anywhere to start',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.55,
+                        // Minimalist Progress Bar & Skip Hint
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 160,
+                              height: 3,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: AnimatedBuilder(
+                                  animation: _progressAnimation,
+                                  builder: (context, _) {
+                                    return LinearProgressIndicator(
+                                      value: _progressAnimation.value,
+                                      backgroundColor: Colors.white.withValues(
+                                        alpha: 0.08,
                                       ),
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                ],
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF3D6BFF),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            );
-                          },
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'Tap anywhere to start',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.45),
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
 
-                        const SizedBox(height: AppSpacing.l),
+                        const SizedBox(height: 32),
                       ],
                     ),
                   ),
@@ -518,36 +286,32 @@ final class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-final class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({required this.icon, required this.label});
+final class _FeatureBadge extends StatelessWidget {
+  const _FeatureBadge({required this.label});
 
-  final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.07),
+          width: 0.8,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: const Color(0xFF93C5FD)),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFF1F5F9),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 10.5,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFFCBD5E1),
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
